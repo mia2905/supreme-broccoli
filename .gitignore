@@ -30,3 +30,6 @@
 *.exe
 *.out
 *.app
+
+# project binaries
+lesson_1/lesson_1
