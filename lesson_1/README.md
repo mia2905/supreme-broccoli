@@ -22,6 +22,8 @@ The following C elements will be used:
 Every C program starts with a function called main.
 
 ```
+#include <stdio.h> // this includes printf and scanf
+
 int main()
 {
     // and here is your program
