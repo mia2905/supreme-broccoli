@@ -4,6 +4,21 @@
 #define WINDOW_WIDTH 1200
 #define WINDOW_HEIGHT 600
 
+bool RUNNING = true;
+
+@interface WindowDelegate : NSObject <NSWindowDelegate>
+@end
+
+@implementation WindowDelegate
+
+- (BOOL)windowShouldClose:(NSWindow*)sender
+{
+    RUNNING = false;
+    return YES;
+}
+
+@end
+
 int main()
 {
     NSRect    rect   = NSMakeRect( 0, 0, WINDOW_WIDTH, WINDOW_HEIGHT );
@@ -16,9 +31,12 @@ int main()
     [window setTitle: @"SUPREME BROCCOLI"];
     [window makeKeyAndOrderFront: nil];
 
+    WindowDelegate* windowDelegate = [[WindowDelegate alloc] init];
+    [window setDelegate: windowDelegate];
+
     bool running = true;
 
-    while( running )
+    while( RUNNING )
     {
         NSEvent* event = nil;
         
