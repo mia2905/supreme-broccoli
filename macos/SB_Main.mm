@@ -1,5 +1,7 @@
 #include "../SB_Application.h"
-#import <AppKit/AppKit.h>
+#include <AppKit/AppKit.h>
+#include <mach/mach_time.h>
+#include <stdio.h>
 
 #define WINDOW_WIDTH 1200
 #define WINDOW_HEIGHT 600
@@ -8,9 +10,39 @@ static bool         RUNNING       = true;
 static RenderBuffer RENDER_BUFFER = {0};
 
 @interface WindowDelegate : NSObject <NSWindowDelegate>
+{
+    @public
+    NSCondition*     m_mainLoop;
+    CVDisplayLinkRef m_displayLink;
+}
 @end
 
 @implementation WindowDelegate
+
+CVReturn update( CVDisplayLinkRef   displayLink,
+                 const CVTimeStamp* inNow,
+                 const CVTimeStamp* inOutputTime,
+                 CVOptionFlags      flagsIn,
+                 CVOptionFlags*     flagsOut,
+                 void*              displayLinkContext )
+{
+    WindowDelegate* self = (__bridge WindowDelegate*)displayLinkContext;
+    [self->m_mainLoop signal];
+    return kCVReturnSuccess;
+}
+
+- (id)init
+{
+    if( self = [super init] )
+    {
+        m_mainLoop = [[NSCondition alloc] init];
+        CVDisplayLinkCreateWithActiveCGDisplays( &m_displayLink );
+        CVDisplayLinkSetOutputCallback( m_displayLink, update, (__bridge void *)self );
+        CVDisplayLinkStart( m_displayLink );
+    }
+
+    return self;
+}
 
 - (BOOL)windowShouldClose:(NSWindow*)sender
 {
@@ -40,10 +72,14 @@ int main()
     RENDER_BUFFER.pitch  = RENDER_BUFFER.width * bytesPerPixel;
     RENDER_BUFFER.buffer = (u8*)malloc( RENDER_BUFFER.pitch * RENDER_BUFFER.height );
     
-    bool running = true;
-
+    mach_timebase_info_data_t info;
+    mach_timebase_info( &info );
+    f64 ticksToNanoSeconds = (f64)info.numer / (f64)info.denom;
+    u64 last = mach_absolute_time();
+    
     while( RUNNING )
     {
+        [windowDelegate->m_mainLoop wait];
         Render( &RENDER_BUFFER );
 
         @autoreleasepool {
@@ -63,6 +99,13 @@ int main()
             [image addRepresentation: bitmap];                                           ;
 
             window.contentView.layer.contents = image;
+
+            u64 endRender    = mach_absolute_time();
+            f64 renderTimeNs = (f64)(endRender - last) * ticksToNanoSeconds;
+
+            printf( "frame time [ms]: %f\n", (renderTimeNs / (1000 * 1000)));
+
+            last = endRender;
         }
         
         NSEvent* event = nil;
