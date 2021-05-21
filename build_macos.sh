@@ -17,6 +17,8 @@ main () {
     if [ -e supreme-broccoli ]
     then
         echo "-> ${GREEN}SUCCESS${NORMAL}"
+        sizeInKB=$(du -k supreme-broccoli | cut -f -1)
+        echo "-> FILE SIZE: " $sizeInKB kB
     else
         echo "-> ${RED}FAILED${NORMAL}"
     fi
