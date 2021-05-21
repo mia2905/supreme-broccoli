@@ -4,7 +4,8 @@
 #define WINDOW_WIDTH 1200
 #define WINDOW_HEIGHT 600
 
-bool RUNNING = true;
+static bool         RUNNING       = true;
+static RenderBuffer RENDER_BUFFER = {0};
 
 @interface WindowDelegate : NSObject <NSWindowDelegate>
 @end
@@ -28,32 +29,33 @@ int main()
                                                        backing: NSBackingStoreBuffered
                                                        defer: NO];
     
-    [window setBackgroundColor: NSColor.redColor];
     [window setTitle: @"SUPREME BROCCOLI"];
     [window makeKeyAndOrderFront: nil];
     [window setDelegate: windowDelegate];
 
-    u32 imageBufferWidth  = window.contentView.bounds.size.width;
-    u32 imageBufferHeight = window.contentView.bounds.size.height;
-    u32 bytesPerPixel     = 4;
-    u32 pitch             = imageBufferWidth * bytesPerPixel;
-
-    u8* imageBuffer = (u8*)malloc( pitch * imageBufferHeight );
-
+    u32 bytesPerPixel    = 4;
+    
+    RENDER_BUFFER.width  = window.contentView.bounds.size.width;
+    RENDER_BUFFER.height = window.contentView.bounds.size.height;
+    RENDER_BUFFER.pitch  = RENDER_BUFFER.width * bytesPerPixel;
+    RENDER_BUFFER.buffer = (u8*)malloc( RENDER_BUFFER.pitch * RENDER_BUFFER.height );
+    
     bool running = true;
 
     while( RUNNING )
     {
+        Render( &RENDER_BUFFER );
+
         @autoreleasepool {
-            NSBitmapImageRep* bitmap = [[[NSBitmapImageRep alloc] initWithBitmapDataPlanes: &imageBuffer
-                                                                  pixelsWide:(NSInteger)imageBufferWidth 
-                                                                  pixelsHigh:(NSInteger)imageBufferHeight 
+            NSBitmapImageRep* bitmap = [[[NSBitmapImageRep alloc] initWithBitmapDataPlanes: &RENDER_BUFFER.buffer
+                                                                  pixelsWide:(NSInteger)RENDER_BUFFER.width 
+                                                                  pixelsHigh:(NSInteger)RENDER_BUFFER.height 
                                                                   bitsPerSample:(NSInteger)8
                                                                   samplesPerPixel:(NSInteger)4 
                                                                   hasAlpha:(BOOL)YES 
                                                                   isPlanar:(BOOL)NO 
                                                                   colorSpaceName:NSDeviceRGBColorSpace
-                                                                  bytesPerRow:(NSInteger)pitch
+                                                                  bytesPerRow:(NSInteger)RENDER_BUFFER.pitch
                                                                   bitsPerPixel:(NSInteger)bytesPerPixel * 8] autorelease];
 
             NSSize imageSize = NSMakeSize( WINDOW_WIDTH, WINDOW_HEIGHT );
@@ -68,9 +70,9 @@ int main()
         do 
         {
             event = [NSApp nextEventMatchingMask: NSEventMaskAny
-                                        untilDate: nil
-                                            inMode: NSDefaultRunLoopMode
-                                            dequeue: YES];
+                                       untilDate: nil
+                                          inMode: NSDefaultRunLoopMode
+                                         dequeue: YES];
 
             switch( [event type] )
             {

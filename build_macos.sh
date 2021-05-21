@@ -12,7 +12,7 @@ main () {
     echo "build SUPREME BROCCOLI - MacOS"
     echo "------------------------------"
 
-    clang ${FRAMEWORKS} macos/SB_Main.mm -o supreme-broccoli -O3
+    clang ${FRAMEWORKS} macos/SB_Main.mm SB_Application.cpp -o supreme-broccoli -O3
 
     if [ -e supreme-broccoli ]
     then
