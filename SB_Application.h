@@ -25,4 +25,6 @@ struct RenderBuffer
     u8* buffer;
 };
 
-void Render( RenderBuffer* buffer );
+extern "C" {
+   void Render( RenderBuffer* buffer );
+}

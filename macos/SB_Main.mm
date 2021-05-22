@@ -2,12 +2,16 @@
 #include <AppKit/AppKit.h>
 #include <mach/mach_time.h>
 #include <stdio.h>
+#include <dlfcn.h>
 
 #define WINDOW_WIDTH 1200
 #define WINDOW_HEIGHT 600
 
 static bool         RUNNING       = true;
 static RenderBuffer RENDER_BUFFER = {0};
+
+typedef void RENDER( RenderBuffer* buffer);
+static RENDER*      RENDER_FUNC   = nullptr;
 
 @interface WindowDelegate : NSObject <NSWindowDelegate>
 {
@@ -54,6 +58,13 @@ CVReturn update( CVDisplayLinkRef   displayLink,
 
 int main()
 {
+    void* application = dlopen( "supreme-broccoli.dylib", RTLD_LAZY );
+    if( application != nullptr )
+    {
+        printf( "APPLICATION LOADED\n" );
+        RENDER_FUNC = (RENDER*)dlsym( application, "Render" );
+    }
+
     WindowDelegate* windowDelegate = [[WindowDelegate alloc] init];
     NSRect          rect           = NSMakeRect( 0, 0, WINDOW_WIDTH, WINDOW_HEIGHT );
     NSWindow*       window         = [[NSWindow alloc] initWithContentRect: rect
@@ -80,7 +91,7 @@ int main()
     while( RUNNING )
     {
         [windowDelegate->m_mainLoop wait];
-        Render( &RENDER_BUFFER );
+        RENDER_FUNC( &RENDER_BUFFER );
 
         @autoreleasepool {
             NSBitmapImageRep* bitmap = [[[NSBitmapImageRep alloc] initWithBitmapDataPlanes: &RENDER_BUFFER.buffer
@@ -124,6 +135,11 @@ int main()
             }
         }
         while( event != nil );
+    }
+
+    if( application != nullptr )
+    {
+        dlclose( application );
     }
     
     return 0;

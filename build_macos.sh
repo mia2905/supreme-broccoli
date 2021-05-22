@@ -8,19 +8,33 @@ FRAMEWORKS='-framework CoreVideo -framework AppKit -framework AVFoundation -fram
 
 main () {
     echo ""
-    echo "------------------------------"
-    echo "build SUPREME BROCCOLI - MacOS"
-    echo "------------------------------"
+    echo "---------------------------------"
+    echo "    SUPREME BROCCOLI - MacOS"
+    echo "---------------------------------"
+    echo "-> CLEAN"
 
-    clang ${FRAMEWORKS} macos/SB_Main.mm SB_Application.cpp -o supreme-broccoli -O3
+    rm -rf supreme-broccoli.dylib
+    rm -rf supreme-broccoli
+
+    clang -dynamiclib -o supreme-broccoli.dylib SB_Application.cpp
+    clang ${FRAMEWORKS} macos/SB_Main.mm -o supreme-broccoli -O3
+
+    if [ -e supreme-broccoli.dylib ]
+    then
+        echo "-> BUILD APP: ${GREEN}SUCCESS${NORMAL}"
+        sizeInKB=$(du -k supreme-broccoli.dylib | cut -f -1)
+        echo "-> FILE SIZE: " $sizeInKB kB
+    else
+        echo "-> BUILD: ${RED}FAILED${NORMAL}"
+    fi
 
     if [ -e supreme-broccoli ]
     then
-        echo "-> ${GREEN}SUCCESS${NORMAL}"
+        echo "-> BUILD: ${GREEN}SUCCESS${NORMAL}"
         sizeInKB=$(du -k supreme-broccoli | cut -f -1)
         echo "-> FILE SIZE: " $sizeInKB kB
     else
-        echo "-> ${RED}FAILED${NORMAL}"
+        echo "-> BUILD: ${RED}FAILED${NORMAL}"
     fi
 }
 
