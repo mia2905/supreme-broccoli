@@ -60,11 +60,19 @@ CVReturn update( CVDisplayLinkRef   displayLink,
 
 void loadApplication()
 {
-    APPLICATION = dlopen( "supreme-broccoli.dylib", RTLD_LAZY );
+    APPLICATION = dlopen( "supreme-broccoli-temp.dylib", RTLD_LAZY );
     if( APPLICATION != nullptr )
     {
         printf( "APPLICATION LOADED\n" );
         RENDER_FUNC = (RENDER*)dlsym( APPLICATION, "Render" );
+    }
+}
+
+void unloadApplication()
+{
+    if( APPLICATION != nullptr )
+    {
+        dlclose( APPLICATION );
     }
 }
 
@@ -144,10 +152,7 @@ int main()
         while( event != nil );
     }
 
-    if( APPLICATION != nullptr )
-    {
-        dlclose( APPLICATION );
-    }
+    unloadApplication();
     
     return 0;
 }
