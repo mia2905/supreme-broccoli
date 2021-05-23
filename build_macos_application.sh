@@ -4,8 +4,6 @@ RED='\033[0;31m'
 GREEN='\033[0;32m'
 NORMAL='\033[0m'
 
-FRAMEWORKS='-framework CoreVideo -framework AppKit -framework AVFoundation -framework CoreGraphics'
-
 main () {
     echo ""
     echo "---------------------------------"

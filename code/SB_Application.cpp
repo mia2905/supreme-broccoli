@@ -1,5 +1,12 @@
 #include "SB_Application.h"
 
+
+
+void test()
+{
+    int a = 6;
+}
+
 void Render( RenderBuffer* buffer )
 {
     Pixel* p = (Pixel*)buffer->buffer;
@@ -7,7 +14,7 @@ void Render( RenderBuffer* buffer )
     {
         for( u32 col=0; col<buffer->width; ++col )
         {
-            p->red   = 255;
+            p->red   = 10;
             p->green = 255;
             p->blue  = 0;
             p->alpha = 255;

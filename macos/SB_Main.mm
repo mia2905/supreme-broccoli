@@ -12,6 +12,7 @@ static RenderBuffer RENDER_BUFFER = {0};
 
 typedef void RENDER( RenderBuffer* buffer);
 
+static NSError*     ERROR         = nil;
 static void*        APPLICATION   = nullptr;
 static RENDER*      RENDER_FUNC   = nullptr;
 
@@ -62,15 +63,24 @@ void loadApplication()
 {
     // copy the original dylib to a temp version
     NSFileManager* fileManager = [NSFileManager defaultManager];
-    [fileManager copyItemAtPath:@"supreme-broccoli.dylib" 
-                         toPath:@"supreme-broccoli-temp.dylib"
-                          error:nil];
+    
+    BOOL result = [fileManager copyItemAtPath:@"supreme-broccoli.dylib" 
+                                       toPath:@"supreme-broccoli-temp.dylib"
+                                        error:&ERROR];
+
+    if( result == NO )
+    {
+        printf( "APPLICATION ERROR - copy dylib" );
+    }                                        
 
     APPLICATION = dlopen( "supreme-broccoli-temp.dylib", RTLD_LAZY );
     if( APPLICATION != nullptr )
     {
-        printf( "APPLICATION LOADED\n" );
         RENDER_FUNC = (RENDER*)dlsym( APPLICATION, "Render" );
+    }
+    else
+    {
+        printf( "APPLICATION - ERROR" );
     }
 }
 
@@ -79,11 +89,23 @@ void unloadApplication()
     if( APPLICATION != nullptr )
     {
         dlclose( APPLICATION );
+        NSFileManager* fileManager = [NSFileManager defaultManager];
+        BOOL result = [fileManager removeItemAtPath:@"supreme-broccoli-temp.dylib" 
+                                              error:&ERROR];
+
+        if( result == NO )
+        {
+            printf( "APPLICATION ERROR - unload application" );
+        }
+        
+        APPLICATION = nullptr;
     }
 }
 
 int main()
 {
+    // init an error object 
+    ERROR = [NSError errorWithDomain:@"APPLICATION" code:200 userInfo:nil];
     loadApplication();
 
     WindowDelegate* windowDelegate = [[WindowDelegate alloc] init];
@@ -108,10 +130,22 @@ int main()
     mach_timebase_info( &info );
     f64 ticksToNanoSeconds = (f64)info.numer / (f64)info.denom;
     u64 last = mach_absolute_time();
+
+    static u32 loadCounter = 0;
     
     while( RUNNING )
     {
+        // this get signaled from the display link with 60FPS
         [windowDelegate->m_mainLoop wait];
+
+        // reload the dylib every second
+        if( ++loadCounter > 60 )
+        {
+            unloadApplication();
+            loadApplication();
+            loadCounter = 0;
+        }        
+
         RENDER_FUNC( &RENDER_BUFFER );
 
         @autoreleasepool {
