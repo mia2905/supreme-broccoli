@@ -18,3 +18,11 @@ To start the application in instant live coding mode first start the **supreme-b
 >./supreme-boroccoli
 >./run_macos.sh
 ```
+
+## executing shell scripts
+
+In order to run the mentioned scripts make sure they have the neccessary access rights. The easiest is to execute the following for each of the scripts:
+
+```
+> chmod 777 >>script name<<
+```
