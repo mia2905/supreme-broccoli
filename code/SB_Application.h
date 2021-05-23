@@ -25,6 +25,20 @@ struct RenderBuffer
     u8* buffer;
 };
 
+struct KeyPress
+{
+    u32  numberOfTransitions;
+    bool ended;
+};
+
+struct UserInput
+{
+    KeyPress arrowUp;
+    KeyPress arrowDown;
+    KeyPress arrowLeft;
+    KeyPress arrowRight;
+};
+
 extern "C" {
-   void Render( RenderBuffer* buffer );
+   void UpdateAndRender( RenderBuffer* buffer, UserInput* input );
 }

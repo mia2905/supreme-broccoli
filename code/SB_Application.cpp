@@ -7,7 +7,7 @@ void test()
     int a = 6;
 }
 
-void Render( RenderBuffer* buffer )
+void UpdateAndRender( RenderBuffer* buffer, UserInput* input )
 {
     Pixel* p = (Pixel*)buffer->buffer;
     for( u32 row=0; row<buffer->height; ++row )

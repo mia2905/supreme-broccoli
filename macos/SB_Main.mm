@@ -9,12 +9,13 @@
 
 static bool         RUNNING       = true;
 static RenderBuffer RENDER_BUFFER = {0};
+static UserInput    USER_INPUT    = {0};
 
-typedef void RENDER( RenderBuffer* buffer);
+typedef void UPDATE_AND_RENDER( RenderBuffer* buffer, UserInput* input );
 
-static NSError*     ERROR         = nil;
-static void*        APPLICATION   = nullptr;
-static RENDER*      RENDER_FUNC   = nullptr;
+static NSError*           ERROR         = nil;
+static void*              APPLICATION   = nullptr;
+static UPDATE_AND_RENDER* RENDER_FUNC   = nullptr;
 
 @interface WindowDelegate : NSObject <NSWindowDelegate>
 {
@@ -76,7 +77,7 @@ void loadApplication()
     APPLICATION = dlopen( "supreme-broccoli-temp.dylib", RTLD_LAZY );
     if( APPLICATION != nullptr )
     {
-        RENDER_FUNC = (RENDER*)dlsym( APPLICATION, "Render" );
+        RENDER_FUNC = (UPDATE_AND_RENDER*)dlsym( APPLICATION, "UpdateAndRender" );
     }
     else
     {
@@ -146,7 +147,7 @@ int main()
             loadCounter = 0;
         }        
 
-        RENDER_FUNC( &RENDER_BUFFER );
+        RENDER_FUNC( &RENDER_BUFFER, &USER_INPUT );
 
         @autoreleasepool {
             NSBitmapImageRep* bitmap = [[[NSBitmapImageRep alloc] initWithBitmapDataPlanes: &RENDER_BUFFER.buffer
