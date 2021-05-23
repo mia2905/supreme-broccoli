@@ -1,4 +1,4 @@
-#include "../SB_Application.h"
+#include "../code/SB_Application.h"
 #include <AppKit/AppKit.h>
 #include <mach/mach_time.h>
 #include <stdio.h>
@@ -11,6 +11,8 @@ static bool         RUNNING       = true;
 static RenderBuffer RENDER_BUFFER = {0};
 
 typedef void RENDER( RenderBuffer* buffer);
+
+static void*        APPLICATION   = nullptr;
 static RENDER*      RENDER_FUNC   = nullptr;
 
 @interface WindowDelegate : NSObject <NSWindowDelegate>
@@ -56,14 +58,19 @@ CVReturn update( CVDisplayLinkRef   displayLink,
 
 @end
 
-int main()
+void loadApplication()
 {
-    void* application = dlopen( "supreme-broccoli.dylib", RTLD_LAZY );
-    if( application != nullptr )
+    APPLICATION = dlopen( "supreme-broccoli.dylib", RTLD_LAZY );
+    if( APPLICATION != nullptr )
     {
         printf( "APPLICATION LOADED\n" );
-        RENDER_FUNC = (RENDER*)dlsym( application, "Render" );
+        RENDER_FUNC = (RENDER*)dlsym( APPLICATION, "Render" );
     }
+}
+
+int main()
+{
+    loadApplication();
 
     WindowDelegate* windowDelegate = [[WindowDelegate alloc] init];
     NSRect          rect           = NSMakeRect( 0, 0, WINDOW_WIDTH, WINDOW_HEIGHT );
@@ -137,9 +144,9 @@ int main()
         while( event != nil );
     }
 
-    if( application != nullptr )
+    if( APPLICATION != nullptr )
     {
-        dlclose( application );
+        dlclose( APPLICATION );
     }
     
     return 0;
