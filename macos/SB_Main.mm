@@ -60,6 +60,12 @@ CVReturn update( CVDisplayLinkRef   displayLink,
 
 void loadApplication()
 {
+    // copy the original dylib to a temp version
+    NSFileManager* fileManager = [NSFileManager defaultManager];
+    [fileManager copyItemAtPath:@"supreme-broccoli.dylib" 
+                         toPath:@"supreme-broccoli-temp.dylib"
+                          error:nil];
+
     APPLICATION = dlopen( "supreme-broccoli-temp.dylib", RTLD_LAZY );
     if( APPLICATION != nullptr )
     {

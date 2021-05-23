@@ -14,7 +14,6 @@ main () {
     echo "-> CLEAN"
 
     rm -rf supreme-broccoli.dylib
-    rm -rf supreme-broccoli
 
     clang -dynamiclib -o supreme-broccoli.dylib code/SB_Application.cpp
     
@@ -23,8 +22,6 @@ main () {
         echo "-> BUILD APP: ${GREEN}SUCCESS${NORMAL}"
         sizeInKB=$(du -k supreme-broccoli.dylib | cut -f -1)
         echo "-> FILE SIZE: " $sizeInKB kB
-        echo "-> COPY TO: supreme-broccoli-temp.dylib"
-        cp supreme-broccoli.dylib supreme-broccoli-temp.dylib
     else
         echo "-> BUILD: ${RED}FAILED${NORMAL}"
     fi
