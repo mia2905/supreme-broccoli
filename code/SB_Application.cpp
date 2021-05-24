@@ -1,5 +1,5 @@
 #include "SB_Application.h"
-
+#include <stdio.h>
 
 
 void test()
@@ -15,9 +15,9 @@ void UpdateAndRender( RenderBuffer* buffer, UserInput* input )
     {
         for( u32 col=0; col<buffer->width; ++col )
         {
-            p->red   = 0;
-            p->green = 255;
-            p->blue  = 255;
+            p->red   = 100;
+            p->green = 0;
+            p->blue  = 100;
             p->alpha = 255;
             ++p;
         }

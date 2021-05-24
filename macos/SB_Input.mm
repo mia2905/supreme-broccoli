@@ -21,8 +21,9 @@ void resetUserInput( UserInput* input )
     input->arrowRight.ended               = false;
 }
 
-void updateInput( UserInput* input, NSEvent* event )
+bool updateInput( UserInput* input, NSEvent* event )
 {
+    bool eventHandeled = false;
     if( [event type] == NSEventTypeKeyDown )
     {
         switch( event.keyCode )
@@ -30,21 +31,27 @@ void updateInput( UserInput* input, NSEvent* event )
             case ARROW_UP:    
                 input->arrowUp.numberOfTransitions++;    
                 input->arrowUp.ended = false;
+                eventHandeled = true;
                 break;
             case ARROW_DOWN:  
                 input->arrowDown.numberOfTransitions++;  
                 input->arrowDown.ended = false;
+                eventHandeled = true;
                 break;
             case ARROW_LEFT:  
                 input->arrowLeft.numberOfTransitions++;  
                 input->arrowLeft.ended = false; 
+                eventHandeled = true;
                 break;
             case ARROW_RIGHT: 
                 input->arrowRight.numberOfTransitions++; 
                 input->arrowRight.ended = false;
+                eventHandeled = true;
                 break;
             default: break;
         }
+
+        printf( "KEY DOWN\n" );
     }
 
     if( [event type] == NSEventTypeKeyUp )
@@ -53,17 +60,26 @@ void updateInput( UserInput* input, NSEvent* event )
         {
             case ARROW_UP:    
                 input->arrowUp.ended = true;
+                eventHandeled = true;
                 break;
             case ARROW_DOWN:  
                 input->arrowDown.ended = true;
+                eventHandeled = true;
                 break;
             case ARROW_LEFT:  
                 input->arrowLeft.ended = true; 
+                eventHandeled = true;
                 break;
             case ARROW_RIGHT: 
                 input->arrowRight.ended = true;
+                eventHandeled = true;
                 break;
             default: break;
         }
+
+        printf( "KEY UP\n" );
     }
+
+    fflush( stdout );
+    return eventHandeled;
 }

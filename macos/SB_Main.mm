@@ -112,6 +112,8 @@ void unloadApplication()
 
 int main()
 {
+    [NSApplication sharedApplication];
+
     // init an error object 
     ERROR = [NSError errorWithDomain:@"APPLICATION" code:200 userInfo:nil];
     loadApplication();
@@ -127,6 +129,9 @@ int main()
     [window makeKeyAndOrderFront: nil];
     [window setDelegate: windowDelegate];
 
+    [NSApp setActivationPolicy:NSApplicationActivationPolicyRegular];
+    [NSApp activateIgnoringOtherApps:YES];
+    
     u32 bytesPerPixel    = 4;
     
     RENDER_BUFFER.width  = window.contentView.bounds.size.width;
@@ -154,8 +159,7 @@ int main()
             loadCounter = 0;
         }        
 
-        NSEvent* event = nil;
-        
+        NSEvent* event = nil;        
         do 
         {
             event = [NSApp nextEventMatchingMask: NSEventMaskAny
@@ -163,9 +167,11 @@ int main()
                                           inMode: NSDefaultRunLoopMode
                                          dequeue: YES];
 
-            updateInput( &USER_INPUT, event );
-            
-            [NSApp sendEvent: event];
+            // if the event is already handled here don't pass it on
+            if( !updateInput( &USER_INPUT, event ) )    
+            {     
+                [NSApp sendEvent: event];
+            }
         }
         while( event != nil );
 
