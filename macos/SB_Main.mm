@@ -7,6 +7,12 @@
 #define WINDOW_WIDTH 1200
 #define WINDOW_HEIGHT 600
 
+// MacOS key codes
+#define ARROW_UP    126
+#define ARROW_DOWN  125
+#define ARROW_LEFT  123
+#define ARROW_RIGHT 124
+
 static bool         RUNNING       = true;
 static RenderBuffer RENDER_BUFFER = {0};
 static UserInput    USER_INPUT    = {0};
@@ -16,6 +22,11 @@ typedef void UPDATE_AND_RENDER( RenderBuffer* buffer, UserInput* input );
 static NSError*           ERROR         = nil;
 static void*              APPLICATION   = nullptr;
 static UPDATE_AND_RENDER* RENDER_FUNC   = nullptr;
+
+void UpdateAndRenderStub( RenderBuffer*, UserInput* input )
+{
+    // no op
+}
 
 @interface WindowDelegate : NSObject <NSWindowDelegate>
 {
@@ -62,43 +73,41 @@ CVReturn update( CVDisplayLinkRef   displayLink,
 
 void loadApplication()
 {
-    // copy the original dylib to a temp version
     NSFileManager* fileManager = [NSFileManager defaultManager];
-    
-    BOOL result = [fileManager copyItemAtPath:@"supreme-broccoli.dylib" 
-                                       toPath:@"supreme-broccoli-temp.dylib"
-                                        error:&ERROR];
 
-    if( result == NO )
+    BOOL exists = [fileManager fileExistsAtPath:@"supreme-broccoli.dylib"];
+    if( exists == YES ) 
     {
-        printf( "APPLICATION ERROR - copy dylib" );
-    }                                        
+        printf( "APPLICATION EXISTS\n" );
+        fflush( stdout );
+        NSFileManager* fileManager = [NSFileManager defaultManager];
 
-    APPLICATION = dlopen( "supreme-broccoli-temp.dylib", RTLD_LAZY );
-    if( APPLICATION != nullptr )
-    {
+        // delete the old temp version
+        [fileManager removeItemAtPath:@"supreme-broccoli-temp.dylib" 
+                                error:&ERROR];
+
+        // copy to new temp
+        [fileManager copyItemAtPath:@"supreme-broccoli.dylib" 
+                             toPath:@"supreme-broccoli-temp.dylib"
+                              error:&ERROR];
+
+        APPLICATION = dlopen( "supreme-broccoli-temp.dylib", RTLD_LAZY );
         RENDER_FUNC = (UPDATE_AND_RENDER*)dlsym( APPLICATION, "UpdateAndRender" );
-    }
+    }     
     else
     {
-        printf( "APPLICATION - ERROR" );
-    }
+        printf( "APPLICATION MISSING\n" );
+        fflush( stdout );
+
+        RENDER_FUNC = &UpdateAndRenderStub;
+    }                    
 }
 
 void unloadApplication()
 {
     if( APPLICATION != nullptr )
     {
-        dlclose( APPLICATION );
-        NSFileManager* fileManager = [NSFileManager defaultManager];
-        BOOL result = [fileManager removeItemAtPath:@"supreme-broccoli-temp.dylib" 
-                                              error:&ERROR];
-
-        if( result == NO )
-        {
-            printf( "APPLICATION ERROR - unload application" );
-        }
-        
+        dlclose( APPLICATION );        
         APPLICATION = nullptr;
     }
 }
@@ -170,7 +179,7 @@ int main()
             u64 endRender    = mach_absolute_time();
             f64 renderTimeNs = (f64)(endRender - last) * ticksToNanoSeconds;
 
-            printf( "frame time [ms]: %f\n", (renderTimeNs / (1000 * 1000)));
+            //printf( "frame time [ms]: %f\n", (renderTimeNs / (1000 * 1000)));
 
             last = endRender;
         }
@@ -186,9 +195,54 @@ int main()
 
             switch( [event type] )
             {
-                default: 
-                    [NSApp sendEvent: event];
+                case NSEventTypeKeyDown:
+                {
+                    switch( event.keyCode)
+                    {
+                        case ARROW_UP:    
+                            USER_INPUT.arrowUp.numberOfTransitions++;    
+                            USER_INPUT.arrowUp.ended = false;
+                            break;
+                        case ARROW_DOWN:  
+                            USER_INPUT.arrowDown.numberOfTransitions++;  
+                            USER_INPUT.arrowDown.ended = false;
+                            break;
+                        case ARROW_LEFT:  
+                            USER_INPUT.arrowLeft.numberOfTransitions++;  
+                            USER_INPUT.arrowLeft.ended = false; 
+                            break;
+                        case ARROW_RIGHT: 
+                            USER_INPUT.arrowRight.numberOfTransitions++; 
+                            USER_INPUT.arrowRight.ended = false;
+                            break;
+                        default: break;
+                    }
+                    break;
+                }
+
+                case NSEventTypeKeyUp:
+                {
+                    switch( event.keyCode)
+                    {
+                        case ARROW_UP:    
+                            USER_INPUT.arrowUp.ended = true;
+                            break;
+                        case ARROW_DOWN:  
+                            USER_INPUT.arrowDown.ended = true;
+                            break;
+                        case ARROW_LEFT:  
+                            USER_INPUT.arrowLeft.ended = true; 
+                            break;
+                        case ARROW_RIGHT: 
+                            USER_INPUT.arrowRight.ended = true;
+                            break;
+                        default: break;
+                    }
+                    break;
+                }
             }
+
+            [NSApp sendEvent: event];
         }
         while( event != nil );
     }

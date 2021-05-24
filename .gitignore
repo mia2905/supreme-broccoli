@@ -31,6 +31,9 @@
 *.out
 *.app
 
+# debug info
+*.dSYM
+
 # project binaries
 lesson_1/lesson_1
 supreme-broccoli
