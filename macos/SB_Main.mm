@@ -1,20 +1,30 @@
 #include "../code/SB_Application.h"
+
 #include <AppKit/AppKit.h>
 #include <mach/mach_time.h>
 #include <stdio.h>
 #include <dlfcn.h>
+
+// platform code
+#include "SB_Input.mm"
 
 #define WINDOW_WIDTH 1200
 #define WINDOW_HEIGHT 600
 
 static bool         RUNNING       = true;
 static RenderBuffer RENDER_BUFFER = {0};
+static UserInput    USER_INPUT    = {0};
 
-typedef void RENDER( RenderBuffer* buffer);
+typedef void UPDATE_AND_RENDER( RenderBuffer* buffer, UserInput* input );
 
-static NSError*     ERROR         = nil;
-static void*        APPLICATION   = nullptr;
-static RENDER*      RENDER_FUNC   = nullptr;
+static NSError*           ERROR         = nil;
+static void*              APPLICATION   = nullptr;
+static UPDATE_AND_RENDER* RENDER_FUNC   = nullptr;
+
+void UpdateAndRenderStub( RenderBuffer*, UserInput* input )
+{
+    // no op
+}
 
 @interface WindowDelegate : NSObject <NSWindowDelegate>
 {
@@ -61,49 +71,49 @@ CVReturn update( CVDisplayLinkRef   displayLink,
 
 void loadApplication()
 {
-    // copy the original dylib to a temp version
     NSFileManager* fileManager = [NSFileManager defaultManager];
-    
-    BOOL result = [fileManager copyItemAtPath:@"supreme-broccoli.dylib" 
-                                       toPath:@"supreme-broccoli-temp.dylib"
-                                        error:&ERROR];
 
-    if( result == NO )
+    BOOL exists = [fileManager fileExistsAtPath:@"supreme-broccoli.dylib"];
+    if( exists == YES ) 
     {
-        printf( "APPLICATION ERROR - copy dylib" );
-    }                                        
+        printf( "APPLICATION EXISTS\n" );
+        fflush( stdout );
+        NSFileManager* fileManager = [NSFileManager defaultManager];
 
-    APPLICATION = dlopen( "supreme-broccoli-temp.dylib", RTLD_LAZY );
-    if( APPLICATION != nullptr )
-    {
-        RENDER_FUNC = (RENDER*)dlsym( APPLICATION, "Render" );
-    }
+        // delete the old temp version
+        [fileManager removeItemAtPath:@"supreme-broccoli-temp.dylib" 
+                                error:&ERROR];
+
+        // copy to new temp
+        [fileManager copyItemAtPath:@"supreme-broccoli.dylib" 
+                             toPath:@"supreme-broccoli-temp.dylib"
+                              error:&ERROR];
+
+        APPLICATION = dlopen( "supreme-broccoli-temp.dylib", RTLD_LAZY );
+        RENDER_FUNC = (UPDATE_AND_RENDER*)dlsym( APPLICATION, "UpdateAndRender" );
+    }     
     else
     {
-        printf( "APPLICATION - ERROR" );
-    }
+        printf( "APPLICATION MISSING\n" );
+        fflush( stdout );
+
+        RENDER_FUNC = &UpdateAndRenderStub;
+    }                    
 }
 
 void unloadApplication()
 {
     if( APPLICATION != nullptr )
     {
-        dlclose( APPLICATION );
-        NSFileManager* fileManager = [NSFileManager defaultManager];
-        BOOL result = [fileManager removeItemAtPath:@"supreme-broccoli-temp.dylib" 
-                                              error:&ERROR];
-
-        if( result == NO )
-        {
-            printf( "APPLICATION ERROR - unload application" );
-        }
-        
+        dlclose( APPLICATION );        
         APPLICATION = nullptr;
     }
 }
 
 int main()
 {
+    [NSApplication sharedApplication];
+
     // init an error object 
     ERROR = [NSError errorWithDomain:@"APPLICATION" code:200 userInfo:nil];
     loadApplication();
@@ -119,6 +129,9 @@ int main()
     [window makeKeyAndOrderFront: nil];
     [window setDelegate: windowDelegate];
 
+    [NSApp setActivationPolicy:NSApplicationActivationPolicyRegular];
+    [NSApp activateIgnoringOtherApps:YES];
+    
     u32 bytesPerPixel    = 4;
     
     RENDER_BUFFER.width  = window.contentView.bounds.size.width;
@@ -146,7 +159,23 @@ int main()
             loadCounter = 0;
         }        
 
-        RENDER_FUNC( &RENDER_BUFFER );
+        NSEvent* event = nil;        
+        do 
+        {
+            event = [NSApp nextEventMatchingMask: NSEventMaskAny
+                                       untilDate: nil
+                                          inMode: NSDefaultRunLoopMode
+                                         dequeue: YES];
+
+            // if the event is already handled here don't pass it on
+            if( !updateInput( &USER_INPUT, event ) )    
+            {     
+                [NSApp sendEvent: event];
+            }
+        }
+        while( event != nil );
+
+        RENDER_FUNC( &RENDER_BUFFER, &USER_INPUT );
 
         @autoreleasepool {
             NSBitmapImageRep* bitmap = [[[NSBitmapImageRep alloc] initWithBitmapDataPlanes: &RENDER_BUFFER.buffer
@@ -169,27 +198,12 @@ int main()
             u64 endRender    = mach_absolute_time();
             f64 renderTimeNs = (f64)(endRender - last) * ticksToNanoSeconds;
 
-            printf( "frame time [ms]: %f\n", (renderTimeNs / (1000 * 1000)));
+            //printf( "frame time [ms]: %f\n", (renderTimeNs / (1000 * 1000)));
 
             last = endRender;
         }
-        
-        NSEvent* event = nil;
-        
-        do 
-        {
-            event = [NSApp nextEventMatchingMask: NSEventMaskAny
-                                       untilDate: nil
-                                          inMode: NSDefaultRunLoopMode
-                                         dequeue: YES];
 
-            switch( [event type] )
-            {
-                default: 
-                    [NSApp sendEvent: event];
-            }
-        }
-        while( event != nil );
+        resetUserInput( &USER_INPUT );
     }
 
     unloadApplication();

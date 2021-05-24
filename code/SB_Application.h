@@ -1,3 +1,6 @@
+#ifndef SB_APPLICATION_H
+#define SB_APPLICATION_H
+
 typedef unsigned char       u8;
 typedef signed   char       s8;
 typedef unsigned short     u16;
@@ -25,6 +28,22 @@ struct RenderBuffer
     u8* buffer;
 };
 
+struct KeyPress
+{
+    u32  numberOfTransitions;
+    bool ended;
+};
+
+struct UserInput
+{
+    KeyPress arrowUp;
+    KeyPress arrowDown;
+    KeyPress arrowLeft;
+    KeyPress arrowRight;
+};
+
 extern "C" {
-   void Render( RenderBuffer* buffer );
+   void UpdateAndRender( RenderBuffer* buffer, UserInput* input );
 }
+
+#endif//SB_APPLICATION_H
