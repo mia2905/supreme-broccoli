@@ -1,17 +1,15 @@
 #include "../code/SB_Application.h"
+
 #include <AppKit/AppKit.h>
 #include <mach/mach_time.h>
 #include <stdio.h>
 #include <dlfcn.h>
 
+// platform code
+#include "SB_Input.mm"
+
 #define WINDOW_WIDTH 1200
 #define WINDOW_HEIGHT 600
-
-// MacOS key codes
-#define ARROW_UP    126
-#define ARROW_DOWN  125
-#define ARROW_LEFT  123
-#define ARROW_RIGHT 124
 
 static bool         RUNNING       = true;
 static RenderBuffer RENDER_BUFFER = {0};
@@ -156,6 +154,21 @@ int main()
             loadCounter = 0;
         }        
 
+        NSEvent* event = nil;
+        
+        do 
+        {
+            event = [NSApp nextEventMatchingMask: NSEventMaskAny
+                                       untilDate: nil
+                                          inMode: NSDefaultRunLoopMode
+                                         dequeue: YES];
+
+            updateInput( &USER_INPUT, event );
+            
+            [NSApp sendEvent: event];
+        }
+        while( event != nil );
+
         RENDER_FUNC( &RENDER_BUFFER, &USER_INPUT );
 
         @autoreleasepool {
@@ -183,68 +196,8 @@ int main()
 
             last = endRender;
         }
-        
-        NSEvent* event = nil;
-        
-        do 
-        {
-            event = [NSApp nextEventMatchingMask: NSEventMaskAny
-                                       untilDate: nil
-                                          inMode: NSDefaultRunLoopMode
-                                         dequeue: YES];
 
-            switch( [event type] )
-            {
-                case NSEventTypeKeyDown:
-                {
-                    switch( event.keyCode)
-                    {
-                        case ARROW_UP:    
-                            USER_INPUT.arrowUp.numberOfTransitions++;    
-                            USER_INPUT.arrowUp.ended = false;
-                            break;
-                        case ARROW_DOWN:  
-                            USER_INPUT.arrowDown.numberOfTransitions++;  
-                            USER_INPUT.arrowDown.ended = false;
-                            break;
-                        case ARROW_LEFT:  
-                            USER_INPUT.arrowLeft.numberOfTransitions++;  
-                            USER_INPUT.arrowLeft.ended = false; 
-                            break;
-                        case ARROW_RIGHT: 
-                            USER_INPUT.arrowRight.numberOfTransitions++; 
-                            USER_INPUT.arrowRight.ended = false;
-                            break;
-                        default: break;
-                    }
-                    break;
-                }
-
-                case NSEventTypeKeyUp:
-                {
-                    switch( event.keyCode)
-                    {
-                        case ARROW_UP:    
-                            USER_INPUT.arrowUp.ended = true;
-                            break;
-                        case ARROW_DOWN:  
-                            USER_INPUT.arrowDown.ended = true;
-                            break;
-                        case ARROW_LEFT:  
-                            USER_INPUT.arrowLeft.ended = true; 
-                            break;
-                        case ARROW_RIGHT: 
-                            USER_INPUT.arrowRight.ended = true;
-                            break;
-                        default: break;
-                    }
-                    break;
-                }
-            }
-
-            [NSApp sendEvent: event];
-        }
-        while( event != nil );
+        resetUserInput( &USER_INPUT );
     }
 
     unloadApplication();

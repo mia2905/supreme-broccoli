@@ -1,3 +1,6 @@
+#ifndef SB_APPLICATION_H
+#define SB_APPLICATION_H
+
 typedef unsigned char       u8;
 typedef signed   char       s8;
 typedef unsigned short     u16;
@@ -42,3 +45,5 @@ struct UserInput
 extern "C" {
    void UpdateAndRender( RenderBuffer* buffer, UserInput* input );
 }
+
+#endif//SB_APPLICATION_H
