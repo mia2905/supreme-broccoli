@@ -11,17 +11,18 @@
 #define WINDOW_WIDTH 1200
 #define WINDOW_HEIGHT 600
 
-static bool         RUNNING       = true;
-static RenderBuffer RENDER_BUFFER = {0};
-static UserInput    USER_INPUT    = {0};
+static bool              RUNNING       = true;
+static ApplicationMemory MEMORY        = {0};
+static RenderBuffer      RENDER_BUFFER = {0};
+static UserInput         USER_INPUT    = {0};
 
-typedef void UPDATE_AND_RENDER( RenderBuffer* buffer, UserInput* input );
+typedef void UPDATE_AND_RENDER( ApplicationMemory* memory, RenderBuffer* buffer, UserInput* input );
 
 static NSError*           ERROR         = nil;
 static void*              APPLICATION   = nullptr;
 static UPDATE_AND_RENDER* RENDER_FUNC   = nullptr;
 
-void UpdateAndRenderStub( RenderBuffer*, UserInput* input )
+void UpdateAndRenderStub( ApplicationMemory* memory, RenderBuffer*, UserInput* input )
 {
     // no op
 }
@@ -132,8 +133,7 @@ int main()
     [NSApp setActivationPolicy:NSApplicationActivationPolicyRegular];
     [NSApp activateIgnoringOtherApps:YES];
     
-    u32 bytesPerPixel    = 4;
-    
+    u32 bytesPerPixel    = 4;    
     RENDER_BUFFER.width  = window.contentView.bounds.size.width;
     RENDER_BUFFER.height = window.contentView.bounds.size.height;
     RENDER_BUFFER.pitch  = RENDER_BUFFER.width * bytesPerPixel;
@@ -145,6 +145,9 @@ int main()
     u64 last = mach_absolute_time();
 
     static u32 loadCounter = 0;
+
+    MEMORY.permanentMemorySize = MegaBytes(64);
+    MEMORY.permanentMemory = malloc( MEMORY.permanentMemorySize );
     
     while( RUNNING )
     {
@@ -175,7 +178,7 @@ int main()
         }
         while( event != nil );
 
-        RENDER_FUNC( &RENDER_BUFFER, &USER_INPUT );
+        RENDER_FUNC( &MEMORY, &RENDER_BUFFER, &USER_INPUT );
 
         @autoreleasepool {
             NSBitmapImageRep* bitmap = [[[NSBitmapImageRep alloc] initWithBitmapDataPlanes: &RENDER_BUFFER.buffer

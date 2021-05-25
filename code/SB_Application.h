@@ -1,6 +1,10 @@
 #ifndef SB_APPLICATION_H
 #define SB_APPLICATION_H
 
+#define KiloBytes(x) (x * 1024)
+#define MegaBytes(x) (KiloBytes(x) * 1024)
+#define GigaBytes(x) (MegaBytes(x) * 1024)
+
 typedef unsigned char       u8;
 typedef signed   char       s8;
 typedef unsigned short     u16;
@@ -42,8 +46,20 @@ struct UserInput
     KeyPress arrowRight;
 };
 
+struct ApplicationState
+{
+    u8 red;
+};
+
+struct ApplicationMemory
+{
+    bool  isInitialized;
+    u32   permanentMemorySize; // in bytes
+    void* permanentMemory;
+};
+
 extern "C" {
-   void UpdateAndRender( RenderBuffer* buffer, UserInput* input );
+   void UpdateAndRender( ApplicationMemory* memory, RenderBuffer* buffer, UserInput* input );
 }
 
 #endif//SB_APPLICATION_H
