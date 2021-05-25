@@ -1,6 +1,8 @@
 #ifndef SB_APPLICATION_H
 #define SB_APPLICATION_H
 
+#define Assert(expression) if(!expression){ *(int *) = 0; } // write to a null address to crash the program deliberately
+
 #define KiloBytes(x) (x * 1024)
 #define MegaBytes(x) (KiloBytes(x) * 1024)
 #define GigaBytes(x) (MegaBytes(x) * 1024)
@@ -15,14 +17,6 @@ typedef unsigned long long u64;
 typedef signed   long long s64;
 typedef float              f32;
 typedef double             f64;
-
-struct Pixel
-{
-    u8 red;
-    u8 green;
-    u8 blue;
-    u8 alpha;
-};
 
 struct RenderBuffer
 {
@@ -44,11 +38,6 @@ struct UserInput
     KeyPress arrowDown;
     KeyPress arrowLeft;
     KeyPress arrowRight;
-};
-
-struct ApplicationState
-{
-    u8 red;
 };
 
 struct ApplicationMemory
