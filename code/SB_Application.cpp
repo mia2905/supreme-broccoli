@@ -11,30 +11,35 @@ void drawRectangle( RenderBuffer* buffer, f32 minX, f32 minY, f32 maxX, f32 maxY
     u32 screenWidth  = buffer->width;
     u32 screenHeight = buffer->height;
 
-    if( minX < 0 ) minX = 0;
-    if( maxX < 0 ) maxX = 0;
-    if( minX >= screenWidth ) minX = screenWidth;
-    if( maxX >= screenWidth ) maxX = screenWidth;
+    u32 xmin = RoundToU32( minX );
+    u32 ymin = RoundToU32( minY );
+    u32 xmax = RoundToU32( maxX );
+    u32 ymax = RoundToU32( maxY );
 
-    if( minY < 0 ) minY = 0;
-    if( maxY < 0 ) maxY = 0;
-    if( minY >= screenHeight ) minY = screenHeight;
-    if( maxY >= screenHeight ) maxY = screenHeight;
+    if( xmin < 0 ) xmin = 0;
+    if( xmax < 0 ) xmax = 0;
+    if( xmin >= screenWidth ) return; // offscreen
+    if( xmax >= screenWidth ) xmax = screenWidth;
 
-    u32 width  = maxX - minX;
-    u32 height = maxY - minY;
+    if( ymin < 0 ) ymin = 0;
+    if( ymax < 0 ) ymax = 0;
+    if( ymin >= screenHeight ) return; // offscreen
+    if( ymax >= screenHeight ) maxY = screenHeight;
+
+    u32 width  = xmax - xmin;
+    u32 height = ymax - ymin;
 
     // the start of the rectangle is the pixel at minX / minY
-    for( u32 row=minY; row<=maxY; ++row )
+    for( u32 row=ymin; row<=ymax; ++row )
     {
-        u8* base = buffer->buffer + (u32)((row * buffer->width + minX) * sizeof(Pixel));
+        u8* base = buffer->buffer + (u32)((row * buffer->width + xmin) * sizeof(Pixel));
         Pixel* p = (Pixel*)base;
-        for( u32 col=minX; col<maxX; ++col )
+        for( u32 col=xmin; col<xmax; ++col )
         {
-            p->red   = (u8)RoundToU32(c.red * 255);
-            p->green = (u8)RoundToU32(c.green * 255);
-            p->blue  = (u8)RoundToU32(c.blue * 255);
-            p->alpha = (u8)RoundToU32(c.alpha * 255);
+            p->red   = (u8)(c.red * 255);
+            p->green = (u8)(c.green * 255);
+            p->blue  = (u8)(c.blue * 255);
+            p->alpha = (u8)(c.alpha * 255);
             ++p;
         }
     }
