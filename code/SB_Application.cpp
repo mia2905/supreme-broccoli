@@ -1,21 +1,20 @@
 #include "SB_Application.h"
-#include <stdio.h>
+#include "SB_ApplicationTypes.h"
 
-
-void test()
+void UpdateAndRender( ApplicationMemory* memory, RenderBuffer* buffer, UserInput* input )
 {
-    int a = 6;
-}
+    if( !memory->isInitialized )
+    {
+        memory->isInitialized = true;
+    }
 
-void UpdateAndRender( RenderBuffer* buffer, UserInput* input )
-{
     Pixel* p = (Pixel*)buffer->buffer;
 
     for( u32 row=0; row<buffer->height; ++row )
     {
         for( u32 col=0; col<buffer->width; ++col )
         {
-            p->red   = 100;
+            p->red   = 0;
             p->green = 0;
             p->blue  = 100;
             p->alpha = 255;

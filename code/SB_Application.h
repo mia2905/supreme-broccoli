@@ -1,6 +1,12 @@
 #ifndef SB_APPLICATION_H
 #define SB_APPLICATION_H
 
+#define Assert(expression) if(!expression){ *(int *) = 0; } // write to a null address to crash the program deliberately
+
+#define KiloBytes(x) (x * 1024)
+#define MegaBytes(x) (KiloBytes(x) * 1024)
+#define GigaBytes(x) (MegaBytes(x) * 1024)
+
 typedef unsigned char       u8;
 typedef signed   char       s8;
 typedef unsigned short     u16;
@@ -11,14 +17,6 @@ typedef unsigned long long u64;
 typedef signed   long long s64;
 typedef float              f32;
 typedef double             f64;
-
-struct Pixel
-{
-    u8 red;
-    u8 green;
-    u8 blue;
-    u8 alpha;
-};
 
 struct RenderBuffer
 {
@@ -42,8 +40,19 @@ struct UserInput
     KeyPress arrowRight;
 };
 
+struct ApplicationMemory
+{
+    bool  isInitialized;
+
+    u64   permanentMemorySize; // in bytes
+    void* permanentMemory;
+
+    u64   transientMemorySize; // in bytes
+    void* transientMemory;
+};
+
 extern "C" {
-   void UpdateAndRender( RenderBuffer* buffer, UserInput* input );
+   void UpdateAndRender( ApplicationMemory* memory, RenderBuffer* buffer, UserInput* input );
 }
 
 #endif//SB_APPLICATION_H
