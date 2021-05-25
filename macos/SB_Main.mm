@@ -137,7 +137,7 @@ int main()
     RENDER_BUFFER.width  = window.contentView.bounds.size.width;
     RENDER_BUFFER.height = window.contentView.bounds.size.height;
     RENDER_BUFFER.pitch  = RENDER_BUFFER.width * bytesPerPixel;
-    RENDER_BUFFER.buffer = (u8*)malloc( RENDER_BUFFER.pitch * RENDER_BUFFER.height );
+    RENDER_BUFFER.buffer = (u8*)calloc( 1, RENDER_BUFFER.pitch * RENDER_BUFFER.height );
     
     mach_timebase_info_data_t info;
     mach_timebase_info( &info );
@@ -147,7 +147,7 @@ int main()
     static u32 loadCounter = 0;
 
     MEMORY.permanentMemorySize = MegaBytes(64);
-    MEMORY.permanentMemory = malloc( MEMORY.permanentMemorySize );
+    MEMORY.permanentMemory = calloc( 1, MEMORY.permanentMemorySize );
     
     while( RUNNING )
     {
