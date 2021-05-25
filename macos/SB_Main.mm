@@ -11,7 +11,7 @@
 #define WINDOW_WIDTH 1200
 #define WINDOW_HEIGHT 600
 
-static bool              RUNNING       = true;
+static bool              RUNNING       = false;
 static ApplicationMemory MEMORY        = {0};
 static RenderBuffer      RENDER_BUFFER = {0};
 static UserInput         USER_INPUT    = {0};
@@ -148,6 +148,15 @@ int main()
 
     MEMORY.permanentMemorySize = MegaBytes(64);
     MEMORY.permanentMemory = calloc( 1, MEMORY.permanentMemorySize );
+
+    MEMORY.transientMemorySize = GigaBytes((u64)4);
+    MEMORY.transientMemory = calloc( 1, MEMORY.transientMemorySize );
+
+    if( MEMORY.permanentMemory != nullptr && 
+        MEMORY.transientMemory != nullptr )
+    {
+        RUNNING = true;
+    }
     
     while( RUNNING )
     {

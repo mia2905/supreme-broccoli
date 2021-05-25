@@ -6,7 +6,6 @@ void UpdateAndRender( ApplicationMemory* memory, RenderBuffer* buffer, UserInput
     ApplicationState* state = (ApplicationState*)memory->permanentMemory;
     if( !memory->isInitialized )
     {
-        state->red = 0;
         memory->isInitialized = true;
     }
 

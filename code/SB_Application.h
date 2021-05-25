@@ -54,8 +54,12 @@ struct ApplicationState
 struct ApplicationMemory
 {
     bool  isInitialized;
-    u32   permanentMemorySize; // in bytes
+
+    u64   permanentMemorySize; // in bytes
     void* permanentMemory;
+
+    u64   transientMemorySize; // in bytes
+    void* transientMemory;
 };
 
 extern "C" {
