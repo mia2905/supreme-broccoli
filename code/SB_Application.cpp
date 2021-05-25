@@ -35,9 +35,9 @@ void drawRectangle( RenderBuffer* buffer, f32 minX, f32 minY, f32 maxX, f32 maxY
         Pixel* p = (Pixel*)base;
         for( u32 col=xmin; col<xmax; ++col )
         {
-            p->red   = (u8)(c.red * 255);
+            p->red   = (u8)(c.red   * 255);
             p->green = (u8)(c.green * 255);
-            p->blue  = (u8)(c.blue * 255);
+            p->blue  = (u8)(c.blue  * 255);
             p->alpha = (u8)(c.alpha * 255);
             ++p;
         }
@@ -55,10 +55,11 @@ void drawPlayer( RenderBuffer* buffer, Player* player )
 
 void updatePlayer( UserInput* input, Player* player )
 {
-    if( input->arrowUp.numberOfTransitions > 0 )    player->y -= 1.0f;
-    if( input->arrowDown.numberOfTransitions > 0 )  player->y += 1.0f;
-    if( input->arrowRight.numberOfTransitions > 0 ) player->x += 1.0f;
-    if( input->arrowLeft.numberOfTransitions > 0 )  player->x -= 1.0f;
+    f32 speed = 2.0f;
+    if( input->arrowUp.numberOfTransitions > 0 )    player->y -= speed;
+    if( input->arrowDown.numberOfTransitions > 0 )  player->y += speed;
+    if( input->arrowRight.numberOfTransitions > 0 ) player->x += speed;
+    if( input->arrowLeft.numberOfTransitions > 0 )  player->x -= speed;
 }
 
 void UpdateAndRender( ApplicationMemory* memory, RenderBuffer* buffer, UserInput* input )
