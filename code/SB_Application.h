@@ -29,7 +29,7 @@ struct RenderBuffer
 struct KeyPress
 {
     u32  numberOfTransitions;
-    bool ended;
+    bool endedDown;
 };
 
 struct UserInput

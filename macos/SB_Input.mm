@@ -6,21 +6,6 @@
 #define ARROW_LEFT  123
 #define ARROW_RIGHT 124
 
-void resetUserInput( UserInput* input )
-{
-    input->arrowUp.numberOfTransitions = 0;
-    input->arrowUp.ended               = false;
-
-    input->arrowDown.numberOfTransitions = 0;
-    input->arrowDown.ended               = false;
-
-    input->arrowLeft.numberOfTransitions = 0;
-    input->arrowLeft.ended               = false;
-
-    input->arrowRight.numberOfTransitions = 0;
-    input->arrowRight.ended               = false;
-}
-
 bool updateInput( UserInput* input, NSEvent* event )
 {
     bool eventHandeled = false;
@@ -30,22 +15,22 @@ bool updateInput( UserInput* input, NSEvent* event )
         {
             case ARROW_UP:    
                 input->arrowUp.numberOfTransitions++;    
-                input->arrowUp.ended = false;
+                input->arrowUp.endedDown = true;
                 eventHandeled = true;
                 break;
             case ARROW_DOWN:  
                 input->arrowDown.numberOfTransitions++;  
-                input->arrowDown.ended = false;
+                input->arrowDown.endedDown = true;
                 eventHandeled = true;
                 break;
             case ARROW_LEFT:  
                 input->arrowLeft.numberOfTransitions++;  
-                input->arrowLeft.ended = false; 
+                input->arrowLeft.endedDown = true;
                 eventHandeled = true;
                 break;
             case ARROW_RIGHT: 
                 input->arrowRight.numberOfTransitions++; 
-                input->arrowRight.ended = false;
+                input->arrowRight.endedDown = true;
                 eventHandeled = true;
                 break;
             default: break;
@@ -59,19 +44,19 @@ bool updateInput( UserInput* input, NSEvent* event )
         switch( event.keyCode )
         {
             case ARROW_UP:    
-                input->arrowUp.ended = true;
+                input->arrowUp.endedDown = false;
                 eventHandeled = true;
                 break;
             case ARROW_DOWN:  
-                input->arrowDown.ended = true;
+                input->arrowDown.endedDown = false;
                 eventHandeled = true;
                 break;
             case ARROW_LEFT:  
-                input->arrowLeft.ended = true; 
+                input->arrowLeft.endedDown = false; 
                 eventHandeled = true;
                 break;
             case ARROW_RIGHT: 
-                input->arrowRight.ended = true;
+                input->arrowRight.endedDown = false;
                 eventHandeled = true;
                 break;
             default: break;
