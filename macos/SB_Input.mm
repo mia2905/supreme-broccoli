@@ -13,24 +13,20 @@ bool updateInput( UserInput* input, NSEvent* event )
     {
         switch( event.keyCode )
         {
-            case ARROW_UP:    
-                input->arrowUp.numberOfTransitions++;    
-                input->arrowUp.endedDown = true;
+            case ARROW_UP:     
+                input->arrowUp.isDown = true;
                 eventHandeled = true;
                 break;
             case ARROW_DOWN:  
-                input->arrowDown.numberOfTransitions++;  
-                input->arrowDown.endedDown = true;
+                input->arrowDown.isDown = true;
                 eventHandeled = true;
                 break;
             case ARROW_LEFT:  
-                input->arrowLeft.numberOfTransitions++;  
-                input->arrowLeft.endedDown = true;
+                input->arrowLeft.isDown = true;
                 eventHandeled = true;
                 break;
             case ARROW_RIGHT: 
-                input->arrowRight.numberOfTransitions++; 
-                input->arrowRight.endedDown = true;
+                input->arrowRight.isDown = true;
                 eventHandeled = true;
                 break;
             default: break;
@@ -44,19 +40,19 @@ bool updateInput( UserInput* input, NSEvent* event )
         switch( event.keyCode )
         {
             case ARROW_UP:    
-                input->arrowUp.endedDown = false;
+                input->arrowUp.isDown = false;
                 eventHandeled = true;
                 break;
             case ARROW_DOWN:  
-                input->arrowDown.endedDown = false;
+                input->arrowDown.isDown = false;
                 eventHandeled = true;
                 break;
             case ARROW_LEFT:  
-                input->arrowLeft.endedDown = false; 
+                input->arrowLeft.isDown = false; 
                 eventHandeled = true;
                 break;
             case ARROW_RIGHT: 
-                input->arrowRight.endedDown = false;
+                input->arrowRight.isDown = false;
                 eventHandeled = true;
                 break;
             default: break;
