@@ -164,7 +164,7 @@ int main()
         [windowDelegate->m_mainLoop wait];
 
         // reload the dylib every second
-        if( ++loadCounter > 60*4 )
+        if( ++loadCounter > 60*2 )
         {
             unloadApplication();
             loadApplication();
