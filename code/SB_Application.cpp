@@ -3,9 +3,9 @@
 
 #include <stdio.h>
 
-s32 RoundToU32( f32 value )
+s32 RoundToS32( f32 value )
 {
-    return (u32)(value + 0.5f);
+    return (s32)(value + 0.5f);
 }
 
 void drawRectangle( RenderBuffer* buffer, f32 minX, f32 minY, f32 maxX, f32 maxY, Color c )
@@ -13,10 +13,10 @@ void drawRectangle( RenderBuffer* buffer, f32 minX, f32 minY, f32 maxX, f32 maxY
     u32 screenWidth  = buffer->width;
     u32 screenHeight = buffer->height;
 
-    s32 xmin = RoundToU32( minX );
-    s32 ymin = RoundToU32( minY );
-    s32 xmax = RoundToU32( maxX );
-    s32 ymax = RoundToU32( maxY );
+    s32 xmin = RoundToS32( minX );
+    s32 ymin = RoundToS32( minY );
+    s32 xmax = RoundToS32( maxX );
+    s32 ymax = RoundToS32( maxY );
 
     if( xmin < 0 ) xmin = 0;
     if( xmax < 0 ) xmax = 0;
@@ -56,10 +56,10 @@ void drawPlayer( RenderBuffer* buffer, Player* player )
 void updatePlayer( UserInput* input, Player* player )
 {
     f32 speed = 2.0f;
-    if( input->arrowUp.numberOfTransitions > 0 )    player->y -= speed;
-    if( input->arrowDown.numberOfTransitions > 0 )  player->y += speed;
-    if( input->arrowRight.numberOfTransitions > 0 ) player->x += speed;
-    if( input->arrowLeft.numberOfTransitions > 0 )  player->x -= speed;
+    if( input->arrowUp.isDown )    player->y -= speed;
+    if( input->arrowDown.isDown )  player->y += speed;
+    if( input->arrowRight.isDown ) player->x += speed;
+    if( input->arrowLeft.isDown )  player->x -= speed;
 }
 
 void UpdateAndRender( ApplicationMemory* memory, RenderBuffer* buffer, UserInput* input )
@@ -73,9 +73,11 @@ void UpdateAndRender( ApplicationMemory* memory, RenderBuffer* buffer, UserInput
         player->y      = 30;
         player->width  = 40;
         player->height = 40;
-        player->color  = { 1.0, 0.0, 0.0, 1.0 };
+        player->color  = { 1.0, 1.0, 0.0, 1.0 };
         memory->isInitialized = true;
     }
+
+    player->color = { 0.0, 0.0, 1.0, 1.0 };
 
     Color background = { 0.0f, 0.8f, 0.5f, 1.0f };
     drawRectangle( buffer, 0, 0, buffer->width, buffer->height, background );

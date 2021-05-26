@@ -164,7 +164,7 @@ int main()
         [windowDelegate->m_mainLoop wait];
 
         // reload the dylib every second
-        if( ++loadCounter > 60 )
+        if( ++loadCounter > 60*4 )
         {
             unloadApplication();
             loadApplication();
@@ -210,12 +210,10 @@ int main()
             u64 endRender    = mach_absolute_time();
             f64 renderTimeNs = (f64)(endRender - last) * ticksToNanoSeconds;
 
-            //printf( "frame time [ms]: %f\n", (renderTimeNs / (1000 * 1000)));
+            printf( "frame time [ms]: %f\n", (renderTimeNs / (1000 * 1000)));
 
             last = endRender;
         }
-
-        resetUserInput( &USER_INPUT );
     }
 
     unloadApplication();
