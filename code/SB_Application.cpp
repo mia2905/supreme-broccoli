@@ -53,8 +53,54 @@ void drawPlayer( RenderBuffer* buffer, Player* player )
     drawRectangle( buffer, minx, miny, maxx, maxy, player->color );
 }
 
+void drawMap( RenderBuffer* buffer )
+{
+    Color tilecolor = { 0.4f, 0.4f, 0.4f, 1.0f };
+    u32 tileWidth   = 40;
+    u32 tileHeight  = 40;
+    u32 tilesPerRow = 27;
+    u32 rows        = 9;
+    u32 tilemap[9][27] = 
+    {
+        { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 },
+        { 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 },
+        { 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 },
+        { 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 },
+        { 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 },
+        { 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 },
+        { 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 },
+        { 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 },
+        { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 }
+    };
+
+    f32 minX = 0.0f;
+    f32 maxX = 0.0f;
+    f32 minY = 0.0f;
+    f32 maxY = 0.0f;
+
+    for( u32 row=0; row<rows; ++row )
+    {
+        for( u32 col=0; col<tilesPerRow; ++col )
+        {
+            u32 tile = tilemap[row][col];
+            if( tile == 1 )
+            {
+                minX = col * tileWidth;
+                minY = row * tileHeight;
+                maxX = minX + tileWidth;
+                maxY = minY + tileHeight;
+
+                drawRectangle( buffer, minX, minY, maxX, maxY, tilecolor );
+            }
+        }
+    }
+}
+
 void updatePlayer( UserInput* input, Player* player )
 {
+    player->height = 40.0f;
+    player->width  = 30.0f;
+    player->color  = { 0.8f, 0.8f, 0.5f, 1.0f }; 
     f32 speed = 2.0f;
     if( input->arrowUp.isDown )    player->y -= speed;
     if( input->arrowDown.isDown )  player->y += speed;
@@ -71,16 +117,16 @@ void UpdateAndRender( ApplicationMemory* memory, RenderBuffer* buffer, UserInput
     {
         player->x      = 30;
         player->y      = 30;
-        player->width  = 40;
-        player->height = 40;
-        player->color  = { 1.0, 1.0, 0.0, 1.0 };
+
         memory->isInitialized = true;
     }
 
     player->color = { 0.0, 0.0, 1.0, 1.0 };
 
-    Color background = { 0.0f, 0.8f, 0.5f, 1.0f };
+    Color background = { 0.9f, 0.2f, 0.8f, 1.0f };
     drawRectangle( buffer, 0, 0, buffer->width, buffer->height, background );
+
+    drawMap( buffer );
 
     updatePlayer( input, player );
     drawPlayer( buffer, player );
