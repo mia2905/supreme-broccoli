@@ -138,10 +138,10 @@ void updatePlayer( UserInput* input, Player* player, f32 dt )
     if( input->arrowLeft.isDown )  playerX -= movement;
    
     if( !checkCollision( playerX, playerY ) && 
-        !checkCollision( playerX + player->width/2, playerY ) &&
-        !checkCollision( playerX - player->width/2, playerY ) &&
-        !checkCollision( playerX, playerY + player->height/2 ) &&
-        !checkCollision( playerX, playerY - player->height/2 ) )
+        !checkCollision( playerX + 0.5f*player->width, playerY + 0.5*player->height ) &&
+        !checkCollision( playerX - 0.5f*player->width, playerY + 0.5*player->height ) &&
+        !checkCollision( playerX + 0.5f*player->width, playerY - 0.5*player->height ) &&
+        !checkCollision( playerX - 0.5f*player->width, playerY - 0.5*player->height ) )
     {
         player->x = playerX;
         player->y = playerY;
