@@ -8,6 +8,8 @@
 #define TILEWIDTH  40
 #define TILEHEIGHT 40
 
+static TileMap tileMap = {0};
+
 static u32 tilemap[TILEMAP_Y][TILEMAP_X] = 
     {
         { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 },
@@ -115,7 +117,7 @@ bool checkCollision( f32 playerX, f32 playerY )
     if( (playerTileX >= 0) && (playerTileX < TILEMAP_X) &&
         (playerTileY >= 0) && (playerTileY < TILEMAP_Y) )
     {
-       collision =  ( tilemap[playerTileY][playerTileX] == 0 ); 
+       collision = !( tilemap[playerTileY][playerTileX] == 0 ); 
     }
 
     return collision;
@@ -123,7 +125,7 @@ bool checkCollision( f32 playerX, f32 playerY )
 
 void updatePlayer( UserInput* input, Player* player, f32 dt )
 {
-    player->height = 40.0f;
+    player->height = 30.0f;
     player->width  = 30.0f;
      
     f32 playerX  = player->x;
@@ -134,10 +136,12 @@ void updatePlayer( UserInput* input, Player* player, f32 dt )
     if( input->arrowDown.isDown )  playerY += movement;
     if( input->arrowRight.isDown ) playerX += movement;
     if( input->arrowLeft.isDown )  playerX -= movement;
-
-    bool isValid = checkCollision( playerX, playerY );
-
-    if( isValid )
+   
+    if( !checkCollision( playerX, playerY ) && 
+        !checkCollision( playerX + player->width/2, playerY ) &&
+        !checkCollision( playerX - player->width/2, playerY ) &&
+        !checkCollision( playerX, playerY + player->height/2 ) &&
+        !checkCollision( playerX, playerY - player->height/2 ) )
     {
         player->x = playerX;
         player->y = playerY;
@@ -160,8 +164,8 @@ void UpdateAndRender( ApplicationMemory* memory,
         memory->isInitialized = true;
     }
 
-    player->speed = 100;
-    player->color = { 0.0, 0.0, 1.0, 1.0 };
+    player->speed = 200;
+    player->color = { 0.8, 0.8, 1.0, 1.0 };
 
     Color background = { 0.9f, 0.2f, 0.8f, 1.0f };
     drawRectangle( buffer, 0, 0, buffer->width, buffer->height, background );
