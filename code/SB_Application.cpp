@@ -8,6 +8,8 @@
 #define TILEWIDTH  40
 #define TILEHEIGHT 40
 
+static TileMap tileMap = {0};
+
 static u32 tilemap[TILEMAP_Y][TILEMAP_X] = 
     {
         { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 },
@@ -115,37 +117,41 @@ bool checkCollision( f32 playerX, f32 playerY )
     if( (playerTileX >= 0) && (playerTileX < TILEMAP_X) &&
         (playerTileY >= 0) && (playerTileY < TILEMAP_Y) )
     {
-       collision =  ( tilemap[playerTileY][playerTileX] == 0 ); 
+       collision = !( tilemap[playerTileY][playerTileX] == 0 ); 
     }
 
     return collision;
 }
 
-void updatePlayer( UserInput* input, Player* player )
+void updatePlayer( UserInput* input, Player* player, f32 dt )
 {
-    player->height = 40.0f;
+    player->height = 30.0f;
     player->width  = 30.0f;
-    player->color  = { 0.8f, 0.8f, 0.5f, 1.0f }; 
-    f32 speed = 2.0f;
+     
+    f32 playerX  = player->x;
+    f32 playerY  = player->y;
+    f32 movement = dt * player->speed;
 
-    f32 playerX = player->x;
-    f32 playerY = player->y;
-
-    if( input->arrowUp.isDown )    playerY -= speed;
-    if( input->arrowDown.isDown )  playerY += speed;
-    if( input->arrowRight.isDown ) playerX += speed;
-    if( input->arrowLeft.isDown )  playerX -= speed;
-
-    bool isValid = checkCollision( playerX, playerY );
-
-    if( isValid )
+    if( input->arrowUp.isDown )    playerY -= movement;
+    if( input->arrowDown.isDown )  playerY += movement;
+    if( input->arrowRight.isDown ) playerX += movement;
+    if( input->arrowLeft.isDown )  playerX -= movement;
+   
+    if( !checkCollision( playerX, playerY ) && 
+        !checkCollision( playerX + player->width/2, playerY ) &&
+        !checkCollision( playerX - player->width/2, playerY ) &&
+        !checkCollision( playerX, playerY + player->height/2 ) &&
+        !checkCollision( playerX, playerY - player->height/2 ) )
     {
         player->x = playerX;
         player->y = playerY;
     }
 }
 
-void UpdateAndRender( ApplicationMemory* memory, RenderBuffer* buffer, UserInput* input )
+void UpdateAndRender( ApplicationMemory* memory, 
+                      RenderBuffer*      buffer,  
+                      UserInput*         input,
+                      PlatformInfo*      info )
 {
     ApplicationState* state  = (ApplicationState*)memory->permanentMemory;
     Player*           player = &state->player;
@@ -158,13 +164,14 @@ void UpdateAndRender( ApplicationMemory* memory, RenderBuffer* buffer, UserInput
         memory->isInitialized = true;
     }
 
-    player->color = { 0.0, 0.0, 1.0, 1.0 };
+    player->speed = 200;
+    player->color = { 0.8, 0.8, 1.0, 1.0 };
 
     Color background = { 0.9f, 0.2f, 0.8f, 1.0f };
     drawRectangle( buffer, 0, 0, buffer->width, buffer->height, background );
 
     drawMap( buffer );
 
-    updatePlayer( input, player );
+    updatePlayer( input, player, info->deltaTimeS );
     drawPlayer( buffer, player );
 }
