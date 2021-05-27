@@ -121,20 +121,19 @@ bool checkCollision( f32 playerX, f32 playerY )
     return collision;
 }
 
-void updatePlayer( UserInput* input, Player* player )
+void updatePlayer( UserInput* input, Player* player, f32 dt )
 {
     player->height = 40.0f;
     player->width  = 30.0f;
-    player->color  = { 0.8f, 0.8f, 0.5f, 1.0f }; 
-    f32 speed = 2.0f;
+     
+    f32 playerX  = player->x;
+    f32 playerY  = player->y;
+    f32 movement = dt * player->speed;
 
-    f32 playerX = player->x;
-    f32 playerY = player->y;
-
-    if( input->arrowUp.isDown )    playerY -= speed;
-    if( input->arrowDown.isDown )  playerY += speed;
-    if( input->arrowRight.isDown ) playerX += speed;
-    if( input->arrowLeft.isDown )  playerX -= speed;
+    if( input->arrowUp.isDown )    playerY -= movement;
+    if( input->arrowDown.isDown )  playerY += movement;
+    if( input->arrowRight.isDown ) playerX += movement;
+    if( input->arrowLeft.isDown )  playerX -= movement;
 
     bool isValid = checkCollision( playerX, playerY );
 
@@ -145,7 +144,10 @@ void updatePlayer( UserInput* input, Player* player )
     }
 }
 
-void UpdateAndRender( ApplicationMemory* memory, RenderBuffer* buffer, UserInput* input )
+void UpdateAndRender( ApplicationMemory* memory, 
+                      RenderBuffer*      buffer,  
+                      UserInput*         input,
+                      PlatformInfo*      info )
 {
     ApplicationState* state  = (ApplicationState*)memory->permanentMemory;
     Player*           player = &state->player;
@@ -158,6 +160,7 @@ void UpdateAndRender( ApplicationMemory* memory, RenderBuffer* buffer, UserInput
         memory->isInitialized = true;
     }
 
+    player->speed = 100;
     player->color = { 0.0, 0.0, 1.0, 1.0 };
 
     Color background = { 0.9f, 0.2f, 0.8f, 1.0f };
@@ -165,6 +168,6 @@ void UpdateAndRender( ApplicationMemory* memory, RenderBuffer* buffer, UserInput
 
     drawMap( buffer );
 
-    updatePlayer( input, player );
+    updatePlayer( input, player, info->deltaTimeS );
     drawPlayer( buffer, player );
 }
