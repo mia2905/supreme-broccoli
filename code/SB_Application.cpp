@@ -158,7 +158,7 @@ void UpdateAndRender( ApplicationMemory* memory,
 
     if( !memory->isInitialized )
     {
-        player->x = 100;
+        player->x = 60;
         player->y = 100;
 
         memory->isInitialized = true;
