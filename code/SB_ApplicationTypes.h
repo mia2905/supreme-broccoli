@@ -21,6 +21,8 @@ struct Color
 
 struct Player
 {
+    u32   tilemapX;
+    u32   tilemapY;
     f32   x;
     f32   y;
     f32   width;
@@ -42,12 +44,17 @@ struct World
 {
     u32 tilemapCountX;
     u32 tilemapCountY;
+
+    u32 tilemapX;
+    u32 tilemapY;
+
+    TileMap tilemaps[4];
 };
 
 struct ApplicationState
 {
     Player  player;
-    TileMap tilemap;
+    World   world;
 };
 
 #endif//SB_APPLICATIONTYPES_H
