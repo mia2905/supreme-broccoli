@@ -50,8 +50,20 @@ struct ApplicationMemory
     void* transientMemory;
 };
 
+struct PlatformInfo
+{
+    f32  deltaTimeS;
+    bool showDebugInfo;
+};
+
+/******************************************************
+ * SERVICES THE APPLICATION PROVIDES TO THE PLATFORM
+ ******************************************************/
 extern "C" {
-   void UpdateAndRender( ApplicationMemory* memory, RenderBuffer* buffer, UserInput* input );
+   void UpdateAndRender( ApplicationMemory* memory, 
+                         RenderBuffer*      buffer, 
+                         UserInput*         input,
+                         PlatformInfo*      info );
 }
 
 #endif//SB_APPLICATION_H

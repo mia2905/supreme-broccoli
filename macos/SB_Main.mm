@@ -15,14 +15,18 @@ static bool              RUNNING       = false;
 static ApplicationMemory MEMORY        = {0};
 static RenderBuffer      RENDER_BUFFER = {0};
 static UserInput         USER_INPUT    = {0};
+static PlatformInfo      INFO          = {0};
 
-typedef void UPDATE_AND_RENDER( ApplicationMemory* memory, RenderBuffer* buffer, UserInput* input );
+typedef void UPDATE_AND_RENDER( ApplicationMemory* memory, RenderBuffer* buffer, UserInput* input, PlatformInfo* info );
 
 static NSError*           ERROR         = nil;
 static void*              APPLICATION   = nullptr;
 static UPDATE_AND_RENDER* RENDER_FUNC   = nullptr;
 
-void UpdateAndRenderStub( ApplicationMemory* memory, RenderBuffer*, UserInput* input )
+void UpdateAndRenderStub( ApplicationMemory* memory, 
+                          RenderBuffer*      buffer, 
+                          UserInput*         input,
+                          PlatformInfo*      info )
 {
     // no op
 }
@@ -157,7 +161,7 @@ int main()
     {
         RUNNING = true;
     }
-    
+
     while( RUNNING )
     {
         // this get signaled from the display link with 60FPS
@@ -187,7 +191,8 @@ int main()
         }
         while( event != nil );
 
-        RENDER_FUNC( &MEMORY, &RENDER_BUFFER, &USER_INPUT );
+        INFO.deltaTimeS = (f32)((mach_absolute_time() - last) * ticksToNanoSeconds) / (1000*1000*1000);
+        RENDER_FUNC( &MEMORY, &RENDER_BUFFER, &USER_INPUT, &INFO );
 
         @autoreleasepool {
             NSBitmapImageRep* bitmap = [[[NSBitmapImageRep alloc] initWithBitmapDataPlanes: &RENDER_BUFFER.buffer
@@ -206,14 +211,14 @@ int main()
             [image addRepresentation: bitmap];                                           ;
 
             window.contentView.layer.contents = image;
-
-            u64 endRender    = mach_absolute_time();
-            f64 renderTimeNs = (f64)(endRender - last) * ticksToNanoSeconds;
-
-            //printf( "frame time [ms]: %f\n", (renderTimeNs / (1000 * 1000)));
-
-            last = endRender;
         }
+
+        u64 endRender    = mach_absolute_time();
+        f64 renderTimeNs = (f64)(endRender - last) * ticksToNanoSeconds;
+
+        printf( "frame time [ms]: %f\n", (renderTimeNs / (1000 * 1000)));
+
+        last = endRender;
     }
 
     unloadApplication();

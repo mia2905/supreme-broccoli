@@ -3,9 +3,40 @@
 
 #include <stdio.h>
 
-s32 RoundToS32( f32 value )
+#define TILEMAP_Y  13
+#define TILEMAP_X  27
+#define TILEWIDTH  40
+#define TILEHEIGHT 40
+
+static u32 map[TILEMAP_Y][TILEMAP_X] = 
+{
+    { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 },
+    { 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 1 },
+    { 1, 0, 1, 1, 1, 0, 1, 0, 1, 1, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 1, 1, 0, 1, 1 },
+    { 1, 0, 1, 1, 1, 0, 1, 0, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 0, 1, 0, 0, 0, 0, 0, 0, 1 },
+    { 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 1, 0, 1 },
+    { 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 0, 1, 0, 0, 0, 0, 1 },
+    { 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 1, 1, 1 },
+    { 1, 0, 1, 0, 0, 1, 0, 1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1 },
+    { 1, 0, 1, 1, 0, 1, 0, 1, 1, 1, 0, 1, 0, 1, 0, 1, 1, 1, 0, 1, 1, 0, 1, 1, 1, 0, 1 },
+    { 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 1 },
+    { 1, 0, 1, 1, 0, 1, 1, 1, 1, 1, 0, 1, 0, 0, 0, 1, 1, 1, 0, 1, 1, 0, 1, 0, 1, 0, 1 },
+    { 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 },
+    { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 }
+};
+
+inline s32 roundToS32( f32 value )
 {
     return (s32)(value + 0.5f);
+}
+
+void buildWorld( TileMap* tileMap )
+{
+    tileMap->countX     = TILEMAP_X;
+    tileMap->countY     = TILEMAP_Y;
+    tileMap->tileWidth  = 40;
+    tileMap->tileHeight = 40;
+    tileMap->tiles      = (u32*)map;
 }
 
 void drawRectangle( RenderBuffer* buffer, f32 minX, f32 minY, f32 maxX, f32 maxY, Color c )
@@ -13,10 +44,10 @@ void drawRectangle( RenderBuffer* buffer, f32 minX, f32 minY, f32 maxX, f32 maxY
     u32 screenWidth  = buffer->width;
     u32 screenHeight = buffer->height;
 
-    s32 xmin = RoundToS32( minX );
-    s32 ymin = RoundToS32( minY );
-    s32 xmax = RoundToS32( maxX );
-    s32 ymax = RoundToS32( maxY );
+    s32 xmin = roundToS32( minX );
+    s32 ymin = roundToS32( minY );
+    s32 xmax = roundToS32( maxX );
+    s32 ymax = roundToS32( maxY );
 
     if( xmin < 0 ) xmin = 0;
     if( xmax < 0 ) xmax = 0;
@@ -53,29 +84,13 @@ void drawPlayer( RenderBuffer* buffer, Player* player )
     drawRectangle( buffer, minx, miny, maxx, maxy, player->color );
 }
 
-void drawMap( RenderBuffer* buffer )
+void drawMap( RenderBuffer* buffer, TileMap* tilemap)
 {
     Color tilecolor = { 0.4f, 0.4f, 0.4f, 1.0f };
     u32 tileWidth   = 40;
     u32 tileHeight  = 40;
     u32 tilesPerRow = 27;
     u32 rows        = 13;
-    u32 tilemap[13][27] = 
-    {
-        { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 },
-        { 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1 },
-        { 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 1 },
-        { 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 1, 0, 0, 1, 0, 0, 1 },
-        { 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 1 },
-        { 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 },
-        { 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 },
-        { 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 },
-        { 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 1 },
-        { 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 1 },
-        { 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 1 },
-        { 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 },
-        { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 }
-    };
 
     f32 minX = 0.0f;
     f32 maxX = 0.0f;
@@ -86,7 +101,7 @@ void drawMap( RenderBuffer* buffer )
     {
         for( u32 col=0; col<tilesPerRow; ++col )
         {
-            u32 tile = tilemap[row][col];
+            u32 tile = tilemap->tiles[row * tilemap->countX + col];
             if( tile == 1 )
             {
                 minX = col * tileWidth;
@@ -100,38 +115,72 @@ void drawMap( RenderBuffer* buffer )
     }
 }
 
-void updatePlayer( UserInput* input, Player* player )
+bool checkCollision( f32 playerX, f32 playerY, TileMap* tilemap )
 {
-    player->height = 40.0f;
-    player->width  = 30.0f;
-    player->color  = { 0.8f, 0.8f, 0.5f, 1.0f }; 
-    f32 speed = 2.0f;
-    if( input->arrowUp.isDown )    player->y -= speed;
-    if( input->arrowDown.isDown )  player->y += speed;
-    if( input->arrowRight.isDown ) player->x += speed;
-    if( input->arrowLeft.isDown )  player->x -= speed;
+    bool collision = true;
+    u32 playerTileX = (u32)( playerX / TILEWIDTH );
+    u32 playerTileY = (u32)( playerY / TILEHEIGHT );
+
+    if( (playerTileX >= 0) && (playerTileX < TILEMAP_X) &&
+        (playerTileY >= 0) && (playerTileY < TILEMAP_Y) )
+    {
+       collision = !( tilemap->tiles[playerTileY * tilemap->countX + playerTileX] == 0 ); 
+    }
+
+    return collision;
 }
 
-void UpdateAndRender( ApplicationMemory* memory, RenderBuffer* buffer, UserInput* input )
+void updatePlayer( UserInput* input, Player* player, TileMap* tileMap, f32 dt )
+{
+    player->height = 30.0f;
+    player->width  = 30.0f;
+     
+    f32 playerX  = player->x;
+    f32 playerY  = player->y;
+    f32 movement = dt * player->speed;
+
+    if( input->arrowUp.isDown )    playerY -= movement;
+    if( input->arrowDown.isDown )  playerY += movement;
+    if( input->arrowRight.isDown ) playerX += movement;
+    if( input->arrowLeft.isDown )  playerX -= movement;
+   
+    if( !checkCollision( playerX, playerY, tileMap ) && 
+        !checkCollision( playerX + 0.5f*player->width, playerY + 0.5*player->height, tileMap ) &&
+        !checkCollision( playerX - 0.5f*player->width, playerY + 0.5*player->height, tileMap ) &&
+        !checkCollision( playerX + 0.5f*player->width, playerY - 0.5*player->height, tileMap ) &&
+        !checkCollision( playerX - 0.5f*player->width, playerY - 0.5*player->height, tileMap ) )
+    {
+        player->x = playerX;
+        player->y = playerY;
+    }
+}
+
+void UpdateAndRender( ApplicationMemory* memory, 
+                      RenderBuffer*      buffer,  
+                      UserInput*         input,
+                      PlatformInfo*      info )
 {
     ApplicationState* state  = (ApplicationState*)memory->permanentMemory;
     Player*           player = &state->player;
 
     if( !memory->isInitialized )
     {
-        player->x      = 30;
-        player->y      = 30;
+        player->x = 65;
+        player->y = 100;
 
         memory->isInitialized = true;
     }
 
-    player->color = { 0.0, 0.0, 1.0, 1.0 };
+    player->speed = 200;
+    player->color = { 0.8, 0.8, 1.0, 1.0 };
+
+    buildWorld( &state->tilemap );
 
     Color background = { 0.9f, 0.2f, 0.8f, 1.0f };
     drawRectangle( buffer, 0, 0, buffer->width, buffer->height, background );
 
-    drawMap( buffer );
+    drawMap( buffer, &state->tilemap );
 
-    updatePlayer( input, player );
+    updatePlayer( input, player, &state->tilemap, info->deltaTimeS );
     drawPlayer( buffer, player );
 }
