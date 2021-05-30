@@ -8,28 +8,35 @@
 #define TILEWIDTH  40
 #define TILEHEIGHT 40
 
-static TileMap tileMap = {0};
-
-static u32 tilemap[TILEMAP_Y][TILEMAP_X] = 
-    {
-        { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 },
-        { 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1 },
-        { 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 1 },
-        { 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 1, 0, 0, 1, 0, 0, 1 },
-        { 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 1 },
-        { 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 },
-        { 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 },
-        { 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 },
-        { 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 1 },
-        { 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 1 },
-        { 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 1 },
-        { 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 },
-        { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 }
-    };
+static u32 map[TILEMAP_Y][TILEMAP_X] = 
+{
+    { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 },
+    { 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 1 },
+    { 1, 0, 1, 1, 1, 0, 1, 0, 1, 1, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 1, 1, 0, 1, 1 },
+    { 1, 0, 1, 1, 1, 0, 1, 0, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 0, 1, 0, 0, 0, 0, 0, 0, 1 },
+    { 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 1, 0, 1 },
+    { 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 0, 1, 0, 0, 0, 0, 1 },
+    { 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 1, 1, 1 },
+    { 1, 0, 1, 0, 0, 1, 0, 1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1 },
+    { 1, 0, 1, 1, 0, 1, 0, 1, 1, 1, 0, 1, 0, 1, 0, 1, 1, 1, 0, 1, 1, 0, 1, 1, 1, 0, 1 },
+    { 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 1 },
+    { 1, 0, 1, 1, 0, 1, 1, 1, 1, 1, 0, 1, 0, 0, 0, 1, 1, 1, 0, 1, 1, 0, 1, 0, 1, 0, 1 },
+    { 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 },
+    { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 }
+};
 
 inline s32 roundToS32( f32 value )
 {
     return (s32)(value + 0.5f);
+}
+
+void buildWorld( TileMap* tileMap )
+{
+    tileMap->countX     = TILEMAP_X;
+    tileMap->countY     = TILEMAP_Y;
+    tileMap->tileWidth  = 40;
+    tileMap->tileHeight = 40;
+    tileMap->tiles      = (u32*)map;
 }
 
 void drawRectangle( RenderBuffer* buffer, f32 minX, f32 minY, f32 maxX, f32 maxY, Color c )
@@ -77,7 +84,7 @@ void drawPlayer( RenderBuffer* buffer, Player* player )
     drawRectangle( buffer, minx, miny, maxx, maxy, player->color );
 }
 
-void drawMap( RenderBuffer* buffer )
+void drawMap( RenderBuffer* buffer, TileMap* tilemap)
 {
     Color tilecolor = { 0.4f, 0.4f, 0.4f, 1.0f };
     u32 tileWidth   = 40;
@@ -94,7 +101,7 @@ void drawMap( RenderBuffer* buffer )
     {
         for( u32 col=0; col<tilesPerRow; ++col )
         {
-            u32 tile = tilemap[row][col];
+            u32 tile = tilemap->tiles[row * tilemap->countX + col];
             if( tile == 1 )
             {
                 minX = col * tileWidth;
@@ -108,7 +115,7 @@ void drawMap( RenderBuffer* buffer )
     }
 }
 
-bool checkCollision( f32 playerX, f32 playerY )
+bool checkCollision( f32 playerX, f32 playerY, TileMap* tilemap )
 {
     bool collision = true;
     u32 playerTileX = (u32)( playerX / TILEWIDTH );
@@ -117,13 +124,13 @@ bool checkCollision( f32 playerX, f32 playerY )
     if( (playerTileX >= 0) && (playerTileX < TILEMAP_X) &&
         (playerTileY >= 0) && (playerTileY < TILEMAP_Y) )
     {
-       collision = !( tilemap[playerTileY][playerTileX] == 0 ); 
+       collision = !( tilemap->tiles[playerTileY * tilemap->countX + playerTileX] == 0 ); 
     }
 
     return collision;
 }
 
-void updatePlayer( UserInput* input, Player* player, f32 dt )
+void updatePlayer( UserInput* input, Player* player, TileMap* tileMap, f32 dt )
 {
     player->height = 30.0f;
     player->width  = 30.0f;
@@ -137,11 +144,11 @@ void updatePlayer( UserInput* input, Player* player, f32 dt )
     if( input->arrowRight.isDown ) playerX += movement;
     if( input->arrowLeft.isDown )  playerX -= movement;
    
-    if( !checkCollision( playerX, playerY ) && 
-        !checkCollision( playerX + 0.5f*player->width, playerY + 0.5*player->height ) &&
-        !checkCollision( playerX - 0.5f*player->width, playerY + 0.5*player->height ) &&
-        !checkCollision( playerX + 0.5f*player->width, playerY - 0.5*player->height ) &&
-        !checkCollision( playerX - 0.5f*player->width, playerY - 0.5*player->height ) )
+    if( !checkCollision( playerX, playerY, tileMap ) && 
+        !checkCollision( playerX + 0.5f*player->width, playerY + 0.5*player->height, tileMap ) &&
+        !checkCollision( playerX - 0.5f*player->width, playerY + 0.5*player->height, tileMap ) &&
+        !checkCollision( playerX + 0.5f*player->width, playerY - 0.5*player->height, tileMap ) &&
+        !checkCollision( playerX - 0.5f*player->width, playerY - 0.5*player->height, tileMap ) )
     {
         player->x = playerX;
         player->y = playerY;
@@ -158,7 +165,7 @@ void UpdateAndRender( ApplicationMemory* memory,
 
     if( !memory->isInitialized )
     {
-        player->x = 100;
+        player->x = 65;
         player->y = 100;
 
         memory->isInitialized = true;
@@ -167,11 +174,13 @@ void UpdateAndRender( ApplicationMemory* memory,
     player->speed = 200;
     player->color = { 0.8, 0.8, 1.0, 1.0 };
 
+    buildWorld( &state->tilemap );
+
     Color background = { 0.9f, 0.2f, 0.8f, 1.0f };
     drawRectangle( buffer, 0, 0, buffer->width, buffer->height, background );
 
-    drawMap( buffer );
+    drawMap( buffer, &state->tilemap );
 
-    updatePlayer( input, player, info->deltaTimeS );
+    updatePlayer( input, player, &state->tilemap, info->deltaTimeS );
     drawPlayer( buffer, player );
 }

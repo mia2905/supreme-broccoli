@@ -38,6 +38,12 @@ struct TileMap
     u32* tiles;
 };
 
+struct World
+{
+    u32 tilemapCountX;
+    u32 tilemapCountY;
+};
+
 struct ApplicationState
 {
     Player  player;
