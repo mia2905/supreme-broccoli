@@ -7,8 +7,7 @@
 #define TILEMAPS_Y  2
 #define TILEMAP_Y  13
 #define TILEMAP_X  27
-#define TILEWIDTH  40
-#define TILEHEIGHT 40
+#define TILE_WIDTH  40
 
 static u32 map_00[TILEMAP_Y][TILEMAP_X] = 
 {
@@ -23,7 +22,7 @@ static u32 map_00[TILEMAP_Y][TILEMAP_X] =
     { 1, 0, 1, 1, 0, 1, 0, 1, 1, 1, 0, 1, 0, 1, 0, 1, 1, 1, 0, 1, 1, 0, 1, 1, 1, 0, 1 },
     { 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 1 },
     { 1, 0, 1, 1, 0, 1, 1, 1, 1, 1, 0, 1, 0, 0, 0, 1, 1, 1, 0, 1, 1, 0, 1, 0, 1, 0, 1 },
-    { 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 },
+    { 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 },
     { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 }
 };
 
@@ -83,13 +82,14 @@ inline s32 roundToS32( f32 value )
     return (s32)(value + 0.5f);
 }
 
+inline s32 truncateToS32( f32 value )
+{
+    return (s32)value;
+}
+
 void buildWorld( World* world )
 {
     TileMap map00 = {0};
-    map00.countX = TILEMAP_X;
-    map00.countY = TILEMAP_Y;
-    map00.tileWidth = 40;
-    map00.tileHeight = 40;
     map00.tiles = (u32*)map_00;
 
     TileMap map01 = map00;
@@ -102,17 +102,38 @@ void buildWorld( World* world )
     map01.tiles = (u32*)map_11;
 
     world->tilemaps[0] = map00;
-    world->tilemaps[0] = map01;
-    world->tilemaps[0] = map10;
-    world->tilemaps[0] = map11;    
+    world->tilemaps[1] = map01;
+    world->tilemaps[2] = map10;
+    world->tilemaps[3] = map11;    
 }
 
-TileMap* getCurrentMap( World* world, Player* player )
+TileMap* getMap( World* world, u32 mapX, u32 mapY )
+{
+    u32 width    = world->tilemapCountX;
+    TileMap* map = nullptr;
+
+    if( (mapX >= 0) && (mapX < world->tilemapCountX) &&
+        (mapY >= 0) && (mapY < world->tilemapCountY) )
+    {
+        map = &world->tilemaps[mapY * width + mapX];
+    }
+    
+    return map;
+}
+
+TileMap* getCurrentMap( World* world )
 {
     u32 tilemapX = world->tilemapX;
     u32 tilemapY = world->tilemapY;
     u32 width    = world->tilemapCountX;
-    TileMap* currentMap = &world->tilemaps[tilemapY * width + tilemapX];
+    TileMap* currentMap = nullptr;
+
+    if( (tilemapX >= 0) && (tilemapX < world->tilemapCountX) &&
+        (tilemapY >= 0) && (tilemapY < world->tilemapCountY) )
+    {
+        currentMap = &world->tilemaps[tilemapY * width + tilemapX];
+    }
+    
     return currentMap;
 }
 
@@ -174,13 +195,14 @@ void drawMap( RenderBuffer* buffer, World* world, Player* player )
     f32 minY = 0.0f;
     f32 maxY = 0.0f;
 
-    TileMap* currentMap = getCurrentMap( world, player );
+    TileMap* currentMap = getCurrentMap( world );
+    Assert( currentMap );
 
     for( u32 row=0; row<rows; ++row )
     {
         for( u32 col=0; col<tilesPerRow; ++col )
         {
-            u32 tile = currentMap->tiles[row * currentMap->countX + col];
+            u32 tile = currentMap->tiles[row * world->tileCountX + col];
             if( tile == 1 )
             {
                 minX = col * tileWidth;
@@ -194,19 +216,54 @@ void drawMap( RenderBuffer* buffer, World* world, Player* player )
     }
 }
 
-bool checkCollision( f32 playerX, f32 playerY, TileMap* tilemap )
+bool isMoveAllowed( f32    testPlayerX, 
+                    f32    testPlayerY, 
+                    World* world )
 {
-    bool collision = true;
-    u32 playerTileX = (u32)( playerX / TILEWIDTH );
-    u32 playerTileY = (u32)( playerY / TILEHEIGHT );
+    bool allowed = false;
 
-    if( (playerTileX >= 0) && (playerTileX < TILEMAP_X) &&
-        (playerTileY >= 0) && (playerTileY < TILEMAP_Y) )
+    // update which tilemap the player is on
+    s32 newTileX = truncateToS32( testPlayerX / world->tileWidth );
+    s32 newTileY = truncateToS32( testPlayerY / world->tileHeight );
+    u32 mapX     = world->tilemapX;
+    u32 mapY     = world->tilemapY;
+
+    if( newTileX < 0 )
     {
-       collision = !( tilemap->tiles[playerTileY * tilemap->countX + playerTileX] == 0 ); 
+        newTileX = world->tileCountX + newTileX;
+        mapX--;
     }
 
-    return collision;
+    if( newTileY < 0 )
+    {
+        newTileY = world->tileCountY + newTileY;
+        mapY--;
+    }
+
+    if( newTileX >= world->tileCountX )
+    {
+        newTileX = world->tileCountX - newTileX;
+        mapX++;
+    }
+
+    if( newTileY >= world->tileCountY )
+    {
+        newTileY = world->tileCountY - newTileY;
+        mapY++;
+    }
+
+    TileMap* map = getMap( world, mapX, mapY );
+    
+    if( map )
+    {
+        if( (newTileX >= 0) && (newTileX < world->tileCountX) &&
+            (newTileY >= 0) && (newTileY < world->tileCountY) )
+        {
+            allowed = ( map->tiles[newTileY * world->tileCountX + newTileX] == 0 ); 
+        }
+    }
+    
+    return allowed;
 }
 
 void updatePlayer( UserInput* input, Player* player, World* world, f32 dt )
@@ -218,21 +275,19 @@ void updatePlayer( UserInput* input, Player* player, World* world, f32 dt )
     f32 playerY  = player->y;
     f32 movement = dt * player->speed;
 
-    TileMap* currentMap = getCurrentMap( world, player );
-
     if( input->arrowUp.isDown )    playerY -= movement;
     if( input->arrowDown.isDown )  playerY += movement;
     if( input->arrowRight.isDown ) playerX += movement;
     if( input->arrowLeft.isDown )  playerX -= movement;
-   
-    if( !checkCollision( playerX, playerY, currentMap ) && 
-        !checkCollision( playerX + 0.5f*player->width, playerY + 0.5*player->height, currentMap ) &&
-        !checkCollision( playerX - 0.5f*player->width, playerY + 0.5*player->height, currentMap ) &&
-        !checkCollision( playerX + 0.5f*player->width, playerY - 0.5*player->height, currentMap ) &&
-        !checkCollision( playerX - 0.5f*player->width, playerY - 0.5*player->height, currentMap ) )
+
+    if( isMoveAllowed( playerX, playerY, world ) )
     {
         player->x = playerX;
         player->y = playerY;
+    }
+    else
+    {
+        u32 x = 0;
     }
 }
 
@@ -249,11 +304,13 @@ void UpdateAndRender( ApplicationMemory* memory,
     {
         player->x        = 65;
         player->y        = 100;
-        player->tilemapX = 0;
-        player->tilemapY = 0;
 
         world->tilemapCountX = TILEMAPS_X;
         world->tilemapCountY = TILEMAPS_Y;
+        world->tileCountX    = TILEMAP_X;
+        world->tileCountY    = TILEMAP_Y;
+        world->tileWidth     = TILE_WIDTH;
+        world->tileHeight    = TILE_WIDTH;
         world->tilemapX      = 0;
         world->tilemapY      = 0;
         

@@ -1,7 +1,7 @@
 #ifndef SB_APPLICATION_H
 #define SB_APPLICATION_H
 
-#define Assert(expression) if(!expression){ *(int *) = 0; } // write to a null address to crash the program deliberately
+#define Assert(expression) if(!expression) { int* a = nullptr; *a = 0; } // write to a null address to crash the program deliberately
 
 #define KiloBytes(x) (x * 1024)
 #define MegaBytes(x) (KiloBytes(x) * 1024)
@@ -53,7 +53,7 @@ struct ApplicationMemory
 struct PlatformInfo
 {
     f32  deltaTimeS;
-    bool showDebugInfo;
+    bool debugMode;
 };
 
 /******************************************************

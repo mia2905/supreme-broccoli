@@ -21,8 +21,6 @@ struct Color
 
 struct Player
 {
-    u32   tilemapX;
-    u32   tilemapY;
     f32   x;
     f32   y;
     f32   width;
@@ -33,20 +31,22 @@ struct Player
 
 struct TileMap
 {
-    u32  countX;    // number of tiles in x
-    u32  countY;    // number of tiles in y
-    u32  tileWidth;
-    u32  tileHeight;
     u32* tiles;
 };
 
 struct World
 {
-    u32 tilemapCountX;
-    u32 tilemapCountY;
+    u32 tilemapCountX; // number of maps in X
+    u32 tilemapCountY; // number of maps in Y
 
-    u32 tilemapX;
-    u32 tilemapY;
+    u32 tileCountX;    // number of tiles per map in X
+    u32 tileCountY;    // number of tiles per map in Y
+
+    u32 tileWidth;
+    u32 tileHeight;
+
+    u32 tilemapX;      // current map index in x
+    u32 tilemapY;      // current map index in y
 
     TileMap tilemaps[4];
 };
