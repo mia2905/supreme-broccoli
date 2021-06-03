@@ -81,8 +81,7 @@ void loadApplication()
     BOOL exists = [fileManager fileExistsAtPath:@"supreme-broccoli.dylib"];
     if( exists == YES ) 
     {
-        printf( "APPLICATION EXISTS\n" );
-        fflush( stdout );
+        Print( "APPLICATION EXISTS\n" );
         NSFileManager* fileManager = [NSFileManager defaultManager];
 
         // delete the old temp version
@@ -99,9 +98,7 @@ void loadApplication()
     }     
     else
     {
-        printf( "APPLICATION MISSING\n" );
-        fflush( stdout );
-
+        Print( "APPLICATION MISSING\n" );
         RENDER_FUNC = &UpdateAndRenderStub;
     }                    
 }

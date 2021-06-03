@@ -2,7 +2,7 @@
 #define SB_APPLICATION_H
 
 #define Assert(expression) if(!expression) { int* a = nullptr; *a = 0; } // write to a null address to crash the program deliberately
-
+#define Print(text) if(INFO.debugMode) { printf(text); fflush(stdout); }
 #define KiloBytes(x) (x * 1024)
 #define MegaBytes(x) (KiloBytes(x) * 1024)
 #define GigaBytes(x) (MegaBytes(x) * 1024)
