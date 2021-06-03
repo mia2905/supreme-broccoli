@@ -317,6 +317,7 @@ void UpdateAndRender( ApplicationMemory* memory,
         memory->isInitialized = true;
     }
 
+    info->debugMode = false; // set this to true to get platform debug info printed to stdout
     player->speed = 200;
     player->color = { 0.8, 0.8, 1.0, 1.0 };
 
