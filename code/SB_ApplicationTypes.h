@@ -19,6 +19,27 @@ struct Color
     f32 alpha;
 };
 
+struct RawPosition
+{
+    u32 tileMapX;
+    u32 tileMapY;
+
+    f32 x; // position x relative to a tilemap
+    f32 y; // position y relative to a tilemap
+};
+
+struct CorrectPosition
+{
+    u32 tileMapX;
+    u32 tileMapY;
+
+    u32 tileX;
+    u32 tileY;
+
+    f32 x; // position x relative to a tile
+    f32 y; // position y relative to a tile
+}; 
+
 struct Player
 {
     f32   x;

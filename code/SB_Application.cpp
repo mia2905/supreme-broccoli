@@ -2,12 +2,13 @@
 #include "SB_ApplicationTypes.h"
 
 #include <stdio.h>
+#include <math.h>
 
 #define TILEMAPS_X  2
 #define TILEMAPS_Y  2
 #define TILEMAP_Y  13
 #define TILEMAP_X  27
-#define TILE_WIDTH  40
+#define TILE_WIDTH 40
 
 static u32 map_00[TILEMAP_Y][TILEMAP_X] = 
 {
@@ -87,24 +88,17 @@ inline s32 truncateToS32( f32 value )
     return (s32)value;
 }
 
+inline s32 floorToS32( f32 value )
+{
+    return (s32)floorf( value );
+}
+
 void buildWorld( World* world )
 {
-    TileMap map00 = {0};
-    map00.tiles = (u32*)map_00;
-
-    TileMap map01 = map00;
-    map01.tiles = (u32*)map_01;
-
-    TileMap map10 = map00;
-    map01.tiles = (u32*)map_10;
-
-    TileMap map11 = map00;
-    map01.tiles = (u32*)map_11;
-
-    world->tilemaps[0] = map00;
-    world->tilemaps[1] = map01;
-    world->tilemaps[2] = map10;
-    world->tilemaps[3] = map11;    
+    world->tilemaps[0].tiles = (u32*)map_00;
+    world->tilemaps[1].tiles = (u32*)map_10;
+    world->tilemaps[2].tiles = (u32*)map_01;
+    world->tilemaps[3].tiles = (u32*)map_11;    
 }
 
 TileMap* getMap( World* world, u32 mapX, u32 mapY )
@@ -216,50 +210,81 @@ void drawMap( RenderBuffer* buffer, World* world, Player* player )
     }
 }
 
-bool isMoveAllowed( f32    testPlayerX, 
-                    f32    testPlayerY, 
-                    World* world )
+CorrectPosition getCorrectPosition( World* world, RawPosition pos )
 {
-    bool allowed = false;
-
+    CorrectPosition newPos = {0};
+    
     // update which tilemap the player is on
-    s32 newTileX = truncateToS32( testPlayerX / world->tileWidth );
-    s32 newTileY = truncateToS32( testPlayerY / world->tileHeight );
-    u32 mapX     = world->tilemapX;
-    u32 mapY     = world->tilemapY;
+    s32 newTileX      = truncateToS32( pos.x / world->tileWidth );
+    s32 newTileY      = truncateToS32( pos.y / world->tileHeight );
+    s32 tilemapWidth  = world->tileCountX * world->tileWidth;
+    s32 tilemapHeight = world->tileCountY * world->tileHeight;
+
+    newPos.x = pos.x - (newTileX * world->tileWidth);
+    newPos.y = pos.y - (newTileY * world->tileHeight);
+
+
+    u32 mapX     = pos.tileMapX;
+    u32 mapY     = pos.tileMapY;
 
     if( newTileX < 0 )
     {
         newTileX = world->tileCountX + newTileX;
         mapX--;
+        newPos.x = pos.x + tilemapWidth;
     }
 
     if( newTileY < 0 )
     {
         newTileY = world->tileCountY + newTileY;
         mapY--;
+        newPos.y = pos.y + tilemapHeight;
     }
 
     if( newTileX >= world->tileCountX )
     {
         newTileX = world->tileCountX - newTileX;
         mapX++;
+        newPos.x = pos.x - tilemapWidth;
     }
 
     if( newTileY >= world->tileCountY )
     {
         newTileY = world->tileCountY - newTileY;
         mapY++;
+        newPos.y = pos.y - tilemapHeight;
     }
+    
+    newPos.tileMapX = mapX;
+    newPos.tileMapY = mapY;
+    newPos.tileX    = newTileX;
+    newPos.tileY    = newTileY;
+        
+    return newPos;
+}
 
-    TileMap* map = getMap( world, mapX, mapY );
+bool isMoveAllowed( f32    testPlayerX, 
+                    f32    testPlayerY, 
+                    World* world )
+{
+    bool allowed = false;
+
+    RawPosition pos = {0};
+    pos.x = testPlayerX;
+    pos.y = testPlayerY;
+    pos.tileMapX = world->tilemapX;
+    pos.tileMapY = world->tilemapY;
+
+    CorrectPosition newPos = getCorrectPosition( world, pos );
+
+    TileMap* map = getMap( world, newPos.tileMapX, newPos.tileMapY );
     
     if( map )
     {
-        if( (newTileX >= 0) && (newTileX < world->tileCountX) &&
-            (newTileY >= 0) && (newTileY < world->tileCountY) )
+        if( (newPos.tileX >= 0) && (newPos.tileX < world->tileCountX) &&
+            (newPos.tileY >= 0) && (newPos.tileY < world->tileCountY) )
         {
-            allowed = ( map->tiles[newTileY * world->tileCountX + newTileX] == 0 ); 
+            allowed = ( map->tiles[newPos.tileY * world->tileCountX + newPos.tileX] == 0 ); 
         }
     }
     
@@ -282,12 +307,18 @@ void updatePlayer( UserInput* input, Player* player, World* world, f32 dt )
 
     if( isMoveAllowed( playerX, playerY, world ) )
     {
-        player->x = playerX;
-        player->y = playerY;
-    }
-    else
-    {
-        u32 x = 0;
+        RawPosition raw = {0};
+        raw.x = playerX;
+        raw.y = playerY;
+        raw.tileMapX = world->tilemapX;
+        raw.tileMapY = world->tilemapY;
+
+        CorrectPosition pos = getCorrectPosition( world, raw );
+        player->x = pos.tileX * world->tileWidth + pos.x;
+        player->y = pos.tileY * world->tileHeight + pos.y;
+
+        world->tilemapX = pos.tileMapX;
+        world->tilemapY = pos.tileMapY;
     }
 }
 
@@ -323,11 +354,10 @@ void UpdateAndRender( ApplicationMemory* memory,
 
     buildWorld( world );
 
+    updatePlayer( input, player, &state->world, info->deltaTimeS );
+
     Color background = { 0.9f, 0.2f, 0.8f, 1.0f };
     drawRectangle( buffer, 0, 0, buffer->width, buffer->height, background );
-
     drawMap( buffer, &state->world, &state->player );
-
-    updatePlayer( input, player, &state->world, info->deltaTimeS );
     drawPlayer( buffer, player );
 }
