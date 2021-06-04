@@ -215,51 +215,46 @@ CorrectPosition getCorrectPosition( World* world, RawPosition pos )
     CorrectPosition newPos = {0};
     
     // update which tilemap the player is on
-    s32 newTileX      = truncateToS32( pos.x / world->tileWidth );
-    s32 newTileY      = truncateToS32( pos.y / world->tileHeight );
+    s32 newTileX      = floorToS32( pos.x / world->tileWidth );
+    s32 newTileY      = floorToS32( pos.y / world->tileHeight );
     s32 tilemapWidth  = world->tileCountX * world->tileWidth;
     s32 tilemapHeight = world->tileCountY * world->tileHeight;
-
-    newPos.x = pos.x - (newTileX * world->tileWidth);
-    newPos.y = pos.y - (newTileY * world->tileHeight);
-
-
-    u32 mapX     = pos.tileMapX;
-    u32 mapY     = pos.tileMapY;
+    
+    u32 mapX = pos.tileMapX;
+    u32 mapY = pos.tileMapY;
+    
+    newPos.x = pos.x - (newTileX * (s32)world->tileWidth);
+    newPos.y = pos.y - (newTileY * (s32)world->tileWidth);
 
     if( newTileX < 0 )
     {
         newTileX = world->tileCountX + newTileX;
         mapX--;
-        newPos.x = pos.x + tilemapWidth;
     }
 
     if( newTileY < 0 )
     {
         newTileY = world->tileCountY + newTileY;
         mapY--;
-        newPos.y = pos.y + tilemapHeight;
     }
 
     if( newTileX >= world->tileCountX )
     {
         newTileX = world->tileCountX - newTileX;
         mapX++;
-        newPos.x = pos.x - tilemapWidth;
     }
 
     if( newTileY >= world->tileCountY )
     {
         newTileY = world->tileCountY - newTileY;
         mapY++;
-        newPos.y = pos.y - tilemapHeight;
     }
     
     newPos.tileMapX = mapX;
     newPos.tileMapY = mapY;
     newPos.tileX    = newTileX;
     newPos.tileY    = newTileY;
-        
+            
     return newPos;
 }
 
