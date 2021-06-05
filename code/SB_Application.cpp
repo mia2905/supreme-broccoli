@@ -167,12 +167,15 @@ void drawRectangle( RenderBuffer* buffer, f32 minX, f32 minY, f32 maxX, f32 maxY
     }
 }
 
-void drawPlayer( RenderBuffer* buffer, Player* player )
+void drawPlayer( RenderBuffer* buffer, Player* player, World* world )
 {
-    f32 minx = player->x - player->width/2;
-    f32 maxx = player->x + player->width/2;
-    f32 miny = player->y - player->height/2;
-    f32 maxy = player->y + player->height/2;
+    f32 tileX = player->playerPos.tileX * world->tileWidth;
+    f32 tileY = player->playerPos.tileY * world->tileHeight;
+
+    f32 minx  = tileX + player->playerPos.x - player->width/2;
+    f32 maxx  = tileX + player->playerPos.x + player->width/2;
+    f32 miny  = tileY + player->playerPos.y - player->height/2;
+    f32 maxy  = tileY + player->playerPos.y + player->height/2;
     drawRectangle( buffer, minx, miny, maxx, maxy, player->color );
 }
 
@@ -210,9 +213,9 @@ void drawMap( RenderBuffer* buffer, World* world, Player* player )
     }
 }
 
-CorrectPosition getCorrectPosition( World* world, RawPosition pos )
+GeneralizedPosition getGeneralizedPosition( World* world, RawPosition pos )
 {
-    CorrectPosition newPos = {0};
+    GeneralizedPosition newPos = {0};
     
     // update which tilemap the player is on
     s32 newTileX      = floorToS32( pos.x / world->tileWidth );
@@ -270,7 +273,7 @@ bool isMoveAllowed( f32    testPlayerX,
     pos.tileMapX = world->tilemapX;
     pos.tileMapY = world->tilemapY;
 
-    CorrectPosition newPos = getCorrectPosition( world, pos );
+    GeneralizedPosition newPos = getGeneralizedPosition( world, pos );
 
     TileMap* map = getMap( world, newPos.tileMapX, newPos.tileMapY );
     
@@ -288,11 +291,8 @@ bool isMoveAllowed( f32    testPlayerX,
 
 void updatePlayer( UserInput* input, Player* player, World* world, f32 dt )
 {
-    player->height = 30.0f;
-    player->width  = 30.0f;
-     
-    f32 playerX  = player->x;
-    f32 playerY  = player->y;
+    f32 playerX  = player->playerPos.x + player->playerPos.tileX * world->tileWidth;
+    f32 playerY  = player->playerPos.y + player->playerPos.tileY * world->tileHeight;
 
     f32 movement = dt * player->speed;
 
@@ -317,12 +317,10 @@ void updatePlayer( UserInput* input, Player* player, World* world, f32 dt )
         raw.tileMapX = world->tilemapX;
         raw.tileMapY = world->tilemapY;
 
-        CorrectPosition pos = getCorrectPosition( world, raw );
-        player->x = pos.tileX * world->tileWidth + pos.x;
-        player->y = pos.tileY * world->tileHeight + pos.y;
+        player->playerPos = getGeneralizedPosition( world, raw );
 
-        world->tilemapX = pos.tileMapX;
-        world->tilemapY = pos.tileMapY;
+        world->tilemapX = player->playerPos.tileMapX;
+        world->tilemapY = player->playerPos.tileMapY;
     }
 }
 
@@ -343,10 +341,16 @@ void UpdateAndRender( ApplicationMemory* memory,
 
     if( !memory->isInitialized || state->reload )
     {
-        player->x             = 60;
-        player->y             = 100;
-        player->speed         = 200;
-        player->color         = { 0.8, 0.8, 1.0, 1.0 };
+        player->height             = 30.0f;
+        player->width              = 30.0f;
+        player->playerPos.x        = 20;
+        player->playerPos.y        = 20;
+        player->playerPos.tileMapX = 0;
+        player->playerPos.tileMapY = 0;
+        player->playerPos.tileX    = 1;
+        player->playerPos.tileY    = 1;
+        player->speed              = 200;
+        player->color              = { 0.8, 0.8, 1.0, 1.0 };
 
         world->tilemapCountX  = TILEMAPS_X;
         world->tilemapCountY  = TILEMAPS_Y;
@@ -369,5 +373,5 @@ void UpdateAndRender( ApplicationMemory* memory,
     Color background = { 0.9f, 0.2f, 0.8f, 1.0f };
     drawRectangle( buffer, 0, 0, buffer->width, buffer->height, background );
     drawMap( buffer, &state->world, &state->player );
-    drawPlayer( buffer, player );
+    drawPlayer( buffer, player, world );
 }

@@ -28,7 +28,7 @@ struct RawPosition
     f32 y; // position y relative to a tilemap
 };
 
-struct CorrectPosition
+struct GeneralizedPosition
 {
     u32 tileMapX;
     u32 tileMapY;
@@ -42,8 +42,7 @@ struct CorrectPosition
 
 struct Player
 {
-    f32   x;
-    f32   y;
+    GeneralizedPosition playerPos;
     f32   width;
     f32   height;
     f32   speed; // pixels per second;
