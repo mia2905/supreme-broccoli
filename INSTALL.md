@@ -15,7 +15,7 @@ This builds the main executable **AND** the dynamic load library.
 
 ## Instant live coding - MacOS
 
-To start the application in instant live coding mode the script: ```run_macos.hs``` This enables changing application code in the **code** folder while the application is running. Each change triggers a rebuild of the dynamic load library which is reloaded once a second by the platform.
+To start the application in instant live coding mode run the script: ```run_macos.hs``` This enables changing application code in the **code** folder while the application is running. Each change triggers a rebuild of the dynamic load library which is reloaded every two seconds by the platform.
 
 ```
 >./run_macos.sh
