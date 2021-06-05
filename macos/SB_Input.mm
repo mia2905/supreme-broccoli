@@ -31,8 +31,6 @@ bool updateInput( UserInput* input, NSEvent* event )
                 break;
             default: break;
         }
-
-        printf( "KEY DOWN\n" );
     }
 
     if( [event type] == NSEventTypeKeyUp )
@@ -57,8 +55,6 @@ bool updateInput( UserInput* input, NSEvent* event )
                 break;
             default: break;
         }
-
-        printf( "KEY UP\n" );
     }
 
     fflush( stdout );

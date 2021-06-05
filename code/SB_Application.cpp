@@ -2,13 +2,15 @@
 #include "SB_ApplicationTypes.h"
 
 #include <stdio.h>
+#include <math.h>
 
+#define TILEMAPS_X  2
+#define TILEMAPS_Y  2
 #define TILEMAP_Y  13
 #define TILEMAP_X  27
-#define TILEWIDTH  40
-#define TILEHEIGHT 40
+#define TILE_WIDTH 40
 
-static u32 map[TILEMAP_Y][TILEMAP_X] = 
+static u32 map_00[TILEMAP_Y][TILEMAP_X] = 
 {
     { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 },
     { 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 1 },
@@ -16,12 +18,63 @@ static u32 map[TILEMAP_Y][TILEMAP_X] =
     { 1, 0, 1, 1, 1, 0, 1, 0, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 0, 1, 0, 0, 0, 0, 0, 0, 1 },
     { 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 1, 0, 1 },
     { 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 0, 1, 0, 0, 0, 0, 1 },
-    { 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 1, 1, 1 },
+    { 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 1, 0, 0 },
     { 1, 0, 1, 0, 0, 1, 0, 1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1 },
     { 1, 0, 1, 1, 0, 1, 0, 1, 1, 1, 0, 1, 0, 1, 0, 1, 1, 1, 0, 1, 1, 0, 1, 1, 1, 0, 1 },
     { 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 1 },
     { 1, 0, 1, 1, 0, 1, 1, 1, 1, 1, 0, 1, 0, 0, 0, 1, 1, 1, 0, 1, 1, 0, 1, 0, 1, 0, 1 },
-    { 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 },
+    { 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 },
+    { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 }
+};
+
+static u32 map_01[TILEMAP_Y][TILEMAP_X] = 
+{
+    { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 },
+    { 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 },
+    { 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 },
+    { 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 },
+    { 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 },
+    { 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 },
+    { 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+    { 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 },
+    { 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 },
+    { 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 },
+    { 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 },
+    { 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 },
+    { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 }
+};
+
+static u32 map_10[TILEMAP_Y][TILEMAP_X] = 
+{
+    { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 },
+    { 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 },
+    { 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 },
+    { 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 },
+    { 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 },
+    { 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 },
+    { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 },
+    { 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 },
+    { 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 },
+    { 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 },
+    { 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 },
+    { 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 },
+    { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 }
+};
+
+static u32 map_11[TILEMAP_Y][TILEMAP_X] = 
+{
+    { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 },
+    { 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 },
+    { 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 },
+    { 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 },
+    { 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 },
+    { 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 },
+    { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 },
+    { 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 },
+    { 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 },
+    { 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 },
+    { 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 },
+    { 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 },
     { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 }
 };
 
@@ -30,13 +83,52 @@ inline s32 roundToS32( f32 value )
     return (s32)(value + 0.5f);
 }
 
-void buildWorld( TileMap* tileMap )
+inline s32 truncateToS32( f32 value )
 {
-    tileMap->countX     = TILEMAP_X;
-    tileMap->countY     = TILEMAP_Y;
-    tileMap->tileWidth  = 40;
-    tileMap->tileHeight = 40;
-    tileMap->tiles      = (u32*)map;
+    return (s32)value;
+}
+
+inline s32 floorToS32( f32 value )
+{
+    return (s32)floorf( value );
+}
+
+void buildWorld( World* world )
+{
+    world->tilemaps[0].tiles = (u32*)map_00;
+    world->tilemaps[1].tiles = (u32*)map_10;
+    world->tilemaps[2].tiles = (u32*)map_01;
+    world->tilemaps[3].tiles = (u32*)map_11;    
+}
+
+TileMap* getMap( World* world, u32 mapX, u32 mapY )
+{
+    u32 width    = world->tilemapCountX;
+    TileMap* map = nullptr;
+
+    if( (mapX >= 0) && (mapX < world->tilemapCountX) &&
+        (mapY >= 0) && (mapY < world->tilemapCountY) )
+    {
+        map = &world->tilemaps[mapY * width + mapX];
+    }
+    
+    return map;
+}
+
+TileMap* getCurrentMap( World* world )
+{
+    u32 tilemapX = world->tilemapX;
+    u32 tilemapY = world->tilemapY;
+    u32 width    = world->tilemapCountX;
+    TileMap* currentMap = nullptr;
+
+    if( (tilemapX >= 0) && (tilemapX < world->tilemapCountX) &&
+        (tilemapY >= 0) && (tilemapY < world->tilemapCountY) )
+    {
+        currentMap = &world->tilemaps[tilemapY * width + tilemapX];
+    }
+    
+    return currentMap;
 }
 
 void drawRectangle( RenderBuffer* buffer, f32 minX, f32 minY, f32 maxX, f32 maxY, Color c )
@@ -84,7 +176,7 @@ void drawPlayer( RenderBuffer* buffer, Player* player )
     drawRectangle( buffer, minx, miny, maxx, maxy, player->color );
 }
 
-void drawMap( RenderBuffer* buffer, TileMap* tilemap)
+void drawMap( RenderBuffer* buffer, World* world, Player* player )
 {
     Color tilecolor = { 0.4f, 0.4f, 0.4f, 1.0f };
     u32 tileWidth   = 40;
@@ -97,11 +189,14 @@ void drawMap( RenderBuffer* buffer, TileMap* tilemap)
     f32 minY = 0.0f;
     f32 maxY = 0.0f;
 
+    TileMap* currentMap = getCurrentMap( world );
+    Assert( currentMap );
+
     for( u32 row=0; row<rows; ++row )
     {
         for( u32 col=0; col<tilesPerRow; ++col )
         {
-            u32 tile = tilemap->tiles[row * tilemap->countX + col];
+            u32 tile = currentMap->tiles[row * world->tileCountX + col];
             if( tile == 1 )
             {
                 minX = col * tileWidth;
@@ -115,22 +210,83 @@ void drawMap( RenderBuffer* buffer, TileMap* tilemap)
     }
 }
 
-bool checkCollision( f32 playerX, f32 playerY, TileMap* tilemap )
+CorrectPosition getCorrectPosition( World* world, RawPosition pos )
 {
-    bool collision = true;
-    u32 playerTileX = (u32)( playerX / TILEWIDTH );
-    u32 playerTileY = (u32)( playerY / TILEHEIGHT );
+    CorrectPosition newPos = {0};
+    
+    // update which tilemap the player is on
+    s32 newTileX      = floorToS32( pos.x / world->tileWidth );
+    s32 newTileY      = floorToS32( pos.y / world->tileHeight );
+    s32 tilemapWidth  = world->tileCountX * world->tileWidth;
+    s32 tilemapHeight = world->tileCountY * world->tileHeight;
+    
+    u32 mapX = pos.tileMapX;
+    u32 mapY = pos.tileMapY;
+    
+    newPos.x = pos.x - (newTileX * (s32)world->tileWidth);
+    newPos.y = pos.y - (newTileY * (s32)world->tileWidth);
 
-    if( (playerTileX >= 0) && (playerTileX < TILEMAP_X) &&
-        (playerTileY >= 0) && (playerTileY < TILEMAP_Y) )
+    if( newTileX < 0 )
     {
-       collision = !( tilemap->tiles[playerTileY * tilemap->countX + playerTileX] == 0 ); 
+        newTileX = world->tileCountX + newTileX;
+        mapX--;
     }
 
-    return collision;
+    if( newTileY < 0 )
+    {
+        newTileY = world->tileCountY + newTileY;
+        mapY--;
+    }
+
+    if( newTileX >= world->tileCountX )
+    {
+        newTileX = world->tileCountX - newTileX;
+        mapX++;
+    }
+
+    if( newTileY >= world->tileCountY )
+    {
+        newTileY = world->tileCountY - newTileY;
+        mapY++;
+    }
+    
+    newPos.tileMapX = mapX;
+    newPos.tileMapY = mapY;
+    newPos.tileX    = newTileX;
+    newPos.tileY    = newTileY;
+            
+    return newPos;
 }
 
-void updatePlayer( UserInput* input, Player* player, TileMap* tileMap, f32 dt )
+bool isMoveAllowed( f32    testPlayerX, 
+                    f32    testPlayerY, 
+                    World* world )
+{
+    bool allowed = false;
+
+    RawPosition pos = {0};
+    pos.x = testPlayerX;
+    pos.y = testPlayerY;
+    pos.tileMapX = world->tilemapX;
+    pos.tileMapY = world->tilemapY;
+
+    CorrectPosition newPos = getCorrectPosition( world, pos );
+
+    TileMap* map = getMap( world, newPos.tileMapX, newPos.tileMapY );
+    
+    if( map )
+    {
+        if( (newPos.tileX >= 0) && (newPos.tileX < world->tileCountX) &&
+            (newPos.tileY >= 0) && (newPos.tileY < world->tileCountY) )
+        {
+            allowed = ( map->tiles[newPos.tileY * world->tileCountX + newPos.tileX] == 0 ); 
+        }
+    }
+    
+    return allowed;
+}
+
+void updatePlayer( UserInput* input, Player* player, World* world, f32 dt )
 {
     player->height = 30.0f;
     player->width  = 30.0f;
@@ -143,15 +299,21 @@ void updatePlayer( UserInput* input, Player* player, TileMap* tileMap, f32 dt )
     if( input->arrowDown.isDown )  playerY += movement;
     if( input->arrowRight.isDown ) playerX += movement;
     if( input->arrowLeft.isDown )  playerX -= movement;
-   
-    if( !checkCollision( playerX, playerY, tileMap ) && 
-        !checkCollision( playerX + 0.5f*player->width, playerY + 0.5*player->height, tileMap ) &&
-        !checkCollision( playerX - 0.5f*player->width, playerY + 0.5*player->height, tileMap ) &&
-        !checkCollision( playerX + 0.5f*player->width, playerY - 0.5*player->height, tileMap ) &&
-        !checkCollision( playerX - 0.5f*player->width, playerY - 0.5*player->height, tileMap ) )
+
+    if( isMoveAllowed( playerX, playerY, world ) )
     {
-        player->x = playerX;
-        player->y = playerY;
+        RawPosition raw = {0};
+        raw.x = playerX;
+        raw.y = playerY;
+        raw.tileMapX = world->tilemapX;
+        raw.tileMapY = world->tilemapY;
+
+        CorrectPosition pos = getCorrectPosition( world, raw );
+        player->x = pos.tileX * world->tileWidth + pos.x;
+        player->y = pos.tileY * world->tileHeight + pos.y;
+
+        world->tilemapX = pos.tileMapX;
+        world->tilemapY = pos.tileMapY;
     }
 }
 
@@ -162,25 +324,35 @@ void UpdateAndRender( ApplicationMemory* memory,
 {
     ApplicationState* state  = (ApplicationState*)memory->permanentMemory;
     Player*           player = &state->player;
+    World*            world  = &state->world;
 
     if( !memory->isInitialized )
     {
-        player->x = 65;
-        player->y = 100;
+        player->x        = 65;
+        player->y        = 100;
 
+        world->tilemapCountX = TILEMAPS_X;
+        world->tilemapCountY = TILEMAPS_Y;
+        world->tileCountX    = TILEMAP_X;
+        world->tileCountY    = TILEMAP_Y;
+        world->tileWidth     = TILE_WIDTH;
+        world->tileHeight    = TILE_WIDTH;
+        world->tilemapX      = 0;
+        world->tilemapY      = 0;
+        
         memory->isInitialized = true;
     }
 
+    info->debugMode = false; // set this to true to get platform debug info printed to stdout
     player->speed = 200;
     player->color = { 0.8, 0.8, 1.0, 1.0 };
 
-    buildWorld( &state->tilemap );
+    buildWorld( world );
+
+    updatePlayer( input, player, &state->world, info->deltaTimeS );
 
     Color background = { 0.9f, 0.2f, 0.8f, 1.0f };
     drawRectangle( buffer, 0, 0, buffer->width, buffer->height, background );
-
-    drawMap( buffer, &state->tilemap );
-
-    updatePlayer( input, player, &state->tilemap, info->deltaTimeS );
+    drawMap( buffer, &state->world, &state->player );
     drawPlayer( buffer, player );
 }
