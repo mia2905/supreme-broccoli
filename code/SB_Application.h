@@ -37,6 +37,7 @@ struct UserInput
     KeyPress arrowDown;
     KeyPress arrowLeft;
     KeyPress arrowRight;
+    KeyPress esc;
 };
 
 struct ApplicationMemory

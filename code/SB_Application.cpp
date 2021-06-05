@@ -293,6 +293,12 @@ void updatePlayer( UserInput* input, Player* player, World* world, f32 dt )
      
     f32 playerX  = player->x;
     f32 playerY  = player->y;
+
+    f32 playerLeftX = playerX - player->width * 0.5f;
+    f32 playerRightX = playerX + player->width * 0.5f;
+    f32 playerTopY   = playerY - player->height * 0.5f;
+    f32 playerBottomY = playerY + player->height * 0.5f;
+
     f32 movement = dt * player->speed;
 
     if( input->arrowUp.isDown )    playerY -= movement;
@@ -300,7 +306,10 @@ void updatePlayer( UserInput* input, Player* player, World* world, f32 dt )
     if( input->arrowRight.isDown ) playerX += movement;
     if( input->arrowLeft.isDown )  playerX -= movement;
 
-    if( isMoveAllowed( playerX, playerY, world ) )
+    if( isMoveAllowed( playerLeftX, playerTopY, world ) &&
+        isMoveAllowed( playerRightX, playerTopY, world ) &&
+        isMoveAllowed( playerLeftX, playerBottomY, world ) &&
+        isMoveAllowed( playerRightX, playerBottomY, world )  )
     {
         RawPosition raw = {0};
         raw.x = playerX;
@@ -326,9 +335,15 @@ void UpdateAndRender( ApplicationMemory* memory,
     Player*           player = &state->player;
     World*            world  = &state->world;
 
-    if( !memory->isInitialized )
+    // check if the ESC key was pressed
+    if( input->esc.isDown )
     {
-        player->x        = 65;
+        state->reload = true;
+    }
+
+    if( !memory->isInitialized || state->reload )
+    {
+        player->x        = 60;
         player->y        = 100;
 
         world->tilemapCountX = TILEMAPS_X;
@@ -341,6 +356,7 @@ void UpdateAndRender( ApplicationMemory* memory,
         world->tilemapY      = 0;
         
         memory->isInitialized = true;
+        state->reload         = false;
     }
 
     info->debugMode = false; // set this to true to get platform debug info printed to stdout

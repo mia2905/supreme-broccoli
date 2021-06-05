@@ -5,6 +5,7 @@
 #define ARROW_DOWN  125
 #define ARROW_LEFT  123
 #define ARROW_RIGHT 124
+#define ESC         0x35
 
 bool updateInput( UserInput* input, NSEvent* event )
 {
@@ -29,6 +30,11 @@ bool updateInput( UserInput* input, NSEvent* event )
                 input->arrowRight.isDown = true;
                 eventHandeled = true;
                 break;
+            case ESC:
+                input->esc.isDown = true;
+                eventHandeled = true;
+                break;
+                
             default: break;
         }
     }
@@ -51,6 +57,10 @@ bool updateInput( UserInput* input, NSEvent* event )
                 break;
             case ARROW_RIGHT: 
                 input->arrowRight.isDown = false;
+                eventHandeled = true;
+                break;
+            case ESC:
+                input->esc.isDown = false;
                 eventHandeled = true;
                 break;
             default: break;
