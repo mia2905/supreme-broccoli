@@ -294,11 +294,6 @@ void updatePlayer( UserInput* input, Player* player, World* world, f32 dt )
     f32 playerX  = player->x;
     f32 playerY  = player->y;
 
-    f32 playerLeftX = playerX - player->width * 0.5f;
-    f32 playerRightX = playerX + player->width * 0.5f;
-    f32 playerTopY   = playerY - player->height * 0.5f;
-    f32 playerBottomY = playerY + player->height * 0.5f;
-
     f32 movement = dt * player->speed;
 
     if( input->arrowUp.isDown )    playerY -= movement;
@@ -306,9 +301,14 @@ void updatePlayer( UserInput* input, Player* player, World* world, f32 dt )
     if( input->arrowRight.isDown ) playerX += movement;
     if( input->arrowLeft.isDown )  playerX -= movement;
 
-    if( isMoveAllowed( playerLeftX, playerTopY, world ) &&
-        isMoveAllowed( playerRightX, playerTopY, world ) &&
-        isMoveAllowed( playerLeftX, playerBottomY, world ) &&
+    f32 playerLeftX   = playerX - player->width * 0.5f;
+    f32 playerRightX  = playerX + player->width * 0.5f;
+    f32 playerTopY    = playerY - player->height * 0.5f;
+    f32 playerBottomY = playerY + player->height * 0.5f;
+
+    if( isMoveAllowed( playerLeftX,  playerTopY,    world ) &&
+        isMoveAllowed( playerRightX, playerTopY,    world ) &&
+        isMoveAllowed( playerLeftX,  playerBottomY, world ) &&
         isMoveAllowed( playerRightX, playerBottomY, world )  )
     {
         RawPosition raw = {0};
@@ -343,25 +343,24 @@ void UpdateAndRender( ApplicationMemory* memory,
 
     if( !memory->isInitialized || state->reload )
     {
-        player->x        = 60;
-        player->y        = 100;
+        player->x             = 60;
+        player->y             = 100;
+        player->speed         = 200;
+        player->color         = { 0.8, 0.8, 1.0, 1.0 };
 
-        world->tilemapCountX = TILEMAPS_X;
-        world->tilemapCountY = TILEMAPS_Y;
-        world->tileCountX    = TILEMAP_X;
-        world->tileCountY    = TILEMAP_Y;
-        world->tileWidth     = TILE_WIDTH;
-        world->tileHeight    = TILE_WIDTH;
-        world->tilemapX      = 0;
-        world->tilemapY      = 0;
+        world->tilemapCountX  = TILEMAPS_X;
+        world->tilemapCountY  = TILEMAPS_Y;
+        world->tileCountX     = TILEMAP_X;
+        world->tileCountY     = TILEMAP_Y;
+        world->tileWidth      = TILE_WIDTH;
+        world->tileHeight     = TILE_WIDTH;
+        world->tilemapX       = 0;
+        world->tilemapY       = 0;
         
+        info->debugMode       = false; // set this to true to get platform debug info printed to stdout
         memory->isInitialized = true;
         state->reload         = false;
     }
-
-    info->debugMode = false; // set this to true to get platform debug info printed to stdout
-    player->speed = 200;
-    player->color = { 0.8, 0.8, 1.0, 1.0 };
 
     buildWorld( world );
 
