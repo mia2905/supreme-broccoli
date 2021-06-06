@@ -367,6 +367,7 @@ void UpdateAndRender( ApplicationMemory* memory,
         world->tileHeightInMeters = 2.0f;
         world->tileWidthInPixels  = TILE_WIDTH;
         world->tileHeightInPixels = TILE_WIDTH;
+        world->metersToPixels     = (f32)((f32)world->tileWidthInPixels/world->tileWidthInMeters);
 
         Color playerColor = { 0.8, 0.8, 1.0, 1.0 };
 

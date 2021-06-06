@@ -58,6 +58,8 @@ struct World
     u32 tileHeightInPixels;
     f32 tileHeightInMeters;
 
+    f32 metersToPixels;
+
     TileMap tilemaps[4];
 };
 
