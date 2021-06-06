@@ -169,8 +169,8 @@ void drawRectangle( RenderBuffer* buffer, f32 minX, f32 minY, f32 maxX, f32 maxY
 
 void drawPlayer( RenderBuffer* buffer, Player* player, World* world )
 {
-    f32 tileX = player->playerPos.tileX * world->tileWidth;
-    f32 tileY = player->playerPos.tileY * world->tileHeight;
+    f32 tileX = player->playerPos.tileX * world->tileWidthInPixels;
+    f32 tileY = player->playerPos.tileY * world->tileHeightInPixels;
 
     f32 minx  = tileX + player->playerPos.x - player->width/2;
     f32 maxx  = tileX + player->playerPos.x + player->width/2;
@@ -255,8 +255,8 @@ GeneralizedPosition getGeneralizedPosition( World* world, GeneralizedPosition po
     GeneralizedPosition newPos = pos;
     
     // 1. calculate the new tile relative x and y
-    newPos.tileX = newPos.tileX + generalizeCoords( &newPos.x, world->tileWidth );
-    newPos.tileY = newPos.tileY + generalizeCoords( &newPos.y, world->tileHeight );
+    newPos.tileX = newPos.tileX + generalizeCoords( &newPos.x, world->tileWidthInPixels );
+    newPos.tileY = newPos.tileY + generalizeCoords( &newPos.y, world->tileHeightInPixels );
 
     // 2. calculate the new tile x and y and update tilemap x and y
     newPos.tileMapX = newPos.tileMapX + generalizeTileIndex( &newPos.tileX, world->tileCountX );
@@ -359,25 +359,26 @@ void UpdateAndRender( ApplicationMemory* memory,
 
     if( !memory->isInitialized || state->reload )
     {
-        world->tilemapCountX  = TILEMAPS_X;
-        world->tilemapCountY  = TILEMAPS_Y;
-        world->tileCountX     = TILEMAP_X;
-        world->tileCountY     = TILEMAP_Y;
-        world->tileWidthInMeters = 2.0f;
-        world->tileWidth      = TILE_WIDTH;
-        world->tileHeight     = TILE_WIDTH;
+        world->tilemapCountX      = TILEMAPS_X;
+        world->tilemapCountY      = TILEMAPS_Y;
+        world->tileCountX         = TILEMAP_X;
+        world->tileCountY         = TILEMAP_Y;
+        world->tileWidthInMeters  = 2.0f;
+        world->tileHeightInMeters = 2.0f;
+        world->tileWidthInPixels  = TILE_WIDTH;
+        world->tileHeightInPixels = TILE_WIDTH;
 
         Color playerColor = { 0.8, 0.8, 1.0, 1.0 };
 
-        player->playerPos.x        = world->tileWidth * 0.5f;
-        player->playerPos.y        = world->tileHeight * 0.5f;
+        player->playerPos.x        = world->tileWidthInPixels * 0.5f;
+        player->playerPos.y        = world->tileHeightInPixels * 0.5f;
         player->playerPos.tileMapX = 0;
         player->playerPos.tileMapY = 0;
         player->playerPos.tileX    = 1;
         player->playerPos.tileY    = 1;
         player->height             = 30.0f;
         player->width              = 30.0f;
-        player->speed              = 200;
+        player->speed              = 2.0f;
         player->color              = playerColor;
         
         info->debugMode       = false; // set this to true to get platform debug info printed to stdout
