@@ -363,6 +363,7 @@ void UpdateAndRender( ApplicationMemory* memory,
         world->tilemapCountY  = TILEMAPS_Y;
         world->tileCountX     = TILEMAP_X;
         world->tileCountY     = TILEMAP_Y;
+        world->tileWidthInMeters = 2.0f;
         world->tileWidth      = TILE_WIDTH;
         world->tileHeight     = TILE_WIDTH;
 

@@ -54,7 +54,9 @@ struct World
     u32 tileCountY;    // number of tiles per map in Y
 
     u32 tileWidth;
+    f32 tileWidthInMeters;
     u32 tileHeight;
+    f32 tileHeightInMeters;
 
     TileMap tilemaps[4];
 };
