@@ -19,22 +19,13 @@ struct Color
     f32 alpha;
 };
 
-struct RawPosition
+struct GeneralizedPosition
 {
     u32 tileMapX;
     u32 tileMapY;
 
-    f32 x; // position x relative to a tilemap
-    f32 y; // position y relative to a tilemap
-};
-
-struct CorrectPosition
-{
-    u32 tileMapX;
-    u32 tileMapY;
-
-    u32 tileX;
-    u32 tileY;
+    s32 tileX;
+    s32 tileY;
 
     f32 x; // position x relative to a tile
     f32 y; // position y relative to a tile
@@ -42,8 +33,7 @@ struct CorrectPosition
 
 struct Player
 {
-    f32   x;
-    f32   y;
+    GeneralizedPosition playerPos;
     f32   width;
     f32   height;
     f32   speed; // pixels per second;
@@ -64,10 +54,9 @@ struct World
     u32 tileCountY;    // number of tiles per map in Y
 
     u32 tileWidth;
+    f32 tileWidthInMeters;
     u32 tileHeight;
-
-    u32 tilemapX;      // current map index in x
-    u32 tilemapY;      // current map index in y
+    f32 tileHeightInMeters;
 
     TileMap tilemaps[4];
 };
