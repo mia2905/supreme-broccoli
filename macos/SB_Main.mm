@@ -188,7 +188,6 @@ int main()
         }
         while( event != nil );
 
-        INFO.deltaTimeS = (f32)((mach_absolute_time() - last) * ticksToNanoSeconds) / (1000*1000*1000);
         RENDER_FUNC( &MEMORY, &RENDER_BUFFER, &USER_INPUT, &INFO );
 
         @autoreleasepool {
@@ -211,7 +210,8 @@ int main()
         }
 
         u64 endRender    = mach_absolute_time();
-        f64 renderTimeNs = (f64)(endRender - last) * ticksToNanoSeconds;
+        f64 renderTimeNs = (f64)( endRender - last)  * ticksToNanoSeconds;
+        INFO.deltaTimeS  = (f32)( renderTimeNs / (1000*1000*1000) );
 
         if( INFO.debugMode )
         {

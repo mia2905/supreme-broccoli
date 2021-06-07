@@ -16,7 +16,7 @@ main () {
     rm -rf supreme-broccoli.dylib
     rm -rf supreme-broccoli
 
-    clang -dynamiclib -o supreme-broccoli.dylib code/SB_Application.cpp -O3 --debug -std=c++98
+    clang -dynamiclib -o supreme-broccoli.dylib code/SB_Application.cpp --debug -std=c++98
     clang ${FRAMEWORKS} macos/SB_Main.mm -o supreme-broccoli -O3 --debug -std=c++98
 
     if [ -e supreme-broccoli.dylib ]
