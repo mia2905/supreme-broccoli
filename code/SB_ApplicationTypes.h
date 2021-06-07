@@ -62,7 +62,6 @@ struct World
 
 struct ApplicationState
 {
-    bool    reload;
     Player  player;
     World   world;
 };

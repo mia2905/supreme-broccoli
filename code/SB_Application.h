@@ -55,6 +55,7 @@ struct PlatformInfo
 {
     f32  deltaTimeS;
     bool debugMode;
+    bool reload;
 };
 
 /******************************************************

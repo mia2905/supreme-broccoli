@@ -349,10 +349,10 @@ void UpdateAndRender( ApplicationMemory* memory,
     // check if the ESC key was pressed
     if( input->esc.isDown )
     {
-        state->reload = true;
+        info->reload = true;
     }
 
-    if( !memory->isInitialized || state->reload )
+    if( !memory->isInitialized || info->reload )
     {
         world->tilemapCountX      = TILEMAPS_X;
         world->tilemapCountY      = TILEMAPS_Y;
@@ -365,7 +365,7 @@ void UpdateAndRender( ApplicationMemory* memory,
         Color playerColor = { 0.8, 0.8, 1.0, 1.0 };
 
         player->playerPos.x        = world->tileInMeters * 0.5f;
-        player->playerPos.y        = world->tileInMeters * 0.5f;
+        player->playerPos.y        = world->tileInMeters * 0.5f + 1.0f;
         player->playerPos.tileMapX = 0;
         player->playerPos.tileMapY = 0;
         player->playerPos.tileX    = 1;
@@ -377,7 +377,6 @@ void UpdateAndRender( ApplicationMemory* memory,
         
         info->debugMode       = false; // set this to true to get platform debug info printed to stdout
         memory->isInitialized = true;
-        state->reload         = false;
     }
 
     buildWorld( world );

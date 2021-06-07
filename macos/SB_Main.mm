@@ -165,11 +165,11 @@ int main()
         [windowDelegate->m_mainLoop wait];
 
         // reload the dylib every second
-        if( ++loadCounter > 60*4 )
+        if( INFO.reload )
         {
             unloadApplication();
             loadApplication();
-            loadCounter = 0;
+            INFO.reload = false;
         }        
 
         NSEvent* event = nil;        
