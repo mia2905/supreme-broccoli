@@ -372,7 +372,7 @@ void UpdateAndRender( ApplicationMemory* memory,
         player->playerPos.tileY    = 1;
         player->height             = 0.9f * world->tileInMeters;
         player->width              = 0.9f * world->tileInMeters;
-        player->speed              = 2.0f;
+        player->speed              = 4.0f;
         player->color              = playerColor;
         
         info->debugMode       = false; // set this to true to get platform debug info printed to stdout
