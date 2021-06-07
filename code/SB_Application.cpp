@@ -173,9 +173,9 @@ void drawPlayer( RenderBuffer* buffer, Player* player, World* world )
 
     f32 minx  = world->metersToPixels * ( tileX + player->playerPos.x - player->width/2 );
     f32 maxx  = world->metersToPixels * ( tileX + player->playerPos.x + player->width/2 );
-    f32 miny  = world->metersToPixels * ( tileY + player->playerPos.y - player->height/2 );
-    f32 maxy  = world->metersToPixels * ( tileY + player->playerPos.y + player->height/2 );
-    drawRectangle( buffer, minx, miny, maxx, maxy, player->color );
+    f32 miny  = buffer->height - world->metersToPixels * ( tileY + player->playerPos.y - player->height/2 );
+    f32 maxy  = miny - (world->metersToPixels * player->height);
+    drawRectangle( buffer, minx, maxy, maxx, miny, player->color );
 }
 
 void drawMap( RenderBuffer* buffer, World* world, Player* player )
@@ -183,13 +183,8 @@ void drawMap( RenderBuffer* buffer, World* world, Player* player )
     Color tilecolor = { 0.4f, 0.4f, 0.4f, 1.0f };
     u32 tileWidth   = world->tileInMeters * world->metersToPixels;
     u32 tileHeight  = world->tileInMeters * world->metersToPixels;
-    u32 tilesPerRow = 27;
-    u32 rows        = 13;
-
-    f32 minX = 0.0f;
-    f32 maxX = 0.0f;
-    f32 minY = 0.0f;
-    f32 maxY = 0.0f;
+    u32 tilesPerRow = world->tileCountX;
+    u32 rows        = world->tileCountY;
 
     TileMap* currentMap = getCurrentMap( world, player );
     Assert( currentMap );
@@ -201,12 +196,13 @@ void drawMap( RenderBuffer* buffer, World* world, Player* player )
             u32 tile = currentMap->tiles[row * world->tileCountX + col];
             if( tile == 1 )
             {
-                minX = col  * tileWidth;
-                minY = row  * tileHeight;
-                maxX = minX + tileWidth;
-                maxY = minY + tileHeight;
+                u32 minX = col  * tileWidth;
+                u32 maxX = minX + tileWidth;
 
-                drawRectangle( buffer, minX, minY, maxX, maxY, tilecolor );
+                u32 minY = buffer->height - (row  * tileHeight);
+                u32 maxY = minY - tileHeight;
+
+                drawRectangle( buffer, minX, maxY, maxX, minY, tilecolor );
             }
         }
     }
@@ -291,11 +287,11 @@ void updatePlayer( UserInput* input, Player* player, World* world, f32 dt )
 
     if( input->arrowUp.isDown )    
     {
-        playerY -= movement;
+        playerY += movement;
     }
     if( input->arrowDown.isDown )  
     {
-        playerY += movement;
+        playerY -= movement;
     }
     if( input->arrowRight.isDown ) 
     {
