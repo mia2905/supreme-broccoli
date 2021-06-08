@@ -100,34 +100,18 @@ void buildWorld( World* world )
     world->tilemaps[3].tiles = (u32*)map_11;    
 }
 
-TileMap* getMap( World* world, u32 mapX, u32 mapY )
+TileArea* getTileArea( World* world, u32 x, u32 y )
 {
-    u32 width    = world->tilemapCountX;
-    TileMap* map = nullptr;
+    u32 width      = world->tilemapCountX;
+    TileArea* area = nullptr;
 
-    if( (mapX >= 0) && (mapX < world->tilemapCountX) &&
-        (mapY >= 0) && (mapY < world->tilemapCountY) )
+    if( (x >= 0) && (y < world->tilemapCountX) &&
+        (x >= 0) && (y < world->tilemapCountY) )
     {
-        map = &world->tilemaps[mapY * width + mapX];
+        area = &world->tilemaps[y * width + x];
     }
     
-    return map;
-}
-
-TileMap* getCurrentMap( World* world, Player* player )
-{
-    u32 tilemapX = player->playerPos.tileMapX;
-    u32 tilemapY = player->playerPos.tileMapY;
-    u32 width    = world->tilemapCountX;
-    TileMap* currentMap = nullptr;
-
-    if( (tilemapX >= 0) && (tilemapX < world->tilemapCountX) &&
-        (tilemapY >= 0) && (tilemapY < world->tilemapCountY) )
-    {
-        currentMap = &world->tilemaps[tilemapY * width + tilemapX];
-    }
-    
-    return currentMap;
+    return area;
 }
 
 DecomposedPosition decomposePosition( GeneralizedPosition pos )
@@ -199,14 +183,14 @@ void drawMap( RenderBuffer* buffer, World* world, Player* player )
     u32 tilesPerRow = world->tileCountX;
     u32 rows        = world->tileCountY;
 
-    TileMap* currentMap = getCurrentMap( world, player );
-    Assert( currentMap );
+    TileArea* area = getTileArea( world, player->playerPos.tileMapX, player->playerPos.tileMapY );
+    Assert( area );
 
     for( u32 row=0; row<rows; ++row )
     {
         for( u32 col=0; col<tilesPerRow; ++col )
         {
-            u32 tile = currentMap->tiles[row * world->tileCountX + col];
+            u32 tile = area->tiles[row * world->tileCountX + col];
             if( tile == 1 )
             {
                 u32 minX = col  * tileWidth;
@@ -277,14 +261,14 @@ bool isMoveAllowed( GeneralizedPosition newPos, World*  world )
 {
     bool allowed = false;
 
-    TileMap* map = getMap( world, newPos.tileMapX, newPos.tileMapY );
+    TileArea* area = getTileArea( world, newPos.tileMapX, newPos.tileMapY );
     
-    if( map )
+    if( area )
     {
         if( (newPos.tileX >= 0) && (newPos.tileX < world->tileCountX) &&
             (newPos.tileY >= 0) && (newPos.tileY < world->tileCountY) )
         {
-            allowed = ( map->tiles[newPos.tileY * world->tileCountX + newPos.tileX] == 0 ); 
+            allowed = ( area->tiles[newPos.tileY * world->tileCountX + newPos.tileX] == 0 ); 
         }
     }
     

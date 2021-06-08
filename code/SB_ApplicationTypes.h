@@ -55,7 +55,7 @@ struct Player
     Color color;
 };
 
-struct TileMap
+struct TileArea
 {
     u32* tiles;
 };
@@ -72,7 +72,7 @@ struct World
     f32 tileInMeters;
     f32 metersToPixels;
 
-    TileMap tilemaps[4];
+    TileArea tilemaps[4];
 };
 
 struct ApplicationState
