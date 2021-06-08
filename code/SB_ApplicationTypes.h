@@ -3,6 +3,9 @@
 
 #include "SB_Application.h"
 
+#define TILEAREA_SHIFT 8
+#define TILE_MASK      0x000000ff
+
 struct Pixel
 {
     u8 red;
@@ -19,8 +22,20 @@ struct Color
     f32 alpha;
 };
 
+struct DecomposedPosition
+{
+    u32 tileareaX;
+    u32 tileareaY;
+
+    u32 tileX;
+    u32 tileY;
+};
+
 struct GeneralizedPosition
 {
+    u32 unifiedPositionX; // upper 24-bits tilearea and lower 8-bits tile inside the tile area
+    u32 unifiedPositionY; // upper 24-bits tilearea and lower 8-bits tile inside the tile area
+
     u32 tileMapX;
     u32 tileMapY;
 

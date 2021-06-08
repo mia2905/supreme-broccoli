@@ -130,6 +130,19 @@ TileMap* getCurrentMap( World* world, Player* player )
     return currentMap;
 }
 
+DecomposedPosition decomposePosition( GeneralizedPosition pos )
+{
+    DecomposedPosition newPos = {0};
+
+    newPos.tileareaX = pos.unifiedPositionX >> TILEAREA_SHIFT;
+    newPos.tileareaY = pos.unifiedPositionY >> TILEAREA_SHIFT;
+
+    newPos.tileX     = pos.unifiedPositionX & TILE_MASK;
+    newPos.tileY     = pos.unifiedPositionY & TILE_MASK;
+
+    return newPos;
+}
+
 void drawRectangle( RenderBuffer* buffer, f32 minX, f32 minY, f32 maxX, f32 maxY, Color c )
 {
     u32 screenWidth  = buffer->width;
