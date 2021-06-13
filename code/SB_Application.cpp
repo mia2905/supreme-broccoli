@@ -1,23 +1,8 @@
 #include "SB_Application.h"
+#include "SB_Intrinsics.h"
 #include "SB_Tilemap.h"
 #include "SB_Tilemap.cpp"
 
-#include <math.h>
-
-inline s32 roundToS32( f32 value )
-{
-    return (s32)(value + 0.5f);
-}
-
-inline s32 truncateToS32( f32 value )
-{
-    return (s32)value;
-}
-
-inline s32 floorToS32( f32 value )
-{
-    return (s32)floorf( value );
-}
 
 void drawRectangle( RenderBuffer* buffer, f32 minX, f32 minY, f32 maxX, f32 maxY, Color c )
 {
