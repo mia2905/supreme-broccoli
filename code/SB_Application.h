@@ -7,6 +7,9 @@
 #define MegaBytes(x) (KiloBytes(x) * 1024)
 #define GigaBytes(x) (MegaBytes(x) * 1024)
 
+#define SCREEN_X   13
+#define SCREEN_Y   27
+
 typedef unsigned char       u8;
 typedef signed   char       s8;
 typedef unsigned short     u16;
@@ -56,6 +59,46 @@ struct PlatformInfo
     f32  deltaTimeS;
     bool debugMode;
     bool reload;
+};
+
+struct Pixel
+{
+    u8 red;
+    u8 green;
+    u8 blue;
+    u8 alpha;
+};
+
+struct Color
+{
+    f32 red;
+    f32 green;
+    f32 blue;
+    f32 alpha;
+};
+
+#include "SB_Tilemap.h"
+
+struct Player
+{
+    GeneralizedPosition playerPos;
+    f32   width;
+    f32   height;
+    f32   speed; // meters per second;
+    Color color;
+};
+
+struct Screen 
+{
+    u32 tilesInX;
+    u32 tilesInY;
+};
+
+struct ApplicationState
+{
+    Player  player;
+    Screen  screen;
+    TileMap tilemap;
 };
 
 /******************************************************
