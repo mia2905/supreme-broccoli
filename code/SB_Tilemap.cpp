@@ -10,7 +10,7 @@ TileArea* getTileArea( TileMap* tilemap, u32 x, u32 y )
     if( (x >= 0) && (y < tilemap->tileareaCountX) &&
         (x >= 0) && (y < tilemap->tileareaCountY) )
     {
-        area = &tilemap->tilemaps[y * width + x];
+        area = &tilemap->tileAreas[y * width + x];
     }
     
     return area;
@@ -109,4 +109,29 @@ bool isMoveAllowed( GeneralizedPosition newPos, TileMap* tilemap )
     }
     
     return allowed;
+}
+
+void buildTileArea( TileMap* map, u32 areaX, u32 areaY )
+{
+    TileArea* area = getTileArea( map, areaX, areaY );
+    Assert( (area != nullptr) );
+
+    u32* tile = area->tiles;
+
+    for( u32 row=0; row<TILEMAP_Y; ++row )
+    {
+        for( u32 col=0; col<TILEMAP_X; ++col )
+        {
+            *tile = 0;
+
+            if( row == 0 )                *tile = 1;
+            if( row == (TILEMAP_Y - 1) )  *tile = 1;
+            if( col == 0 )                *tile = 1;
+            if( col == (TILEMAP_X - 1 ) ) *tile = 1;
+            if( row == (TILEMAP_Y / 2) )  *tile = 0;
+            if( col == (TILEMAP_X / 2) )  *tile = 0;
+            
+            tile++;
+        }
+    }
 }

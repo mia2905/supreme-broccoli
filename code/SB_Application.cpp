@@ -3,6 +3,21 @@
 #include "SB_Tilemap.h"
 #include "SB_Tilemap.cpp"
 
+#define PushStruct( pool, struct ) (struct*)PushStruct_( pool, sizeof(struct) )
+void* PushStruct_( MemoryPool* pool, memory_index size )
+{
+    Assert( pool->usedBytes + size <= pool->size );
+    u8* allocatedMemory = pool->base + pool->usedBytes;
+
+    pool->usedBytes += size;
+
+    return allocatedMemory;
+}
+
+void buildWorld( TileMap* map )
+{
+    
+}
 
 void drawRectangle( RenderBuffer* buffer, f32 minX, f32 minY, f32 maxX, f32 maxY, Color c )
 {
@@ -150,10 +165,17 @@ void UpdateAndRender( ApplicationMemory* memory,
                       UserInput*         input,
                       PlatformInfo*      info )
 {
+    /************************************
+     * MEMORY LAYOUT -> PERMANENT STORE
+     * --------------------------------
+     * 
+     * -> ApplicationState
+     * -> MemoryPool [TileMap]
+     ************************************/
+
     ApplicationState* state   = (ApplicationState*)memory->permanentMemory;
     Player*           player  = &state->player;
     Screen*           screen  = &state->screen;
-    TileMap*          tilemap = &state->tilemap;
 
     // check if the ESC key was pressed
     if( input->esc.isDown )
@@ -161,10 +183,16 @@ void UpdateAndRender( ApplicationMemory* memory,
         info->reload = true;
     }
 
+    MemoryPool* tilemapMemory = (MemoryPool*)memory->permanentMemory + sizeof(ApplicationState);
+    TileMap*    tilemap       = nullptr;
+
     if( !memory->isInitialized || info->reload )
     {
-        screen->tilesInX            = SCREEN_X;
-        screen->tilesInY            = SCREEN_Y;
+        tilemapMemory->size         = MegaBytes(64);
+        tilemapMemory->base         = (u8*)tilemapMemory + sizeof( MemoryPool );
+        tilemapMemory->usedBytes    = 0;
+
+        tilemap = PushStruct( tilemapMemory, TileMap );
         tilemap->tileCountX         = TILEMAP_X;
         tilemap->tileCountY         = TILEMAP_Y;
         tilemap->tileInMeters       = 2.0f;
@@ -181,6 +209,9 @@ void UpdateAndRender( ApplicationMemory* memory,
         player->height             = 0.9f * tilemap->tileInMeters;
         player->speed              = 4.0f;
         player->color              = playerColor;
+
+        screen->tilesInX           = SCREEN_X;
+        screen->tilesInY           = SCREEN_Y;
         
         info->debugMode       = false; // set this to true to get platform debug info printed to stdout
         memory->isInitialized = true;

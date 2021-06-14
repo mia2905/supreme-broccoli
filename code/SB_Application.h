@@ -7,8 +7,10 @@
 #define MegaBytes(x) (KiloBytes(x) * 1024)
 #define GigaBytes(x) (MegaBytes(x) * 1024)
 
-#define SCREEN_X   13
-#define SCREEN_Y   27
+#define WINDOW_WIDTH 1200
+#define WINDOW_HEIGHT 600
+#define SCREEN_X       20
+#define SCREEN_Y       15
 
 typedef unsigned char       u8;
 typedef signed   char       s8;
@@ -20,6 +22,7 @@ typedef unsigned long long u64;
 typedef signed   long long s64;
 typedef float              f32;
 typedef double             f64;
+typedef unsigned long      memory_index;
 
 struct RenderBuffer
 {
@@ -98,7 +101,13 @@ struct ApplicationState
 {
     Player  player;
     Screen  screen;
-    TileMap tilemap;
+};
+
+struct MemoryPool
+{
+    memory_index size;
+    u8*          base;
+    memory_index usedBytes;
 };
 
 /******************************************************

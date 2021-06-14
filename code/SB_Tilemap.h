@@ -6,8 +6,8 @@
 #define TILEAREA_SHIFT 8
 #define TILE_MASK      0x000000ff
 
-#define TILEMAP_Y      256
-#define TILEMAP_X      256
+#define TILEMAP_Y      17
+#define TILEMAP_X       9
 #define TILE_WIDTH     40
 
 struct GeneralizedPosition
@@ -45,7 +45,7 @@ struct TileMap
     f32 tileInMeters;
     f32 metersToPixels;
 
-    TileArea* tilemaps;
+    TileArea* tileAreas;
 };
 
 #endif//SB_TILEMAP_H
