@@ -3,23 +3,16 @@
 #include "SB_Tilemap.h"
 #include "SB_Tilemap.cpp"
 
-#define PushStruct( pool, struct ) (struct*)PushStruct_( pool, sizeof(struct) )
-#define PushArray( pool, count, struct ) (struct*)PushStruct_( pool, (count)*sizeof(struct) )
-void* PushStruct_( MemoryPool* pool, memory_index size )
+
+void buildWorld( MemoryPool* pool, TileMap* map )
 {
-    Assert( pool->usedBytes + size <= pool->size );
-    u8* allocatedMemory = pool->base + pool->usedBytes;
-
-    pool->usedBytes += size;
-
-    return allocatedMemory;
-}
-
-
-
-void buildWorld( TileMap* map )
-{
-
+    for( u32 y=0; y<map->tileareaCountY; ++y )
+    {   
+        for( u32 x=0; x<map->tileareaCountX; ++x )
+        {
+            buildTileArea( pool, map, x, y );
+        }
+    }
 }
 
 void drawRectangle( RenderBuffer* buffer, f32 minX, f32 minY, f32 maxX, f32 maxY, Color c )
@@ -179,6 +172,7 @@ void UpdateAndRender( ApplicationMemory* memory,
     ApplicationState* state   = (ApplicationState*)memory->permanentMemory;
     Player*           player  = &state->player;
     Screen*           screen  = &state->screen;
+    TileMap*          tilemap = &state->tilemap;
 
     // check if the ESC key was pressed
     if( input->esc.isDown )
@@ -187,7 +181,6 @@ void UpdateAndRender( ApplicationMemory* memory,
     }
 
     MemoryPool* tilemapMemory = (MemoryPool*)((u8*)memory->permanentMemory + sizeof(ApplicationState));
-    TileMap*    tilemap       = nullptr;
 
     if( !memory->isInitialized || info->reload )
     {
@@ -195,7 +188,6 @@ void UpdateAndRender( ApplicationMemory* memory,
         tilemapMemory->base         = (u8*)tilemapMemory + sizeof( MemoryPool );
         tilemapMemory->usedBytes    = 0;
 
-        tilemap = PushStruct( tilemapMemory, TileMap );
         tilemap->tileCountX         = TILEMAP_X;
         tilemap->tileCountY         = TILEMAP_Y;
         tilemap->tileareaCountX     = 4;
@@ -206,6 +198,8 @@ void UpdateAndRender( ApplicationMemory* memory,
         tilemap->tileAreas          = PushArray( tilemapMemory, 
                                                  tilemap->tileareaCountX * tilemap->tileareaCountY,
                                                  TileArea );
+
+        buildWorld( tilemapMemory, tilemap );                                                 
 
         Color playerColor = { 0.8, 0.8, 1.0, 1.0 };
 

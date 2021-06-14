@@ -111,11 +111,11 @@ bool isMoveAllowed( GeneralizedPosition newPos, TileMap* tilemap )
     return allowed;
 }
 
-void buildTileArea( TileMap* map, u32 areaX, u32 areaY )
+void buildTileArea( MemoryPool* pool, TileMap* map, u32 areaX, u32 areaY )
 {
     TileArea* area = getTileArea( map, areaX, areaY );
-    Assert( (area != nullptr) );
-
+    area->tiles = PushArray( pool, map->tileCountX * map->tileCountY, u32 );
+    
     u32* tile = area->tiles;
 
     for( u32 row=0; row<TILEMAP_Y; ++row )

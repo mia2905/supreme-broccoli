@@ -7,6 +7,9 @@
 #define MegaBytes(x) (KiloBytes(x) * 1024)
 #define GigaBytes(x) (MegaBytes(x) * 1024)
 
+#define PushStruct( pool, struct ) (struct*)PushStruct_( pool, sizeof(struct) )
+#define PushArray( pool, count, struct ) (struct*)PushStruct_( pool, (count)*sizeof(struct) )
+
 #define WINDOW_WIDTH 1200
 #define WINDOW_HEIGHT 600
 #define SCREEN_X       20
@@ -99,8 +102,9 @@ struct Screen
 
 struct ApplicationState
 {
-    Player  player;
-    Screen  screen;
+    Player   player;
+    Screen   screen;
+    TileMap  tilemap;
 };
 
 struct MemoryPool
@@ -118,6 +122,16 @@ extern "C" {
                          RenderBuffer*      buffer, 
                          UserInput*         input,
                          PlatformInfo*      info );
+}
+
+void* PushStruct_( MemoryPool* pool, memory_index size )
+{
+    Assert( pool->usedBytes + size <= pool->size );
+    u8* allocatedMemory = pool->base + pool->usedBytes;
+
+    pool->usedBytes += size;
+
+    return allocatedMemory;
 }
 
 #endif//SB_APPLICATION_H
