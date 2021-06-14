@@ -4,6 +4,7 @@
 #include "SB_Tilemap.cpp"
 
 #define PushStruct( pool, struct ) (struct*)PushStruct_( pool, sizeof(struct) )
+#define PushArray( pool, count, struct ) (struct*)PushStruct_( pool, (count)*sizeof(struct) )
 void* PushStruct_( MemoryPool* pool, memory_index size )
 {
     Assert( pool->usedBytes + size <= pool->size );
@@ -14,9 +15,11 @@ void* PushStruct_( MemoryPool* pool, memory_index size )
     return allocatedMemory;
 }
 
+
+
 void buildWorld( TileMap* map )
 {
-    
+
 }
 
 void drawRectangle( RenderBuffer* buffer, f32 minX, f32 minY, f32 maxX, f32 maxY, Color c )
@@ -183,7 +186,7 @@ void UpdateAndRender( ApplicationMemory* memory,
         info->reload = true;
     }
 
-    MemoryPool* tilemapMemory = (MemoryPool*)memory->permanentMemory + sizeof(ApplicationState);
+    MemoryPool* tilemapMemory = (MemoryPool*)((u8*)memory->permanentMemory + sizeof(ApplicationState));
     TileMap*    tilemap       = nullptr;
 
     if( !memory->isInitialized || info->reload )
@@ -195,9 +198,14 @@ void UpdateAndRender( ApplicationMemory* memory,
         tilemap = PushStruct( tilemapMemory, TileMap );
         tilemap->tileCountX         = TILEMAP_X;
         tilemap->tileCountY         = TILEMAP_Y;
+        tilemap->tileareaCountX     = 4;
+        tilemap->tileareaCountY     = 4;
         tilemap->tileInMeters       = 2.0f;
         tilemap->tileInPixels       = TILE_WIDTH;
         tilemap->metersToPixels     = (f32)((f32)tilemap->tileInPixels/tilemap->tileInMeters);
+        tilemap->tileAreas          = PushArray( tilemapMemory, 
+                                                 tilemap->tileareaCountX * tilemap->tileareaCountY,
+                                                 TileArea );
 
         Color playerColor = { 0.8, 0.8, 1.0, 1.0 };
 

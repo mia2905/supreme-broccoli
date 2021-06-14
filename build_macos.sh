@@ -30,7 +30,7 @@ main () {
 
     if [ -e supreme-broccoli ]
     then
-        echo "-> BUILD: ${GREEN}SUCCESS${NORMAL}"
+        echo "-> BUILD PLATFORM: ${GREEN}SUCCESS${NORMAL}"
         sizeInKB=$(du -k supreme-broccoli | cut -f -1)
         echo "-> FILE SIZE: " $sizeInKB kB
     else
