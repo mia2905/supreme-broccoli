@@ -97,6 +97,52 @@ void drawMap( RenderBuffer* buffer, TileMap* tilemap, Player* player )
     }
 }
 
+void drawTileArea( RenderBuffer* buffer, TileMap* tilemap, TileArea* area, u32 screenTileX, u32 screenTileY )
+{
+    Color tilecolor = { 0.4f, 0.4f, 0.4f, 1.0f };
+
+    u32 tileWidth   = tilemap->tileInMeters * tilemap->metersToPixels;
+    u32 tileHeight  = tilemap->tileInMeters * tilemap->metersToPixels;
+    u32 tilesPerRow = tilemap->tileCountX;
+    u32 rows        = tilemap->tileCountY;
+
+    for( u32 row=0; row<rows; ++row )
+    {
+        for( u32 col=0; col<tilesPerRow; ++col )
+        {
+            u32 tile = area->tiles[row * tilemap->tileCountX + col];
+            if( tile == 1 )
+            {
+                u32 minX = (col + screenTileX) * tileWidth;
+                u32 maxX = minX + tileWidth;
+
+                u32 minY = buffer->height - ( (row + screenTileY) * tileHeight);
+                u32 maxY = minY - tileHeight;
+
+                drawRectangle( buffer, minX, maxY, maxX, minY, tilecolor );
+            }
+        }
+    }
+}
+
+void drawWorld( RenderBuffer* buffer, TileMap* world, Screen* screen )
+{
+    u32 screenX = 0;
+    u32 screenY = 0;
+
+    for( u32 y = 0; y < world->tileareaCountY; ++y )
+    {
+        for( u32 x = 0; x < world->tileareaCountY; ++x )
+        {
+            screenX = x * world->tileCountX;
+            screenY = y * world->tileCountY;
+
+            TileArea* area = getTileArea( world, x, y );
+            drawTileArea( buffer, world, area, screenX, screenY );
+        }
+    }
+}
+
 void updatePlayer( UserInput* input, Player* player, TileMap* tilemap, f32 dt )
 {
     f32 playerX  = player->playerPos.x;
@@ -223,6 +269,7 @@ void UpdateAndRender( ApplicationMemory* memory,
 
     Color background = { 0.9f, 0.2f, 0.8f, 1.0f };
     drawRectangle( buffer, 0, 0, buffer->width, buffer->height, background );
-    drawMap( buffer, tilemap, player );
+    drawWorld( buffer, tilemap, screen );
+    //drawMap( buffer, tilemap, player );
     drawPlayer( buffer, player, tilemap );
 }
