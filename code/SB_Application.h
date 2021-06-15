@@ -100,18 +100,19 @@ struct Screen
     u32 tilesInY;
 };
 
-struct ApplicationState
-{
-    Player   player;
-    Screen   screen;
-    TileMap  tilemap;
-};
-
 struct MemoryPool
 {
     memory_index size;
     u8*          base;
     memory_index usedBytes;
+};
+
+struct ApplicationState
+{
+    Player     player;
+    Screen     screen;
+    MemoryPool tileMemory;
+    TileMap    tilemap;
 };
 
 /******************************************************

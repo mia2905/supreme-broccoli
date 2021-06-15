@@ -169,10 +169,12 @@ void UpdateAndRender( ApplicationMemory* memory,
      * -> MemoryPool [TileMap]
      ************************************/
 
-    ApplicationState* state   = (ApplicationState*)memory->permanentMemory;
-    Player*           player  = &state->player;
-    Screen*           screen  = &state->screen;
-    TileMap*          tilemap = &state->tilemap;
+    ApplicationState* state      = (ApplicationState*)memory->permanentMemory;
+    Player*           player     = &state->player;
+    Screen*           screen     = &state->screen;
+    MemoryPool*       tileMemory = &state->tileMemory;
+    TileMap*          tilemap    = &state->tilemap;
+
 
     // check if the ESC key was pressed
     if( input->esc.isDown )
@@ -180,13 +182,11 @@ void UpdateAndRender( ApplicationMemory* memory,
         info->reload = true;
     }
 
-    MemoryPool* tilemapMemory = (MemoryPool*)((u8*)memory->permanentMemory + sizeof(ApplicationState));
-
     if( !memory->isInitialized || info->reload )
     {
-        tilemapMemory->size         = MegaBytes(64);
-        tilemapMemory->base         = (u8*)tilemapMemory + sizeof( MemoryPool );
-        tilemapMemory->usedBytes    = 0;
+        tileMemory->size            = MegaBytes(64);
+        tileMemory->base            = (u8*)memory->permanentMemory + sizeof( ApplicationState );
+        tileMemory->usedBytes       = 0;
 
         tilemap->tileCountX         = TILEMAP_X;
         tilemap->tileCountY         = TILEMAP_Y;
@@ -195,11 +195,11 @@ void UpdateAndRender( ApplicationMemory* memory,
         tilemap->tileInMeters       = 2.0f;
         tilemap->tileInPixels       = TILE_WIDTH;
         tilemap->metersToPixels     = (f32)((f32)tilemap->tileInPixels/tilemap->tileInMeters);
-        tilemap->tileAreas          = PushArray( tilemapMemory, 
+        tilemap->tileAreas          = PushArray( tileMemory, 
                                                  tilemap->tileareaCountX * tilemap->tileareaCountY,
                                                  TileArea );
 
-        buildWorld( tilemapMemory, tilemap );                                                 
+        buildWorld( tileMemory, tilemap );                                                 
 
         Color playerColor = { 0.8, 0.8, 1.0, 1.0 };
 
