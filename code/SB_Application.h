@@ -1,11 +1,22 @@
 #ifndef SB_APPLICATION_H
 #define SB_APPLICATION_H
 
-#define Assert(expression) if(!expression) { int* a = nullptr; *a = 0; } // write to a null address to crash the program deliberately
+#include <stdio.h>
+
+#define Assert(expression) if(!(expression)) { int* a = 0; *a = 0; } // write to a null address to crash the program deliberately
 #define Print(text) if(INFO.debugMode) { printf(text); fflush(stdout); }
+#define PrintNumber(label, number) printf( "%s: %f\n", label, number); fflush(stdout);
 #define KiloBytes(x) (x * 1024)
 #define MegaBytes(x) (KiloBytes(x) * 1024)
 #define GigaBytes(x) (MegaBytes(x) * 1024)
+
+#define PushStruct( pool, struct ) (struct*)PushStruct_( pool, sizeof(struct) )
+#define PushArray( pool, count, struct ) (struct*)PushStruct_( pool, (count)*sizeof(struct) )
+
+#define WINDOW_WIDTH 1200
+#define WINDOW_HEIGHT 600
+#define SCREEN_X       20
+#define SCREEN_Y       15
 
 typedef unsigned char       u8;
 typedef signed   char       s8;
@@ -17,6 +28,7 @@ typedef unsigned long long u64;
 typedef signed   long long s64;
 typedef float              f32;
 typedef double             f64;
+typedef unsigned long      memory_index;
 
 struct RenderBuffer
 {
@@ -58,6 +70,55 @@ struct PlatformInfo
     bool reload;
 };
 
+struct Pixel
+{
+    u8 red;
+    u8 green;
+    u8 blue;
+    u8 alpha;
+};
+
+struct Color
+{
+    f32 red;
+    f32 green;
+    f32 blue;
+    f32 alpha;
+};
+
+#include "SB_Tilemap.h"
+
+struct Player
+{
+    GeneralizedPosition playerPos;
+    f32   width;
+    f32   height;
+    f32   speed; // meters per second;
+    Color color;
+};
+
+struct Screen 
+{
+    u32 tilesInX;
+    u32 tilesInY;
+    GeneralizedPosition origin; // lower left corner
+};
+
+struct MemoryPool
+{
+    memory_index size;
+    u8*          base;
+    memory_index usedBytes;
+};
+
+struct ApplicationState
+{
+    Player     player;
+    Screen     screen;
+    MemoryPool tileMemory;
+    TileMap    tilemap;
+};
+
 /******************************************************
  * SERVICES THE APPLICATION PROVIDES TO THE PLATFORM
  ******************************************************/
@@ -66,6 +127,16 @@ extern "C" {
                          RenderBuffer*      buffer, 
                          UserInput*         input,
                          PlatformInfo*      info );
+}
+
+void* PushStruct_( MemoryPool* pool, memory_index size )
+{
+    Assert( pool->usedBytes + size <= pool->size );
+    u8* allocatedMemory = pool->base + pool->usedBytes;
+
+    pool->usedBytes += size;
+
+    return allocatedMemory;
 }
 
 #endif//SB_APPLICATION_H
