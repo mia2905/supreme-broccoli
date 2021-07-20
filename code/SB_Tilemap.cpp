@@ -4,14 +4,9 @@
 
 TileArea* getTileArea( TileMap* tilemap, u32 x, u32 y )
 {
-    u32 width      = tilemap->tileareaCountX;
     TileArea* area = 0;
 
-    if( (x >= 0) && (x < tilemap->tileareaCountX) &&
-        (y >= 0) && (y < tilemap->tileareaCountY) )
-    {
-        area = &tilemap->tileAreas[y * width + x];
-    }
+    area = &tilemap->tileAreas[y * NR_OF_TILEAREAS + x];
     
     return area;
 }

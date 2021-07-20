@@ -13,10 +13,11 @@
 #define PushStruct( pool, struct ) (struct*)PushStruct_( pool, sizeof(struct) )
 #define PushArray( pool, count, struct ) (struct*)PushStruct_( pool, (count)*sizeof(struct) )
 
-#define WINDOW_WIDTH 1200
-#define WINDOW_HEIGHT 600
-#define SCREEN_X       20
-#define SCREEN_Y       15
+#define WINDOW_WIDTH   1200
+#define WINDOW_HEIGHT   600
+#define SCREEN_X         20
+#define SCREEN_Y         15
+#define NR_OF_TILEAREAS 100
 
 typedef unsigned char       u8;
 typedef signed   char       s8;
@@ -50,6 +51,7 @@ struct UserInput
     KeyPress arrowLeft;
     KeyPress arrowRight;
     KeyPress esc;
+    KeyPress space;
 };
 
 struct ApplicationMemory

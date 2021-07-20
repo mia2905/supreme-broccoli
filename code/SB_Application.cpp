@@ -5,12 +5,16 @@
 
 void buildWorld( MemoryPool* pool, TileMap* map )
 {
-    for( u32 y=0; y<map->tileareaCountY; ++y )
-    {   
-        for( u32 x=0; x<map->tileareaCountX; ++x )
-        {
-            buildTileArea( pool, map, x, y );
-        }
+    u32 x = 0;
+    u32 y = 0;
+
+    for( u32 i=0; i<NR_OF_TILEAREAS; ++i )
+    {
+        buildTileArea( pool, map, x, y );
+        if( randomNumber() % 2 == 0 )
+            x++;
+        else
+            y++;
     }
 }
 
@@ -58,8 +62,8 @@ void drawPlayer( RenderBuffer* buffer, Player* player, TileMap* tilemap, Screen*
     u32 tileOffsetX = (pos.tileareaX - origin.tileareaX) * tilemap->tileCountX;
     u32 tileOffsetY = (pos.tileareaY - origin.tileareaY) * tilemap->tileCountY;
 
-    f32 tileX = (tileOffsetX + pos.tileX) * tilemap->tileInMeters;
     f32 tileY = (tileOffsetY + pos.tileY) * tilemap->tileInMeters;
+    f32 tileX = (tileOffsetX + pos.tileX) * tilemap->tileInMeters;
 
     Color tilecolor = { 1.0f, 0.0f, 0.0f, 1.0f };
 
@@ -107,25 +111,29 @@ void drawTileArea( RenderBuffer* buffer, TileMap* tilemap, TileArea* area, u32 s
 
 void drawWorld( RenderBuffer* buffer, TileMap* world, Screen* screen )
 {
+    DecomposedPosition currentScreen = decomposePosition( screen->origin );
+    u32 areaX = currentScreen.tileareaX;
+    u32 areaY = currentScreen.tileareaY;
     u32 screenX = 0;
     u32 screenY = 0;
 
-    for( u32 y = 0; y < world->tileareaCountY; ++y )
+    while( screenY < screen->tilesInY )
     {
-        for( u32 x = 0; x < world->tileareaCountY; ++x )
+        screenX = 0;
+        while( screenX < screen->tilesInX )
         {
-            screenX = x * world->tileCountX;
-            screenY = y * world->tileCountY;
-
-            TileArea* area = getTileArea( world, x, y );
-            if( area == NULL )
+            TileArea* area = getTileArea( world, areaX, areaY );
+            if( area->tiles != nullptr )
             {
-                // nothing defined at this location
-                return;
+                drawTileArea( buffer, world, area, screenX, screenY );
             }
-
-            drawTileArea( buffer, world, area, screenX, screenY );
+            
+            screenX += world->tileCountX;
+            areaX++;
         }
+
+        screenY += world->tileCountY;
+        areaY++;
     }
 }
 
@@ -133,8 +141,9 @@ void updatePlayer( UserInput* input, Player* player, TileMap* tilemap, f32 dt )
 {
     f32 playerX  = player->playerPos.x;
     f32 playerY  = player->playerPos.y;
+    f32 speed    = input->space.isDown ? 3.0f * player->speed : player->speed;
 
-    f32 movement = dt * player->speed; // s * m/s = m -> so movement is a displacement in meters
+    f32 movement = dt * speed; // s * m/s = m -> so movement is a displacement in meters
 
     if( input->arrowUp.isDown )    
     {
@@ -219,19 +228,19 @@ void UpdateAndRender( ApplicationMemory* memory,
 
     if( !memory->isInitialized || info->reload )
     {
+        initMath();
+
         tileMemory->size            = MegaBytes(64);
         tileMemory->base            = (u8*)memory->permanentMemory + sizeof( ApplicationState );
         tileMemory->usedBytes       = 0;
 
         tilemap->tileCountX         = TILEMAP_X;
         tilemap->tileCountY         = TILEMAP_Y;
-        tilemap->tileareaCountX     = 4;
-        tilemap->tileareaCountY     = 4;
         tilemap->tileInMeters       = 2.0f;
         tilemap->tileInPixels       = TILE_WIDTH;
         tilemap->metersToPixels     = (f32)((f32)tilemap->tileInPixels/tilemap->tileInMeters);
         tilemap->tileAreas          = PushArray( tileMemory, 
-                                                 tilemap->tileareaCountX * tilemap->tileareaCountY,
+                                                 NR_OF_TILEAREAS * NR_OF_TILEAREAS,
                                                  TileArea );
 
         buildWorld( tileMemory, tilemap );                                                 

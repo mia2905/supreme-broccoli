@@ -35,9 +35,6 @@ struct TileArea
 
 struct TileMap
 {
-    u32 tileareaCountX; // number of maps in X
-    u32 tileareaCountY; // number of maps in Y
-
     u32 tileCountX;    // number of tiles per map in X
     u32 tileCountY;    // number of tiles per map in Y
 

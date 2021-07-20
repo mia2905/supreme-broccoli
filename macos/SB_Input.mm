@@ -6,6 +6,7 @@
 #define ARROW_LEFT  123
 #define ARROW_RIGHT 124
 #define ESC         0x35
+#define SPACE        49
 
 bool updateInput( UserInput* input, NSEvent* event )
 {
@@ -32,6 +33,11 @@ bool updateInput( UserInput* input, NSEvent* event )
                 break;
             case ESC:
                 input->esc.isDown = true;
+                eventHandeled = true;
+                break;
+
+            case SPACE:
+                input->space.isDown = true;
                 eventHandeled = true;
                 break;
                 
@@ -63,6 +69,11 @@ bool updateInput( UserInput* input, NSEvent* event )
                 input->esc.isDown = false;
                 eventHandeled = true;
                 break;
+            case SPACE:
+                input->space.isDown = false;
+                eventHandeled = true;
+                break;
+                
             default: break;
         }
     }
