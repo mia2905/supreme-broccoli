@@ -37,18 +37,18 @@ void composePosition( DecomposedPosition pos, GeneralizedPosition* newPos )
     newPos->unifiedPositionY = newPos->unifiedPositionY | pos.tileY;
 }
 
-s32 generalizeCoords( f32* value, s32 pixelSize )
+s32 generalizeCoords( f32* value, s32 tileSize )
 {
     s32 result = 0;
-    f32 newX = *value / pixelSize;
+    f32 newX = *value / tileSize;
     if( newX < 0 ) 
     {
-        *value = pixelSize - *value;
+        *value = tileSize - *value;
         result = -1;
     }
     if( newX >= 1.0 )
     {
-        *value = *value - pixelSize;
+        *value = *value - tileSize;
         result = 1;
     }
 

@@ -3,7 +3,6 @@
 #include "SB_Tilemap.h"
 #include "SB_Tilemap.cpp"
 
-
 void buildWorld( MemoryPool* pool, TileMap* map )
 {
     for( u32 y=0; y<map->tileareaCountY; ++y )
@@ -51,50 +50,31 @@ void drawRectangle( RenderBuffer* buffer, f32 minX, f32 minY, f32 maxX, f32 maxY
     }
 }
 
-void drawPlayer( RenderBuffer* buffer, Player* player, TileMap* tilemap )
+void drawPlayer( RenderBuffer* buffer, Player* player, TileMap* tilemap, Screen* screen )
 {
     DecomposedPosition pos = decomposePosition( player->playerPos );
+    DecomposedPosition origin = decomposePosition( screen->origin );
 
-    f32 tileX = pos.tileX * tilemap->tileInMeters;
-    f32 tileY = pos.tileY * tilemap->tileInMeters;
+    u32 tileOffsetX = (pos.tileareaX - origin.tileareaX) * tilemap->tileCountX;
+    u32 tileOffsetY = (pos.tileareaY - origin.tileareaY) * tilemap->tileCountY;
+
+    f32 tileX = (tileOffsetX + pos.tileX) * tilemap->tileInMeters;
+    f32 tileY = (tileOffsetY + pos.tileY) * tilemap->tileInMeters;
+
+    Color tilecolor = { 1.0f, 0.0f, 0.0f, 1.0f };
+
+    f32 tileMinx = tilemap->metersToPixels * tileX;
+    f32 tileMaxx = tilemap->metersToPixels * (tileX + tilemap->tileInMeters);
+    f32 tileMiny = buffer->height - tilemap->metersToPixels * tileY;
+    f32 tileMaxy = tileMiny - (tilemap->metersToPixels * tilemap->tileInMeters);
+    drawRectangle( buffer, tileMinx, tileMaxy, tileMaxx, tileMiny, tilecolor );
+
 
     f32 minx  = tilemap->metersToPixels * ( tileX + player->playerPos.x - player->width/2 );
     f32 maxx  = tilemap->metersToPixels * ( tileX + player->playerPos.x + player->width/2 );
     f32 miny  = buffer->height - tilemap->metersToPixels * ( tileY + player->playerPos.y - player->height/2 );
     f32 maxy  = miny - (tilemap->metersToPixels * player->height);
     drawRectangle( buffer, minx, maxy, maxx, miny, player->color );
-}
-
-void drawMap( RenderBuffer* buffer, TileMap* tilemap, Player* player )
-{
-    Color tilecolor = { 0.4f, 0.4f, 0.4f, 1.0f };
-    u32 tileWidth   = tilemap->tileInMeters * tilemap->metersToPixels;
-    u32 tileHeight  = tilemap->tileInMeters * tilemap->metersToPixels;
-    u32 tilesPerRow = tilemap->tileCountX;
-    u32 rows        = tilemap->tileCountY;
-
-    DecomposedPosition pos = decomposePosition( player->playerPos );
-
-    TileArea* area = getTileArea( tilemap, pos.tileareaX, pos.tileareaY );
-    Assert( area );
-
-    for( u32 row=0; row<rows; ++row )
-    {
-        for( u32 col=0; col<tilesPerRow; ++col )
-        {
-            u32 tile = area->tiles[row * tilemap->tileCountX + col];
-            if( tile == 1 )
-            {
-                u32 minX = col  * tileWidth;
-                u32 maxX = minX + tileWidth;
-
-                u32 minY = buffer->height - (row  * tileHeight);
-                u32 maxY = minY - tileHeight;
-
-                drawRectangle( buffer, minX, maxY, maxX, minY, tilecolor );
-            }
-        }
-    }
 }
 
 void drawTileArea( RenderBuffer* buffer, TileMap* tilemap, TileArea* area, u32 screenTileX, u32 screenTileY )
@@ -138,6 +118,12 @@ void drawWorld( RenderBuffer* buffer, TileMap* world, Screen* screen )
             screenY = y * world->tileCountY;
 
             TileArea* area = getTileArea( world, x, y );
+            if( area == NULL )
+            {
+                // nothing defined at this location
+                return;
+            }
+
             drawTileArea( buffer, world, area, screenX, screenY );
         }
     }
@@ -167,8 +153,10 @@ void updatePlayer( UserInput* input, Player* player, TileMap* tilemap, f32 dt )
         playerX -= movement;
     }
 
+    // old player position
     GeneralizedPosition p = player->playerPos;
 
+    // new positions of the four corners
     GeneralizedPosition bottomLeft  = p;
     GeneralizedPosition bottomRight = p;
     GeneralizedPosition topLeft     = p;
@@ -196,6 +184,7 @@ void updatePlayer( UserInput* input, Player* player, TileMap* tilemap, f32 dt )
         isMoveAllowed( topLeft,     tilemap ) &&
         isMoveAllowed( topRight,    tilemap )  )
     {
+        // update old position with new x and y
         p.x = playerX;
         p.y = playerY;
         player->playerPos = getGeneralizedPosition( tilemap, p );
@@ -251,15 +240,17 @@ void UpdateAndRender( ApplicationMemory* memory,
 
         player->playerPos.unifiedPositionX = 1;
         player->playerPos.unifiedPositionY = 1;
-        player->playerPos.x        = tilemap->tileInMeters * 0.5f;
-        player->playerPos.y        = tilemap->tileInMeters * 0.5f + 1.0f;
-        player->width              = 0.9f * tilemap->tileInMeters;
-        player->height             = 0.9f * tilemap->tileInMeters;
-        player->speed              = 4.0f;
-        player->color              = playerColor;
-
-        screen->tilesInX           = SCREEN_X;
-        screen->tilesInY           = SCREEN_Y;
+        player->playerPos.x                = tilemap->tileInMeters * 0.5f;
+        player->playerPos.y                = tilemap->tileInMeters * 0.5f + 1.0f;
+        player->width                      = 0.9f * tilemap->tileInMeters;
+        player->height                     = 0.9f * tilemap->tileInMeters;
+        player->speed                      = 4.0f;
+        player->color                      = playerColor;
+        
+        screen->tilesInX                   = SCREEN_X;
+        screen->tilesInY                   = SCREEN_Y;
+        screen->origin.unifiedPositionX    = 0;
+        screen->origin.unifiedPositionY    = 0;
         
         info->debugMode       = false; // set this to true to get platform debug info printed to stdout
         memory->isInitialized = true;
@@ -270,6 +261,5 @@ void UpdateAndRender( ApplicationMemory* memory,
     Color background = { 0.9f, 0.2f, 0.8f, 1.0f };
     drawRectangle( buffer, 0, 0, buffer->width, buffer->height, background );
     drawWorld( buffer, tilemap, screen );
-    //drawMap( buffer, tilemap, player );
-    drawPlayer( buffer, player, tilemap );
+    drawPlayer( buffer, player, tilemap, screen );
 }
