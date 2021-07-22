@@ -6,10 +6,6 @@
 #define TILEAREA_SHIFT 8
 #define TILE_MASK      0x000000ff
 
-#define TILEMAP_Y       9
-#define TILEMAP_X      17
-#define TILE_WIDTH     40
-
 struct GeneralizedPosition
 {
     u32 unifiedPositionX; // upper 24-bits tilearea and lower 8-bits tile inside the tile area
@@ -21,11 +17,11 @@ struct GeneralizedPosition
 
 struct DecomposedPosition
 {
-    u32 tileareaX;
-    u32 tileareaY;
+    s32 tileareaX;
+    s32 tileareaY;
 
-    u32 tileX;
-    u32 tileY;
+    s32 tileX;
+    s32 tileY;
 };
 
 struct TileArea
@@ -35,9 +31,6 @@ struct TileArea
 
 struct TileMap
 {
-    u32 tileareaCountX; // number of maps in X
-    u32 tileareaCountY; // number of maps in Y
-
     u32 tileCountX;    // number of tiles per map in X
     u32 tileCountY;    // number of tiles per map in Y
 

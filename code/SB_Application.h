@@ -13,10 +13,13 @@
 #define PushStruct( pool, struct ) (struct*)PushStruct_( pool, sizeof(struct) )
 #define PushArray( pool, count, struct ) (struct*)PushStruct_( pool, (count)*sizeof(struct) )
 
-#define WINDOW_WIDTH 1200
-#define WINDOW_HEIGHT 600
-#define SCREEN_X       20
-#define SCREEN_Y       15
+#define WINDOW_WIDTH   1200
+#define WINDOW_HEIGHT   600
+#define TILE_SIZE        40
+#define TILEMAP_Y        WINDOW_HEIGHT / TILE_SIZE
+#define TILEMAP_X        WINDOW_WIDTH / TILE_SIZE
+
+#define NR_OF_TILEAREAS 100
 
 typedef unsigned char       u8;
 typedef signed   char       s8;
@@ -50,6 +53,7 @@ struct UserInput
     KeyPress arrowLeft;
     KeyPress arrowRight;
     KeyPress esc;
+    KeyPress space;
 };
 
 struct ApplicationMemory
@@ -97,13 +101,6 @@ struct Player
     Color color;
 };
 
-struct Screen 
-{
-    u32 tilesInX;
-    u32 tilesInY;
-    GeneralizedPosition origin; // lower left corner
-};
-
 struct MemoryPool
 {
     memory_index size;
@@ -114,7 +111,6 @@ struct MemoryPool
 struct ApplicationState
 {
     Player     player;
-    Screen     screen;
     MemoryPool tileMemory;
     TileMap    tilemap;
 };
