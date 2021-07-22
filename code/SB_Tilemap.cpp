@@ -2,11 +2,14 @@
 #include "SB_Tilemap.h"
 
 
-TileArea* getTileArea( TileMap* tilemap, u32 x, u32 y )
+TileArea* getTileArea( TileMap* tilemap, s32 x, s32 y )
 {
-    TileArea* area = 0;
+    TileArea* area = NULL;
 
-    area = &tilemap->tileAreas[y * NR_OF_TILEAREAS + x];
+    if( x >= 0 && y >= 0 ) 
+    {
+        area = &tilemap->tileAreas[y * NR_OF_TILEAREAS + x];
+    }
     
     return area;
 }
@@ -94,7 +97,7 @@ bool isMoveAllowed( GeneralizedPosition newPos, TileMap* tilemap )
     DecomposedPosition pos = decomposePosition( newPos );
     TileArea* area = getTileArea( tilemap, pos.tileareaX, pos.tileareaY );
     
-    if( area )
+    if( area->tiles )
     {
         if( (pos.tileX >= 0) && (pos.tileX < tilemap->tileCountX) &&
             (pos.tileY >= 0) && (pos.tileY < tilemap->tileCountY) )
@@ -106,7 +109,7 @@ bool isMoveAllowed( GeneralizedPosition newPos, TileMap* tilemap )
     return allowed;
 }
 
-void buildTileArea( MemoryPool* pool, TileMap* map, u32 areaX, u32 areaY )
+TileArea* buildTileArea( MemoryPool* pool, TileMap* map, u32 areaX, u32 areaY )
 {
     TileArea* area = getTileArea( map, areaX, areaY );
     area->tiles = PushArray( pool, map->tileCountX * map->tileCountY, u32 );
@@ -123,10 +126,31 @@ void buildTileArea( MemoryPool* pool, TileMap* map, u32 areaX, u32 areaY )
             if( row == (TILEMAP_Y - 1) )  *tile = 1;
             if( col == 0 )                *tile = 1;
             if( col == (TILEMAP_X - 1 ) ) *tile = 1;
-            if( row == (TILEMAP_Y / 2) )  *tile = 0;
-            if( col == (TILEMAP_X / 2) )  *tile = 0;
             
             tile++;
         }
+    }
+
+    return area;
+}
+
+void setDoors( TileArea* area, bool left, bool right, bool top, bool bottom )
+{
+    u32* tiles = area->tiles;
+    if( left )
+    {
+        tiles[TILEMAP_Y / 2 * TILEMAP_X] = 0;
+    }
+    if( right )
+    {
+        tiles[TILEMAP_Y / 2 * TILEMAP_X + TILEMAP_X - 1] = 0;
+    }
+    if( top ) 
+    {
+        tiles[TILEMAP_Y * TILEMAP_X - (TILEMAP_X / 2)] = 0;
+    }
+    if( bottom )
+    {
+        tiles[TILEMAP_X / 2] = 0;
     }
 }

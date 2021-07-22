@@ -8,13 +8,47 @@ void buildWorld( MemoryPool* pool, TileMap* map )
     u32 x = 0;
     u32 y = 0;
 
+    bool doorLeft   = false;
+    bool doorRight  = false;
+    bool doorTop    = false;
+    bool doorBottom = false;
+
+    bool lastDoorLeft   = false;
+    bool lastDoorRight  = false;
+    bool lastDoorTop    = false;
+    bool lastDoorBottom = false;
+
     for( u32 i=0; i<NR_OF_TILEAREAS; ++i )
     {
-        buildTileArea( pool, map, x, y );
+        TileArea* area = buildTileArea( pool, map, x, y );
+
+        doorRight  = lastDoorLeft   ? true : false;
+        doorLeft   = lastDoorRight  ? true : false;
+        doorTop    = lastDoorBottom ? true : false;
+        doorBottom = lastDoorTop    ? true : false;
+        
         if( randomNumber() % 2 == 0 )
+        {
+            doorRight      = true;
+            lastDoorRight  = true;
+
+            lastDoorLeft   = false;
+            lastDoorTop    = false;
+            lastDoorBottom = false;
             x++;
+        }
         else
+        {
+            doorTop        = true;
+            lastDoorTop    = true;
+
+            lastDoorRight  = false;
+            lastDoorLeft   = false;
+            lastDoorBottom = false;
             y++;
+        }
+
+        setDoors( area, doorLeft, doorRight, doorTop, doorBottom );
     }
 }
 
@@ -54,16 +88,15 @@ void drawRectangle( RenderBuffer* buffer, f32 minX, f32 minY, f32 maxX, f32 maxY
     }
 }
 
-void drawPlayer( RenderBuffer* buffer, Player* player, TileMap* tilemap, Screen* screen )
+void drawPlayer( RenderBuffer* buffer, Player* player, TileMap* tilemap )
 {
     DecomposedPosition pos = decomposePosition( player->playerPos );
-    DecomposedPosition origin = decomposePosition( screen->origin );
+    
+    u32 tileOffsetX = pos.tileareaX * tilemap->tileCountX;
+    u32 tileOffsetY = pos.tileareaY * tilemap->tileCountY;
 
-    u32 tileOffsetX = (pos.tileareaX - origin.tileareaX) * tilemap->tileCountX;
-    u32 tileOffsetY = (pos.tileareaY - origin.tileareaY) * tilemap->tileCountY;
-
-    f32 tileY = (tileOffsetY + pos.tileY) * tilemap->tileInMeters;
-    f32 tileX = (tileOffsetX + pos.tileX) * tilemap->tileInMeters;
+    f32 tileY = pos.tileY * tilemap->tileInMeters;
+    f32 tileX = pos.tileX * tilemap->tileInMeters;
 
     Color tilecolor = { 1.0f, 0.0f, 0.0f, 1.0f };
 
@@ -81,7 +114,7 @@ void drawPlayer( RenderBuffer* buffer, Player* player, TileMap* tilemap, Screen*
     drawRectangle( buffer, minx, maxy, maxx, miny, player->color );
 }
 
-void drawTileArea( RenderBuffer* buffer, TileMap* tilemap, TileArea* area, u32 screenTileX, u32 screenTileY )
+void drawTileArea( RenderBuffer* buffer, TileMap* tilemap, TileArea* area )
 {
     Color tilecolor = { 0.4f, 0.4f, 0.4f, 1.0f };
 
@@ -97,10 +130,10 @@ void drawTileArea( RenderBuffer* buffer, TileMap* tilemap, TileArea* area, u32 s
             u32 tile = area->tiles[row * tilemap->tileCountX + col];
             if( tile == 1 )
             {
-                u32 minX = (col + screenTileX) * tileWidth;
+                u32 minX = col * tileWidth;
                 u32 maxX = minX + tileWidth;
 
-                u32 minY = buffer->height - ( (row + screenTileY) * tileHeight);
+                u32 minY = buffer->height - (row * tileHeight);
                 u32 maxY = minY - tileHeight;
 
                 drawRectangle( buffer, minX, maxY, maxX, minY, tilecolor );
@@ -109,31 +142,16 @@ void drawTileArea( RenderBuffer* buffer, TileMap* tilemap, TileArea* area, u32 s
     }
 }
 
-void drawWorld( RenderBuffer* buffer, TileMap* world, Screen* screen )
+void drawWorld( RenderBuffer* buffer, TileMap* world, Player* player )
 {
-    DecomposedPosition currentScreen = decomposePosition( screen->origin );
+    DecomposedPosition currentScreen = decomposePosition( player->playerPos );
     u32 areaX = currentScreen.tileareaX;
     u32 areaY = currentScreen.tileareaY;
-    u32 screenX = 0;
-    u32 screenY = 0;
-
-    while( screenY < screen->tilesInY )
+    
+    TileArea* area = getTileArea( world, areaX, areaY );
+    if( area->tiles != nullptr )
     {
-        screenX = 0;
-        while( screenX < screen->tilesInX )
-        {
-            TileArea* area = getTileArea( world, areaX, areaY );
-            if( area->tiles != nullptr )
-            {
-                drawTileArea( buffer, world, area, screenX, screenY );
-            }
-            
-            screenX += world->tileCountX;
-            areaX++;
-        }
-
-        screenY += world->tileCountY;
-        areaY++;
+        drawTileArea( buffer, world, area );
     }
 }
 
@@ -215,7 +233,6 @@ void UpdateAndRender( ApplicationMemory* memory,
 
     ApplicationState* state      = (ApplicationState*)memory->permanentMemory;
     Player*           player     = &state->player;
-    Screen*           screen     = &state->screen;
     MemoryPool*       tileMemory = &state->tileMemory;
     TileMap*          tilemap    = &state->tilemap;
 
@@ -237,7 +254,7 @@ void UpdateAndRender( ApplicationMemory* memory,
         tilemap->tileCountX         = TILEMAP_X;
         tilemap->tileCountY         = TILEMAP_Y;
         tilemap->tileInMeters       = 2.0f;
-        tilemap->tileInPixels       = TILE_WIDTH;
+        tilemap->tileInPixels       = TILE_SIZE;
         tilemap->metersToPixels     = (f32)((f32)tilemap->tileInPixels/tilemap->tileInMeters);
         tilemap->tileAreas          = PushArray( tileMemory, 
                                                  NR_OF_TILEAREAS * NR_OF_TILEAREAS,
@@ -256,11 +273,6 @@ void UpdateAndRender( ApplicationMemory* memory,
         player->speed                      = 4.0f;
         player->color                      = playerColor;
         
-        screen->tilesInX                   = SCREEN_X;
-        screen->tilesInY                   = SCREEN_Y;
-        screen->origin.unifiedPositionX    = 0;
-        screen->origin.unifiedPositionY    = 0;
-        
         info->debugMode       = false; // set this to true to get platform debug info printed to stdout
         memory->isInitialized = true;
     }
@@ -269,6 +281,6 @@ void UpdateAndRender( ApplicationMemory* memory,
 
     Color background = { 0.9f, 0.2f, 0.8f, 1.0f };
     drawRectangle( buffer, 0, 0, buffer->width, buffer->height, background );
-    drawWorld( buffer, tilemap, screen );
-    drawPlayer( buffer, player, tilemap, screen );
+    drawWorld( buffer, tilemap, player );
+    drawPlayer( buffer, player, tilemap );
 }

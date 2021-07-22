@@ -15,8 +15,10 @@
 
 #define WINDOW_WIDTH   1200
 #define WINDOW_HEIGHT   600
-#define SCREEN_X         20
-#define SCREEN_Y         15
+#define TILE_SIZE        40
+#define TILEMAP_Y        WINDOW_HEIGHT / TILE_SIZE
+#define TILEMAP_X        WINDOW_WIDTH / TILE_SIZE
+
 #define NR_OF_TILEAREAS 100
 
 typedef unsigned char       u8;
@@ -99,13 +101,6 @@ struct Player
     Color color;
 };
 
-struct Screen 
-{
-    u32 tilesInX;
-    u32 tilesInY;
-    GeneralizedPosition origin; // lower left corner
-};
-
 struct MemoryPool
 {
     memory_index size;
@@ -116,7 +111,6 @@ struct MemoryPool
 struct ApplicationState
 {
     Player     player;
-    Screen     screen;
     MemoryPool tileMemory;
     TileMap    tilemap;
 };
