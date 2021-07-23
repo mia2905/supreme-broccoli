@@ -5,8 +5,23 @@
 #include <stdio.h>
 #include <dlfcn.h>
 
+#define STB_IMAGE_IMPLEMENTATION
+#define STBI_ONLY_PNG
+#include "../tools/stb_image.h"
+
 // platform code
 #include "SB_Input.mm"
+
+/******************************************************
+ * PLATFORM SERVICES
+ ******************************************************/
+extern "C" {
+    Image LoadImage( const char* filename )
+    {
+        Image image = {0};
+        return image;
+    }
+}
 
 static bool              RUNNING       = false;
 static ApplicationMemory MEMORY        = {0};

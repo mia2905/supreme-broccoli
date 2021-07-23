@@ -90,6 +90,13 @@ struct Color
     f32 alpha;
 };
 
+struct Image
+{
+    u32 width;
+    u32 height;
+    u8* data;
+};
+
 #include "SB_Tilemap.h"
 
 struct Player
@@ -115,6 +122,23 @@ struct ApplicationState
     TileMap    tilemap;
 };
 
+void* PushStruct_( MemoryPool* pool, memory_index size )
+{
+    Assert( pool->usedBytes + size <= pool->size );
+    u8* allocatedMemory = pool->base + pool->usedBytes;
+
+    pool->usedBytes += size;
+
+    return allocatedMemory;
+}
+
+/******************************************************
+ * SERVICES THE APPLICATION PROVIDES TO THE PLATFORM
+ ******************************************************/
+extern "C" {
+    Image LoadImage( const char* filename );
+}
+
 /******************************************************
  * SERVICES THE APPLICATION PROVIDES TO THE PLATFORM
  ******************************************************/
@@ -125,14 +149,6 @@ extern "C" {
                          PlatformInfo*      info );
 }
 
-void* PushStruct_( MemoryPool* pool, memory_index size )
-{
-    Assert( pool->usedBytes + size <= pool->size );
-    u8* allocatedMemory = pool->base + pool->usedBytes;
 
-    pool->usedBytes += size;
-
-    return allocatedMemory;
-}
 
 #endif//SB_APPLICATION_H
