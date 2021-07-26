@@ -39,6 +39,7 @@ struct TileMap
     f32 metersToPixels;
 
     TileArea* tileAreas;
+    Image*    brickImage;
 };
 
 #endif//SB_TILEMAP_H

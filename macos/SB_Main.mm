@@ -5,8 +5,16 @@
 #include <stdio.h>
 #include <dlfcn.h>
 
+#define STB_IMAGE_IMPLEMENTATION
+#define STBI_ONLY_PNG
+#include "../tools/stb_image.h"
+
 // platform code
 #include "SB_Input.mm"
+
+extern "C" {
+    Image* LoadImage( MemoryPool* pool, const char* filename );
+}
 
 static bool              RUNNING       = false;
 static ApplicationMemory MEMORY        = {0};
@@ -144,16 +152,18 @@ int main()
 
     static u32 loadCounter = 0;
 
-    MEMORY.permanentMemorySize = MegaBytes(64);
+    MEMORY.permanentMemorySize = MegaBytes(1024);
     MEMORY.permanentMemory = calloc( 1, MEMORY.permanentMemorySize );
 
-    MEMORY.transientMemorySize = GigaBytes((u64)4);
+    MEMORY.transientMemorySize = MegaBytes(1024);
     MEMORY.transientMemory = calloc( 1, MEMORY.transientMemorySize );
 
     if( MEMORY.permanentMemory != nullptr && 
         MEMORY.transientMemory != nullptr )
     {
         RUNNING = true;
+        ApplicationState* state   = (ApplicationState*)MEMORY.permanentMemory;
+        state->services.loadImage = &LoadImage;
     }
 
     while( RUNNING )
@@ -221,4 +231,33 @@ int main()
     unloadApplication();
     
     return 0;
+}
+
+/******************************************************
+ * PLATFORM SERVICES
+ ******************************************************/
+extern "C" {
+    Image* LoadImage( MemoryPool* pool, const char* filename )
+    {
+        Image* image = PushStruct( pool, Image );
+
+        u8* imageData = stbi_load( filename, &image->width, &image->height, &image->channels, 4 );
+
+        if( imageData )
+        {
+            // calculate the size of the memory block
+            u32 memorySize = image->width * image->height * 4;
+            
+            // allocate memory in the pool
+            image->data = PushBytes( pool, memorySize );
+
+            // copy the image data to the pool
+            memcpy( image->data, imageData, memorySize );
+
+            // free up the memory from the loader
+            stbi_image_free( imageData );
+        }
+
+        return image;
+    }
 }

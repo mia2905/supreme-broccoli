@@ -12,6 +12,7 @@
 
 #define PushStruct( pool, struct ) (struct*)PushStruct_( pool, sizeof(struct) )
 #define PushArray( pool, count, struct ) (struct*)PushStruct_( pool, (count)*sizeof(struct) )
+#define PushBytes( pool, bytes ) (u8*)PushStruct_( pool, bytes )
 
 #define WINDOW_WIDTH   1200
 #define WINDOW_HEIGHT   600
@@ -90,6 +91,14 @@ struct Color
     f32 alpha;
 };
 
+struct Image
+{
+    s32 width;
+    s32 height;
+    s32 channels;
+    u8* data;
+};
+
 #include "SB_Tilemap.h"
 
 struct Player
@@ -108,12 +117,35 @@ struct MemoryPool
     memory_index usedBytes;
 };
 
+struct PlatformServices
+{
+    Image* (*loadImage) (MemoryPool*, const char*); // image loading service
+};
+
 struct ApplicationState
 {
-    Player     player;
-    MemoryPool tileMemory;
-    TileMap    tilemap;
+    bool             loading;
+    Player           player;
+    MemoryPool       tileMemory;
+    TileMap          tilemap;
+    MemoryPool       imageMemory;
+    PlatformServices services;
 };
+
+void* PushStruct_( MemoryPool* pool, memory_index size )
+{
+    Assert( pool->usedBytes + size <= pool->size );
+    u8* allocatedMemory = pool->base + pool->usedBytes;
+
+    pool->usedBytes += size;
+
+    return allocatedMemory;
+}
+
+/******************************************************
+ * SERVICES THE PLATFORM PROVIDES TO THE APPLICATION
+ ******************************************************/
+
 
 /******************************************************
  * SERVICES THE APPLICATION PROVIDES TO THE PLATFORM
@@ -125,14 +157,6 @@ extern "C" {
                          PlatformInfo*      info );
 }
 
-void* PushStruct_( MemoryPool* pool, memory_index size )
-{
-    Assert( pool->usedBytes + size <= pool->size );
-    u8* allocatedMemory = pool->base + pool->usedBytes;
 
-    pool->usedBytes += size;
-
-    return allocatedMemory;
-}
 
 #endif//SB_APPLICATION_H
