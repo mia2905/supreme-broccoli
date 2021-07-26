@@ -12,15 +12,8 @@
 // platform code
 #include "SB_Input.mm"
 
-/******************************************************
- * PLATFORM SERVICES
- ******************************************************/
 extern "C" {
-    Image LoadImage( const char* filename )
-    {
-        Image image = {0};
-        return image;
-    }
+    Image* LoadImage( MemoryPool* pool, const char* filename );
 }
 
 static bool              RUNNING       = false;
@@ -169,6 +162,8 @@ int main()
         MEMORY.transientMemory != nullptr )
     {
         RUNNING = true;
+        ApplicationState* state   = (ApplicationState*)MEMORY.permanentMemory;
+        state->services.loadImage = &LoadImage;
     }
 
     while( RUNNING )
@@ -236,4 +231,33 @@ int main()
     unloadApplication();
     
     return 0;
+}
+
+/******************************************************
+ * PLATFORM SERVICES
+ ******************************************************/
+extern "C" {
+    Image* LoadImage( MemoryPool* pool, const char* filename )
+    {
+        Image* image = PushStruct( pool, Image );
+
+        u8* imageData = stbi_load( filename, &image->width, &image->height, &image->channels, 4 );
+
+        if( imageData )
+        {
+            // calculate the size of the memory block
+            u32 memorySize = image->width * image->height * 4;
+            
+            // allocate memory in the pool
+            image->data = PushBytes( pool, memorySize );
+
+            // copy the image data to the pool
+            memcpy( image->data, imageData, memorySize );
+
+            // free up the memory from the loader
+            stbi_image_free( imageData );
+        }
+
+        return image;
+    }
 }

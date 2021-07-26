@@ -12,6 +12,7 @@
 
 #define PushStruct( pool, struct ) (struct*)PushStruct_( pool, sizeof(struct) )
 #define PushArray( pool, count, struct ) (struct*)PushStruct_( pool, (count)*sizeof(struct) )
+#define PushBytes( pool, bytes ) (u8*)PushStruct_( pool, bytes )
 
 #define WINDOW_WIDTH   1200
 #define WINDOW_HEIGHT   600
@@ -92,8 +93,9 @@ struct Color
 
 struct Image
 {
-    u32 width;
-    u32 height;
+    s32 width;
+    s32 height;
+    s32 channels;
     u8* data;
 };
 
@@ -115,11 +117,19 @@ struct MemoryPool
     memory_index usedBytes;
 };
 
+struct PlatformServices
+{
+    Image* (*loadImage) (MemoryPool*, const char*); // image loading service
+};
+
 struct ApplicationState
 {
-    Player     player;
-    MemoryPool tileMemory;
-    TileMap    tilemap;
+    Player           player;
+    MemoryPool       tileMemory;
+    TileMap          tilemap;
+    MemoryPool       imageMemory;
+    Image*           brick;
+    PlatformServices services;
 };
 
 void* PushStruct_( MemoryPool* pool, memory_index size )
@@ -133,11 +143,9 @@ void* PushStruct_( MemoryPool* pool, memory_index size )
 }
 
 /******************************************************
- * SERVICES THE APPLICATION PROVIDES TO THE PLATFORM
+ * SERVICES THE PLATFORM PROVIDES TO THE APPLICATION
  ******************************************************/
-extern "C" {
-    Image LoadImage( const char* filename );
-}
+
 
 /******************************************************
  * SERVICES THE APPLICATION PROVIDES TO THE PLATFORM

@@ -231,10 +231,11 @@ void UpdateAndRender( ApplicationMemory* memory,
      * -> MemoryPool [TileMap]
      ************************************/
 
-    ApplicationState* state      = (ApplicationState*)memory->permanentMemory;
-    Player*           player     = &state->player;
-    MemoryPool*       tileMemory = &state->tileMemory;
-    TileMap*          tilemap    = &state->tilemap;
+    ApplicationState* state       = (ApplicationState*)memory->permanentMemory;
+    Player*           player      = &state->player;
+    MemoryPool*       tileMemory  = &state->tileMemory;
+    TileMap*          tilemap     = &state->tilemap;
+    MemoryPool*       imageMemory = &state->imageMemory;
 
 
     // check if the ESC key was pressed
@@ -260,7 +261,14 @@ void UpdateAndRender( ApplicationMemory* memory,
                                                  NR_OF_TILEAREAS * NR_OF_TILEAREAS,
                                                  TileArea );
 
-        buildWorld( tileMemory, tilemap );                                                 
+        buildWorld( tileMemory, tilemap );             
+
+        imageMemory->size      = MegaBytes(64);
+        imageMemory->base      = (u8*)tileMemory->base + tileMemory->size;
+        imageMemory->usedBytes = 0;
+
+        const char* brickfile = "./art/bricktile.png";
+        state->brick = state->services.loadImage( imageMemory, brickfile );
 
         Color playerColor = { 0.8, 0.8, 1.0, 1.0 };
 
