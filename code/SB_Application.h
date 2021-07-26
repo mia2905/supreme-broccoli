@@ -124,11 +124,11 @@ struct PlatformServices
 
 struct ApplicationState
 {
+    bool             loading;
     Player           player;
     MemoryPool       tileMemory;
     TileMap          tilemap;
     MemoryPool       imageMemory;
-    Image*           brick;
     PlatformServices services;
 };
 

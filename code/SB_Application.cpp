@@ -51,6 +51,44 @@ void buildWorld( MemoryPool* pool, TileMap* map )
         setDoors( area, doorLeft, doorRight, doorTop, doorBottom );
     }
 }
+void drawImage( RenderBuffer* buffer, f32 x, f32 y, Image* img )
+{
+    u32 screenWidth  = buffer->width;
+    u32 screenHeight = buffer->height;
+
+    s32 xmin = roundToS32( x );
+    s32 ymin = roundToS32( y );
+    s32 xmax = roundToS32( x + img->width );
+    s32 ymax = roundToS32( y + img->height );
+
+    if( xmin < 0 ) xmin = 0;
+    if( xmax < 0 ) xmax = 0;
+    if( xmin >= screenWidth ) return; // offscreen
+    if( xmax >= screenWidth ) xmax = screenWidth;
+
+    if( ymin < 0 ) ymin = 0;
+    if( ymax < 0 ) ymax = 0;
+    if( ymin >= screenHeight ) return; // offscreen
+    if( ymax >= screenHeight ) ymax = screenHeight;
+
+    u8* src = img->data;
+
+    // the start of the rectangle is the pixel at minX / minY
+    for( u32 row=ymin; row<ymax; ++row )
+    {
+        u8* base = buffer->buffer + (u32)((row * buffer->width + xmin) * sizeof(Pixel));
+        Pixel* p = (Pixel*)base;
+        for( u32 col=xmin; col<xmax; ++col )
+        {
+            p->red   = (u8)src[0];
+            p->green = (u8)src[1];
+            p->blue  = (u8)src[2];
+            p->alpha = (u8)src[3];
+            ++p;
+            src += 4;
+        }
+    }
+}
 
 void drawRectangle( RenderBuffer* buffer, f32 minX, f32 minY, f32 maxX, f32 maxY, Color c )
 {
@@ -136,7 +174,8 @@ void drawTileArea( RenderBuffer* buffer, TileMap* tilemap, TileArea* area )
                 u32 minY = buffer->height - (row * tileHeight);
                 u32 maxY = minY - tileHeight;
 
-                drawRectangle( buffer, minX, maxY, maxX, minY, tilecolor );
+                drawImage( buffer, minX, maxY, tilemap->brickImage );
+                //drawRectangle( buffer, minX, maxY, maxX, minY, tilecolor );
             }
         }
     }
@@ -244,8 +283,14 @@ void UpdateAndRender( ApplicationMemory* memory,
         info->reload = true;
     }
 
+    // reentrant guard
+    if( state->loading )
+        return;
+
+    // NOTE: this part of the code is NOT reentrant!!!!
     if( !memory->isInitialized || info->reload )
     {
+        state->loading              = true;
         initMath();
 
         tileMemory->size            = MegaBytes(64);
@@ -268,7 +313,7 @@ void UpdateAndRender( ApplicationMemory* memory,
         imageMemory->usedBytes = 0;
 
         const char* brickfile = "./art/bricktile.png";
-        state->brick = state->services.loadImage( imageMemory, brickfile );
+        tilemap->brickImage   = state->services.loadImage( imageMemory, brickfile );
 
         Color playerColor = { 0.8, 0.8, 1.0, 1.0 };
 
@@ -283,11 +328,12 @@ void UpdateAndRender( ApplicationMemory* memory,
         
         info->debugMode       = false; // set this to true to get platform debug info printed to stdout
         memory->isInitialized = true;
+        state->loading        = false;
     }
 
     updatePlayer( input, player, tilemap, info->deltaTimeS );
 
-    Color background = { 0.9f, 0.2f, 0.8f, 1.0f };
+    Color background = { 0.4f, 0.4f, 0.4f, 1.0f };
     drawRectangle( buffer, 0, 0, buffer->width, buffer->height, background );
     drawWorld( buffer, tilemap, player );
     drawPlayer( buffer, player, tilemap );

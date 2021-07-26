@@ -152,10 +152,10 @@ int main()
 
     static u32 loadCounter = 0;
 
-    MEMORY.permanentMemorySize = MegaBytes(64);
+    MEMORY.permanentMemorySize = MegaBytes(1024);
     MEMORY.permanentMemory = calloc( 1, MEMORY.permanentMemorySize );
 
-    MEMORY.transientMemorySize = GigaBytes((u64)4);
+    MEMORY.transientMemorySize = MegaBytes(1024);
     MEMORY.transientMemory = calloc( 1, MEMORY.transientMemorySize );
 
     if( MEMORY.permanentMemory != nullptr && 
