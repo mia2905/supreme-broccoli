@@ -140,25 +140,29 @@ TileArea* buildTileArea( MemoryPool* pool, TileMap* map, u32 areaX, u32 areaY )
     return area;
 }
 
-void setDoors( TileArea* area, bool left, bool right, bool top, bool bottom )
+void setDoor( TileArea* area, DOOR_DIRECTION door )
 {
     u32* tiles = area->tiles;
-    if( left )
+
+    switch( door )
     {
-        tiles[TILEMAP_Y / 2 * TILEMAP_X + 1] = 0;
-        tiles[TILEMAP_Y / 2 * TILEMAP_X] = 0; // door
-    }
-    if( right )
-    {
-        tiles[TILEMAP_Y / 2 * TILEMAP_X + TILEMAP_X - 2] = 0;
-        tiles[TILEMAP_Y / 2 * TILEMAP_X + TILEMAP_X - 1] = 0; // door
-    }
-    if( top ) 
-    {
-        tiles[TILEMAP_Y * TILEMAP_X - (TILEMAP_X / 2)] = 0; // door
-    }
-    if( bottom )
-    {
-        tiles[TILEMAP_X / 2] = 0; // door
+        case LEFT:   
+            tiles[(TILEMAP_Y / 2 * TILEMAP_X) + 1] = 0;
+            tiles[TILEMAP_Y / 2 * TILEMAP_X]       = 0;                 
+            break;
+        case RIGHT:  
+            tiles[TILEMAP_Y / 2 * TILEMAP_X + TILEMAP_X - 2] = 0; 
+            tiles[TILEMAP_Y / 2 * TILEMAP_X + TILEMAP_X - 1] = 0; 
+            break;
+        case TOP:    
+            tiles[(TILEMAP_Y - 1) * TILEMAP_X - (TILEMAP_X / 2)] = 0;   
+            tiles[TILEMAP_Y * TILEMAP_X - (TILEMAP_X / 2)]       = 0;   
+            break;
+        case BOTTOM: 
+            tiles[TILEMAP_X + TILEMAP_X / 2] = 0;
+            tiles[TILEMAP_X / 2]             = 0;                             
+            break;
+    
+        default: break;
     }
 }

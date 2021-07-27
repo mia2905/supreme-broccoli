@@ -24,6 +24,15 @@ struct DecomposedPosition
     s32 tileY;
 };
 
+enum DOOR_DIRECTION
+{
+    NONE   = 0,
+    LEFT   = 1,
+    RIGHT  = 2,
+    TOP    = 3,
+    BOTTOM = 4
+};
+
 struct TileArea
 {
     u32* tiles;

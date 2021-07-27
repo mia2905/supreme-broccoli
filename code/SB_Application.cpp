@@ -8,47 +8,36 @@ void buildWorld( MemoryPool* pool, TileMap* map )
     u32 x = 0;
     u32 y = 0;
 
-    bool doorLeft   = false;
-    bool doorRight  = false;
-    bool doorTop    = false;
-    bool doorBottom = false;
-
-    bool lastDoorLeft   = false;
-    bool lastDoorRight  = false;
-    bool lastDoorTop    = false;
-    bool lastDoorBottom = false;
+    DOOR_DIRECTION nextRoomEntry = NONE;
+    DOOR_DIRECTION door          = NONE;
 
     for( u32 i=0; i<NR_OF_TILEAREAS; ++i )
     {
         TileArea* area = buildTileArea( pool, map, x, y );
+        door      = (DOOR_DIRECTION)(randomNumber() % 2 + 2);
 
-        doorRight  = lastDoorLeft   ? true : false;
-        doorLeft   = lastDoorRight  ? true : false;
-        doorTop    = lastDoorBottom ? true : false;
-        doorBottom = lastDoorTop    ? true : false;
-        
-        if( randomNumber() % 2 == 0 )
+        if( nextRoomEntry != NONE )
         {
-            doorRight      = true;
-            lastDoorRight  = true;
-
-            lastDoorLeft   = false;
-            lastDoorTop    = false;
-            lastDoorBottom = false;
-            x++;
-        }
-        else
-        {
-            doorTop        = true;
-            lastDoorTop    = true;
-
-            lastDoorRight  = false;
-            lastDoorLeft   = false;
-            lastDoorBottom = false;
-            y++;
+            setDoor( area, nextRoomEntry );
         }
 
-        setDoors( area, doorLeft, doorRight, doorTop, doorBottom );
+        switch( door ) 
+        {
+            case RIGHT:  
+                ++x; 
+                nextRoomEntry = LEFT;   
+                break;
+            case TOP:    
+                ++y; 
+                nextRoomEntry = BOTTOM; 
+                break;
+            
+            default:
+                Assert( door == LEFT || door == BOTTOM );
+                break;
+        }    
+         
+        setDoor( area, door );
     }
 }
 void drawImage( RenderBuffer* buffer, f32 x, f32 y, Image* img )
@@ -321,7 +310,7 @@ void UpdateAndRender( ApplicationMemory* memory,
         Color playerColor = { 0.8, 0.8, 1.0, 1.0 };
 
         player->playerPos.unifiedPositionX = 1;
-        player->playerPos.unifiedPositionY = 1;
+        player->playerPos.unifiedPositionY = 5;
         player->playerPos.x                = tilemap->tileInMeters * 0.5f;
         player->playerPos.y                = tilemap->tileInMeters * 0.5f + 1.0f;
         player->width                      = 0.9f * tilemap->tileInMeters;
@@ -329,7 +318,7 @@ void UpdateAndRender( ApplicationMemory* memory,
         player->speed                      = 4.0f;
         player->color                      = playerColor;
         
-        info->debugMode       = true; // set this to true to get platform debug info printed to stdout
+        info->debugMode       = false; // set this to true to get platform debug info printed to stdout
         memory->isInitialized = true;
         state->loading        = false;
     }

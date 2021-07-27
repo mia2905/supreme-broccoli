@@ -5,7 +5,7 @@
 #include <math.h>
 
 void initMath() {
-    srand( 0 );
+    srand( 10 );
 }
 
 inline s32 roundToS32( f32 value )
