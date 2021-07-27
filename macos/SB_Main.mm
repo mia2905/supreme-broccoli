@@ -40,6 +40,7 @@ void UpdateAndRenderStub( ApplicationMemory* memory,
 {
     @public
     NSCondition*     m_mainLoop;
+    bool             m_draw;
     CVDisplayLinkRef m_displayLink;
 }
 @end
@@ -54,7 +55,16 @@ CVReturn update( CVDisplayLinkRef   displayLink,
                  void*              displayLinkContext )
 {
     WindowDelegate* self = (__bridge WindowDelegate*)displayLinkContext;
-    [self->m_mainLoop signal];
+    if( self->m_draw )
+    {
+        [self->m_mainLoop signal];
+        self->m_draw = false;
+    }
+    else
+    {
+        self->m_draw = true;
+    }
+    
     return kCVReturnSuccess;
 }
 

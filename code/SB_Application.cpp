@@ -315,6 +315,9 @@ void UpdateAndRender( ApplicationMemory* memory,
         const char* brickfile = "./art/bricktile.png";
         tilemap->brickImage   = state->services.loadImage( imageMemory, brickfile );
 
+        const char* bgrFile   = "./art/background.png";
+        state->background     = state->services.loadImage( imageMemory, bgrFile );
+
         Color playerColor = { 0.8, 0.8, 1.0, 1.0 };
 
         player->playerPos.unifiedPositionX = 1;
@@ -326,15 +329,15 @@ void UpdateAndRender( ApplicationMemory* memory,
         player->speed                      = 4.0f;
         player->color                      = playerColor;
         
-        info->debugMode       = false; // set this to true to get platform debug info printed to stdout
+        info->debugMode       = true; // set this to true to get platform debug info printed to stdout
         memory->isInitialized = true;
         state->loading        = false;
     }
 
     updatePlayer( input, player, tilemap, info->deltaTimeS );
 
-    Color background = { 0.4f, 0.4f, 0.4f, 1.0f };
-    drawRectangle( buffer, 0, 0, buffer->width, buffer->height, background );
+    Color backgroundColor = { 0.3f, 0.3f, 0.3f, 1.0f };
+    drawRectangle( buffer, 0, 0, buffer->width, buffer->height, backgroundColor );
     drawWorld( buffer, tilemap, player );
     drawPlayer( buffer, player, tilemap );
 }
