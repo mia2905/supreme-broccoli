@@ -130,6 +130,7 @@ struct ApplicationState
     TileMap          tilemap;
     MemoryPool       imageMemory;
     PlatformServices services;
+    Image*           background;
 };
 
 void* PushStruct_( MemoryPool* pool, memory_index size )

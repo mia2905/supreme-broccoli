@@ -1,5 +1,6 @@
 #include "SB_Application.h"
 #include "SB_Tilemap.h"
+#include "SB_Intrinsics.h"
 
 
 TileArea* getTileArea( TileMap* tilemap, s32 x, s32 y )
@@ -126,6 +127,11 @@ TileArea* buildTileArea( MemoryPool* pool, TileMap* map, u32 areaX, u32 areaY )
             if( row == (TILEMAP_Y - 1) )  *tile = 1;
             if( col == 0 )                *tile = 1;
             if( col == (TILEMAP_X - 1 ) ) *tile = 1;
+
+            if( randomNumber() % 5 == 0 )
+            {
+                *tile = 1;
+            }
             
             tile++;
         }
@@ -139,18 +145,20 @@ void setDoors( TileArea* area, bool left, bool right, bool top, bool bottom )
     u32* tiles = area->tiles;
     if( left )
     {
-        tiles[TILEMAP_Y / 2 * TILEMAP_X] = 0;
+        tiles[TILEMAP_Y / 2 * TILEMAP_X + 1] = 0;
+        tiles[TILEMAP_Y / 2 * TILEMAP_X] = 0; // door
     }
     if( right )
     {
-        tiles[TILEMAP_Y / 2 * TILEMAP_X + TILEMAP_X - 1] = 0;
+        tiles[TILEMAP_Y / 2 * TILEMAP_X + TILEMAP_X - 2] = 0;
+        tiles[TILEMAP_Y / 2 * TILEMAP_X + TILEMAP_X - 1] = 0; // door
     }
     if( top ) 
     {
-        tiles[TILEMAP_Y * TILEMAP_X - (TILEMAP_X / 2)] = 0;
+        tiles[TILEMAP_Y * TILEMAP_X - (TILEMAP_X / 2)] = 0; // door
     }
     if( bottom )
     {
-        tiles[TILEMAP_X / 2] = 0;
+        tiles[TILEMAP_X / 2] = 0; // door
     }
 }
