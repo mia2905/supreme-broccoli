@@ -34,6 +34,8 @@ typedef float              f32;
 typedef double             f64;
 typedef unsigned long      memory_index;
 
+#include "SB_Math.h"
+
 struct RenderBuffer
 {
     u32 width;

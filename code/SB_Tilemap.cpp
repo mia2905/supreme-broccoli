@@ -79,8 +79,8 @@ GeneralizedPosition getGeneralizedPosition( TileMap* tilemap, GeneralizedPositio
     DecomposedPosition  newPos = decomposePosition( pos );
     
     // 1. calculate the new tile relative x and y
-    newPos.tileX = newPos.tileX + generalizeCoords( &result.x, tilemap->tileInMeters );
-    newPos.tileY = newPos.tileY + generalizeCoords( &result.y, tilemap->tileInMeters );
+    newPos.tileX = newPos.tileX + generalizeCoords( &result.tileRelative.x, tilemap->tileInMeters );
+    newPos.tileY = newPos.tileY + generalizeCoords( &result.tileRelative.y, tilemap->tileInMeters );
 
     // 2. calculate the new tile x and y and update tilemap x and y
     newPos.tileareaX = newPos.tileareaX + generalizeTileIndex( (s32*)&newPos.tileX, tilemap->tileCountX );

@@ -11,8 +11,7 @@ struct GeneralizedPosition
     u32 unifiedPositionX; // upper 24-bits tilearea and lower 8-bits tile inside the tile area
     u32 unifiedPositionY; // upper 24-bits tilearea and lower 8-bits tile inside the tile area
 
-    f32 x; // position x relative to a tile
-    f32 y; // position y relative to a tile
+    v2 tileRelative;
 };
 
 struct DecomposedPosition
