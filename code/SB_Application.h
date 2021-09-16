@@ -17,8 +17,8 @@
 #define WINDOW_WIDTH   1200
 #define WINDOW_HEIGHT   600
 #define TILE_SIZE        40
-#define TILEMAP_Y        WINDOW_HEIGHT / TILE_SIZE
-#define TILEMAP_X        WINDOW_WIDTH / TILE_SIZE
+#define TILES_PER_AREA_Y        WINDOW_HEIGHT / TILE_SIZE
+#define TILES_PER_AREA_X        WINDOW_WIDTH / TILE_SIZE
 
 #define NR_OF_TILEAREAS 100
 
@@ -106,8 +106,7 @@ struct Image
 struct Player
 {
     GeneralizedPosition playerPos;
-    f32   width;
-    f32   height;
+    v2    size;
     f32   speed; // meters per second;
     Color color;
 };
