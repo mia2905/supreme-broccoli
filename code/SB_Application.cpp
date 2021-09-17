@@ -41,15 +41,15 @@ void buildWorld( MemoryPool* pool, TileMap* map )
     }
 }
 
-void drawImage( RenderBuffer* buffer, f32 x, f32 y, Image* img )
+void drawImage( RenderBuffer* buffer, v2 position, Image* img )
 {
     u32 screenWidth  = buffer->width;
     u32 screenHeight = buffer->height;
 
-    s32 xmin = roundToS32( x );
-    s32 ymin = roundToS32( y );
-    s32 xmax = roundToS32( x + img->width );
-    s32 ymax = roundToS32( y + img->height );
+    s32 xmin = roundToS32( position.x );
+    s32 ymin = roundToS32( position.y );
+    s32 xmax = roundToS32( position.x + img->width );
+    s32 ymax = roundToS32( position.y + img->height );
 
     if( xmin < 0 ) xmin = 0;
     if( xmax < 0 ) xmax = 0;
@@ -80,15 +80,15 @@ void drawImage( RenderBuffer* buffer, f32 x, f32 y, Image* img )
     }
 }
 
-void drawRectangle( RenderBuffer* buffer, f32 minX, f32 minY, f32 maxX, f32 maxY, Color c )
+void drawRectangle( RenderBuffer* buffer, v2 min, v2 max, Color c )
 {
     u32 screenWidth  = buffer->width;
     u32 screenHeight = buffer->height;
 
-    s32 xmin = roundToS32( minX );
-    s32 ymin = roundToS32( minY );
-    s32 xmax = roundToS32( maxX );
-    s32 ymax = roundToS32( maxY );
+    s32 xmin = roundToS32( min.x );
+    s32 ymin = roundToS32( min.y );
+    s32 xmax = roundToS32( max.x );
+    s32 ymax = roundToS32( max.y );
 
     if( xmin < 0 ) xmin = 0;
     if( xmax < 0 ) xmax = 0;
@@ -119,7 +119,7 @@ void drawRectangle( RenderBuffer* buffer, f32 minX, f32 minY, f32 maxX, f32 maxY
 void drawBackground( RenderBuffer* buffer )
 {
     Color backgroundColor = { 0.3f, 0.3f, 0.3f, 1.0f };
-    drawRectangle( buffer, 0, 0, buffer->width, buffer->height, backgroundColor );
+    drawRectangle( buffer, V2(0, 0), V2(buffer->width, buffer->height), backgroundColor );
 }
 
 void drawPlayer( RenderBuffer* buffer, Player* player, TileMap* tilemap )
@@ -138,13 +138,13 @@ void drawPlayer( RenderBuffer* buffer, Player* player, TileMap* tilemap )
     f32 tileMaxx = tilemap->metersToPixels * (tileX + tilemap->tileInMeters);
     f32 tileMiny = buffer->height - tilemap->metersToPixels * tileY;
     f32 tileMaxy = tileMiny - (tilemap->metersToPixels * tilemap->tileInMeters);
-    drawRectangle( buffer, tileMinx, tileMaxy, tileMaxx, tileMiny, tilecolor );
+    drawRectangle( buffer, V2(tileMinx, tileMaxy), V2(tileMaxx, tileMiny), tilecolor );
 
     f32 minx  = tilemap->metersToPixels * ( tileX + player->playerPos.tileRelative.x - player->size.x/2 );
     f32 maxx  = tilemap->metersToPixels * ( tileX + player->playerPos.tileRelative.x + player->size.x/2 );
     f32 miny  = buffer->height - tilemap->metersToPixels * ( tileY + player->playerPos.tileRelative.y - player->size.y/2 );
     f32 maxy  = miny - (tilemap->metersToPixels * player->size.y);
-    drawRectangle( buffer, minx, maxy, maxx, miny, player->color );
+    drawRectangle( buffer, V2(minx, maxy), V2(maxx, miny), player->color );
 }
 
 void drawTileArea( RenderBuffer* buffer, TileMap* tilemap, TileArea* area )
@@ -169,7 +169,7 @@ void drawTileArea( RenderBuffer* buffer, TileMap* tilemap, TileArea* area )
                 u32 minY = buffer->height - (row * tileHeight);
                 u32 maxY = minY - tileHeight;
 
-                drawImage( buffer, minX, maxY, tilemap->brickImage );
+                drawImage( buffer, V2(minX, maxY), tilemap->brickImage );
             }
         }
     }
