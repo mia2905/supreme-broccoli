@@ -36,14 +36,6 @@ v2 operator+( v2 a, v2 b )
     return result;
 }
 
-v2 operator-( v2 a )
-{
-    v2 result;
-    result.x = -a.x;
-    result.y = -a.y;
-    return result;
-}
-
 v2 operator-( v2 a, v2 b )
 {
     v2 result;
