@@ -55,35 +55,35 @@ s32 generalizeTileIndex( s32* tileIndex, s32 tileCount )
     return result;
 }
 
-v2 getNewTilesAndUpdateOffset( v2* value, s32 tileSize )
+v2 getNewTilesAndUpdateOffset( v2* tileRelativePosition /* in meters */, s32 tileSize /* in meters */ )
 {
     v2 result;
 
-    f32 x = value->x;
-    f32 y = value->y;
+    f32 x = tileRelativePosition->x;
+    f32 y = tileRelativePosition->y;
 
     if( x >= tileSize ) 
     {
         result.x = 1;
-        value->x = value->x - tileSize;
+        tileRelativePosition->x = x - tileSize;
     }
 
     if( x < 0) 
     {
         result.x = -1;
-        value->x = tileSize + value->x;
+        tileRelativePosition->x = tileSize + x;
     }
 
     if( y >= tileSize ) 
     {
         result.y = 1;
-        value->y = value->y - tileSize;
+        tileRelativePosition->y = y - tileSize;
     }
 
     if( y < 0) 
     {
         result.y = -1;
-        value->y = tileSize + value->y;
+        tileRelativePosition->y = tileSize + y;
     }
 
     return result;
