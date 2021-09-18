@@ -55,6 +55,8 @@ CVReturn update( CVDisplayLinkRef   displayLink,
                  void*              displayLinkContext )
 {
     WindowDelegate* self = (__bridge WindowDelegate*)displayLinkContext;
+
+    // only draw every other frame
     if( self->m_draw )
     {
         [self->m_mainLoop signal];
