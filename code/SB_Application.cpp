@@ -191,26 +191,39 @@ void drawWorld( RenderBuffer* buffer, TileMap* world, Player* player )
 void updatePlayer( UserInput* input, Player* player, TileMap* tilemap, f32 dt )
 {
     v2 playerRelativePosition = player->playerPos.tileRelative;
-    f32 speed = input->space.isDown ? 3.0f * player->speed : player->speed;
-
-    f32 movement = dt * speed; // s * m/s = m -> so movement is a displacement in meters
+    f32 speed    = input->space.isDown ? 3.0f * player->speed : player->speed;
+    v2 direction = {0};
 
     if( input->arrowUp.isDown )    
     {
-        playerRelativePosition.y += movement;
+        direction.y = 1.0f;
     }
     if( input->arrowDown.isDown )  
     {
-        playerRelativePosition.y -= movement;
+        direction.y = -1.0f;
     }
     if( input->arrowRight.isDown ) 
     {
-        playerRelativePosition.x += movement;
+        direction.x = 1.0f;
     }
     if( input->arrowLeft.isDown )  
     {
-        playerRelativePosition.x -= movement;
+        direction.x = -1.0f;
     }
+
+    direction.normalize();
+    f32 angle    = direction.angle();
+    f32 movement = dt * speed; // s * m/s = m -> so movement is a displacement in meters
+
+    // now we construct the new displacement with the length (movement) and the angle of the direction vector
+    v2 displacement = {0};
+
+    if( direction.length() > 0 )
+    {
+        displacement.x = movement * sinus( angle );
+        displacement.y = movement * cosinus( angle );
+    }
+    playerRelativePosition = playerRelativePosition + displacement;
 
     // old player position
     GeneralizedPosition p = player->playerPos;
