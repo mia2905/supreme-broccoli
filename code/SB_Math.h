@@ -48,7 +48,7 @@ v2 operator-( v2 a, v2 b )
 
 f32 v2::length()
 {
-    f32 l = sqrtf( this->x * this->x + this->y * this->y );
+    f32 l = sqrtf( square(x) + square(y) );
     return l;
 }
 

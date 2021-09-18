@@ -33,6 +33,11 @@ inline f32 squareRoot( f32 x )
     return sqrtf( x );
 }
 
+inline f32 square( f32 x )
+{
+    return x * x;
+}
+
 inline f32 arcusTanges2( f32 x, f32 y )
 {
     return atan2f( x, y );
