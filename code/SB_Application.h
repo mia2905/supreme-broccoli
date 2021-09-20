@@ -107,7 +107,8 @@ struct Player
 {
     GeneralizedPosition playerPos;
     v2    size;
-    f32   speed; // meters per second;
+    v2    velocityVector;
+    f32   acceleration; // meters per second squared -> m/s^2
     Color color;
 };
 

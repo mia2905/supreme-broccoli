@@ -191,8 +191,10 @@ void drawWorld( RenderBuffer* buffer, TileMap* world, Player* player )
 void updatePlayer( UserInput* input, Player* player, TileMap* tilemap, f32 dt )
 {
     v2 playerRelativePosition = player->playerPos.tileRelative;
-    f32 speed    = input->space.isDown ? 3.0f * player->speed : player->speed;
-    v2 direction = {0};
+    f32 acceleration          = input->space.isDown ? 3.0f * player->acceleration : player->acceleration;
+    v2 direction              = V2(0.0f, 0.0f);
+    v2 accelerationVector     = V2(0.0f, 0.0f);
+    v2 velocityVector         = player->velocityVector;
 
     if( input->arrowUp.isDown )    
     {
@@ -212,18 +214,13 @@ void updatePlayer( UserInput* input, Player* player, TileMap* tilemap, f32 dt )
     }
 
     direction.normalize();
-    f32 angle    = direction.angle();
-    f32 movement = dt * speed; // s * m/s = m -> so movement is a displacement in meters
+    accelerationVector = direction * acceleration;
+    // equations of motion:
+    // p' = 1/2at^2 + vt + p -> acceleration based position
+    // v' = 2at + v          -> acceleration based velocity
 
-    // now we construct the new displacement with the length (movement) and the angle of the direction vector
-    v2 displacement = {0};
-
-    if( direction.length() > 0 )
-    {
-        displacement.x = movement * sinus( angle );
-        displacement.y = movement * cosinus( angle );
-    }
-    playerRelativePosition = playerRelativePosition + displacement;
+    v2 newPosition = ((0.5f * accelerationVector) * square( dt )) + (velocityVector * dt) + playerRelativePosition;
+    player->velocityVector = ((2.0f * accelerationVector) * dt) + velocityVector;
 
     // old player position
     GeneralizedPosition p = player->playerPos;
@@ -234,10 +231,10 @@ void updatePlayer( UserInput* input, Player* player, TileMap* tilemap, f32 dt )
     GeneralizedPosition topLeft     = p;
     GeneralizedPosition topRight    = p;
 
-    bottomLeft.tileRelative    = playerRelativePosition - (player->size * 0.5f);
-    bottomRight.tileRelative   = playerRelativePosition + V2( player->size.x * 0.5f, -player->size.y * 0.5f );
-    topLeft.tileRelative       = playerRelativePosition - V2( -player->size.x * 0.5f, player->size.y * 0.5f );
-    topRight.tileRelative      = playerRelativePosition + (player->size * 0.5f);
+    bottomLeft.tileRelative    = newPosition - (player->size * 0.5f);
+    bottomRight.tileRelative   = newPosition + V2( player->size.x * 0.5f, -player->size.y * 0.5f );
+    topLeft.tileRelative       = newPosition - V2( -player->size.x * 0.5f, player->size.y * 0.5f );
+    topRight.tileRelative      = newPosition + (player->size * 0.5f);
 
     bottomLeft  = getGeneralizedPosition( tilemap, bottomLeft );
     bottomRight = getGeneralizedPosition( tilemap, bottomRight );
@@ -250,7 +247,7 @@ void updatePlayer( UserInput* input, Player* player, TileMap* tilemap, f32 dt )
         isMoveAllowed( topRight,    tilemap )  )
     {
         // update old position with new x and y
-        p.tileRelative    = playerRelativePosition;
+        p.tileRelative    = newPosition;
         player->playerPos = getGeneralizedPosition( tilemap, p );
     }
 }
@@ -330,7 +327,8 @@ void UpdateAndRender( ApplicationMemory* memory,
         player->playerPos.tileRelative.y   = tilemap->tileInMeters * 0.5f + 1.0f;
         player->size.x                     = 0.9f * tilemap->tileInMeters;
         player->size.y                     = 0.9f * tilemap->tileInMeters;
-        player->speed                      = 4.0f;
+        player->acceleration               = 5.0f; // in meters per second squared -> m/s^2
+        player->velocityVector             = V2(0.0f, 0.0f);
         player->color                      = playerColor;
         
         info->debugMode       = false; // set this to true to get platform debug info printed to stdout
