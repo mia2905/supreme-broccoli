@@ -214,7 +214,7 @@ void updatePlayer( UserInput* input, Player* player, TileMap* tilemap, f32 dt )
     }
 
     direction.normalize();
-    accelerationVector = direction * acceleration;
+    accelerationVector = direction * acceleration - 0.75f * velocityVector;
     // equations of motion:
     // p' = 1/2at^2 + vt + p -> acceleration based position
     // v' = 2at + v          -> acceleration based velocity
@@ -327,7 +327,7 @@ void UpdateAndRender( ApplicationMemory* memory,
         player->playerPos.tileRelative.y   = tilemap->tileInMeters * 0.5f + 1.0f;
         player->size.x                     = 0.9f * tilemap->tileInMeters;
         player->size.y                     = 0.9f * tilemap->tileInMeters;
-        player->acceleration               = 5.0f; // in meters per second squared -> m/s^2
+        player->acceleration               = 25.0f; // in meters per second squared -> m/s^2
         player->velocityVector             = V2(0.0f, 0.0f);
         player->color                      = playerColor;
         
