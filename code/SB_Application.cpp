@@ -214,10 +214,11 @@ void updatePlayer( UserInput* input, Player* player, TileMap* tilemap, f32 dt )
     }
 
     direction.normalize();
-    accelerationVector = direction * acceleration - 0.75f * velocityVector;
+    accelerationVector = direction * acceleration - (2.75f * velocityVector);
     // equations of motion:
     // p' = 1/2at^2 + vt + p -> acceleration based position
-    // v' = 2at + v          -> acceleration based velocity
+    // v' = 2at + v          -> acceleration based velocity ( 1st derivative of the position  )
+    // a' = a                -> acceleration                ( 2nd derivative of the velocity )
 
     v2 newPosition = ((0.5f * accelerationVector) * square( dt )) + (velocityVector * dt) + playerRelativePosition;
     player->velocityVector = ((2.0f * accelerationVector) * dt) + velocityVector;
@@ -231,24 +232,59 @@ void updatePlayer( UserInput* input, Player* player, TileMap* tilemap, f32 dt )
     GeneralizedPosition topLeft     = p;
     GeneralizedPosition topRight    = p;
 
-    bottomLeft.tileRelative    = newPosition - (player->size * 0.5f);
+    bottomLeft.tileRelative    = newPosition + V2( -player->size.x * 0.5f, -player->size.y * 0.5f );
     bottomRight.tileRelative   = newPosition + V2( player->size.x * 0.5f, -player->size.y * 0.5f );
-    topLeft.tileRelative       = newPosition - V2( -player->size.x * 0.5f, player->size.y * 0.5f );
-    topRight.tileRelative      = newPosition + (player->size * 0.5f);
+    topLeft.tileRelative       = newPosition + V2( -player->size.x * 0.5f, player->size.y * 0.5f );
+    topRight.tileRelative      = newPosition + V2(player->size.x * 0.5f, player->size.y * 0.5f);
 
     bottomLeft  = getGeneralizedPosition( tilemap, bottomLeft );
     bottomRight = getGeneralizedPosition( tilemap, bottomRight );
     topLeft     = getGeneralizedPosition( tilemap, topLeft );
     topRight    = getGeneralizedPosition( tilemap, topRight );
 
-    if( isMoveAllowed( bottomLeft,  tilemap ) &&
-        isMoveAllowed( bottomRight, tilemap ) &&
-        isMoveAllowed( topLeft,     tilemap ) &&
-        isMoveAllowed( topRight,    tilemap )  )
+    bool bottomLeftOk  = isMoveAllowed( bottomLeft,  tilemap );
+    bool bottomRightOk = isMoveAllowed( bottomRight, tilemap );
+    bool topLeftOk     = isMoveAllowed( topLeft,     tilemap );
+    bool topRightOk    = isMoveAllowed( topRight,    tilemap );
+
+    bool collision = !(bottomLeftOk && bottomRightOk && topLeftOk && topRightOk);
+    
+    if( !collision )
     {
         // update old position with new x and y
         p.tileRelative    = newPosition;
         player->playerPos = getGeneralizedPosition( tilemap, p );
+    }
+    else
+    {
+        v2 v = player->velocityVector;
+        v2 r = V2(0.0f, 0.0f);
+
+        if( !bottomRightOk && !topRightOk ) // right wall collision -> normal pointing left
+        {
+            Print( "* right wall *\n" );
+            r = V2( -1.0f, 0.0f );
+        }
+
+        if( !bottomLeftOk && !topLeftOk ) // left wall collision -> normal pointing right
+        {
+            Print( "* left wall *\n" );
+            r = V2( 1.0f, 0.0f );
+        }
+
+        if( !topLeftOk && !topRightOk ) // top wall collision -> normal pointing down
+        {
+            Print( "* top wall *\n" );
+            r = V2( 0.0f, -1.0f );
+        }
+
+        if( !bottomLeftOk && !bottomRightOk ) // bottom wall collision -> normal pointing up
+        {
+            Print( "* bottom wall *\n" );
+            r = V2( 0.0f, 1.0f );
+        }
+
+        player->velocityVector = v - 2 * v.dot(r) * r;
     }
 }
 
@@ -327,7 +363,7 @@ void UpdateAndRender( ApplicationMemory* memory,
         player->playerPos.tileRelative.y   = tilemap->tileInMeters * 0.5f + 1.0f;
         player->size.x                     = 0.9f * tilemap->tileInMeters;
         player->size.y                     = 0.9f * tilemap->tileInMeters;
-        player->acceleration               = 25.0f; // in meters per second squared -> m/s^2
+        player->acceleration               = 20.0f; // in meters per second squared -> m/s^2
         player->velocityVector             = V2(0.0f, 0.0f);
         player->color                      = playerColor;
         
