@@ -11,8 +11,7 @@ struct GeneralizedPosition
     u32 unifiedPositionX; // upper 24-bits tilearea and lower 8-bits tile inside the tile area
     u32 unifiedPositionY; // upper 24-bits tilearea and lower 8-bits tile inside the tile area
 
-    f32 x; // position x relative to a tile
-    f32 y; // position y relative to a tile
+    v2 tileRelative;      // in meters from the top left corner of the tile
 };
 
 struct DecomposedPosition
@@ -22,6 +21,15 @@ struct DecomposedPosition
 
     s32 tileX;
     s32 tileY;
+};
+
+enum DOOR_DIRECTION
+{
+    NONE   = 0,
+    LEFT   = 1,
+    RIGHT  = 2,
+    TOP    = 3,
+    BOTTOM = 4
 };
 
 struct TileArea

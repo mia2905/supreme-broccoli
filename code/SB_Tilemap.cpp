@@ -36,24 +36,6 @@ void composePosition( DecomposedPosition pos, GeneralizedPosition* newPos )
     newPos->unifiedPositionY = newPos->unifiedPositionY | pos.tileY;
 }
 
-s32 generalizeCoords( f32* value, s32 tileSize )
-{
-    s32 result = 0;
-    f32 newX = *value / tileSize;
-    if( newX < 0 ) 
-    {
-        *value = tileSize - *value;
-        result = -1;
-    }
-    if( newX >= 1.0 )
-    {
-        *value = *value - tileSize;
-        result = 1;
-    }
-
-    return result;
-}
-
 s32 generalizeTileIndex( s32* tileIndex, s32 tileCount )
 {
     s32 result = 0;
@@ -73,14 +55,49 @@ s32 generalizeTileIndex( s32* tileIndex, s32 tileCount )
     return result;
 }
 
+v2 getNewTilesAndUpdateOffset( v2* tileRelativePosition /* in meters */, f32 tileSize /* in meters */ )
+{
+    v2 result;
+
+    f32 x = tileRelativePosition->x;
+    f32 y = tileRelativePosition->y;
+
+    if( x >= tileSize ) 
+    {
+        result.x = 1;
+        tileRelativePosition->x = x - tileSize;
+    }
+
+    if( x < 0) 
+    {
+        result.x = -1;
+        tileRelativePosition->x = tileSize - x;
+    }
+
+    if( y >= tileSize ) 
+    {
+        result.y = 1;
+        tileRelativePosition->y = y - tileSize;
+    }
+
+    if( y < 0) 
+    {
+        result.y = -1;
+        tileRelativePosition->y = tileSize + y;
+    }
+
+    return result;
+}
+
 GeneralizedPosition getGeneralizedPosition( TileMap* tilemap, GeneralizedPosition pos )
 {
     GeneralizedPosition result = pos;
     DecomposedPosition  newPos = decomposePosition( pos );
     
-    // 1. calculate the new tile relative x and y
-    newPos.tileX = newPos.tileX + generalizeCoords( &result.x, tilemap->tileInMeters );
-    newPos.tileY = newPos.tileY + generalizeCoords( &result.y, tilemap->tileInMeters );
+    // 1. calculate the new tiles in x and y
+    v2 tileOffset = getNewTilesAndUpdateOffset( &result.tileRelative, tilemap->tileInMeters );
+    newPos.tileX = newPos.tileX + tileOffset.x;
+    newPos.tileY = newPos.tileY + tileOffset.y;
 
     // 2. calculate the new tile x and y and update tilemap x and y
     newPos.tileareaX = newPos.tileareaX + generalizeTileIndex( (s32*)&newPos.tileX, tilemap->tileCountX );
@@ -110,6 +127,10 @@ bool isMoveAllowed( GeneralizedPosition newPos, TileMap* tilemap )
     return allowed;
 }
 
+/***********************************
+ * only called once during startup
+ ***********************************/
+
 TileArea* buildTileArea( MemoryPool* pool, TileMap* map, u32 areaX, u32 areaY )
 {
     TileArea* area = getTileArea( map, areaX, areaY );
@@ -117,21 +138,16 @@ TileArea* buildTileArea( MemoryPool* pool, TileMap* map, u32 areaX, u32 areaY )
     
     u32* tile = area->tiles;
 
-    for( u32 row=0; row<TILEMAP_Y; ++row )
+    for( u32 row=0; row<TILES_PER_AREA_Y; ++row )
     {
-        for( u32 col=0; col<TILEMAP_X; ++col )
+        for( u32 col=0; col<TILES_PER_AREA_X; ++col )
         {
             *tile = 0;
 
             if( row == 0 )                *tile = 1;
-            if( row == (TILEMAP_Y - 1) )  *tile = 1;
+            if( row == (TILES_PER_AREA_Y - 1) )  *tile = 1;
             if( col == 0 )                *tile = 1;
-            if( col == (TILEMAP_X - 1 ) ) *tile = 1;
-
-            if( randomNumber() % 5 == 0 )
-            {
-                *tile = 1;
-            }
+            if( col == (TILES_PER_AREA_X - 1 ) ) *tile = 1;
             
             tile++;
         }
@@ -140,25 +156,29 @@ TileArea* buildTileArea( MemoryPool* pool, TileMap* map, u32 areaX, u32 areaY )
     return area;
 }
 
-void setDoors( TileArea* area, bool left, bool right, bool top, bool bottom )
+void setDoor( TileArea* area, DOOR_DIRECTION door )
 {
     u32* tiles = area->tiles;
-    if( left )
+
+    switch( door )
     {
-        tiles[TILEMAP_Y / 2 * TILEMAP_X + 1] = 0;
-        tiles[TILEMAP_Y / 2 * TILEMAP_X] = 0; // door
-    }
-    if( right )
-    {
-        tiles[TILEMAP_Y / 2 * TILEMAP_X + TILEMAP_X - 2] = 0;
-        tiles[TILEMAP_Y / 2 * TILEMAP_X + TILEMAP_X - 1] = 0; // door
-    }
-    if( top ) 
-    {
-        tiles[TILEMAP_Y * TILEMAP_X - (TILEMAP_X / 2)] = 0; // door
-    }
-    if( bottom )
-    {
-        tiles[TILEMAP_X / 2] = 0; // door
+        case LEFT:   
+            tiles[(TILES_PER_AREA_Y / 2 * TILES_PER_AREA_X) + 1] = 0;
+            tiles[TILES_PER_AREA_Y / 2 * TILES_PER_AREA_X]       = 0;                 
+            break;
+        case RIGHT:  
+            tiles[TILES_PER_AREA_Y / 2 * TILES_PER_AREA_X + TILES_PER_AREA_X - 2] = 0; 
+            tiles[TILES_PER_AREA_Y / 2 * TILES_PER_AREA_X + TILES_PER_AREA_X - 1] = 0; 
+            break;
+        case TOP:    
+            tiles[(TILES_PER_AREA_Y - 1) * TILES_PER_AREA_X - (TILES_PER_AREA_X / 2)] = 0;   
+            tiles[TILES_PER_AREA_Y * TILES_PER_AREA_X - (TILES_PER_AREA_X / 2)]       = 0;   
+            break;
+        case BOTTOM: 
+            tiles[TILES_PER_AREA_X + TILES_PER_AREA_X / 2] = 0;
+            tiles[TILES_PER_AREA_X / 2]             = 0;                             
+            break;
+    
+        default: break;
     }
 }

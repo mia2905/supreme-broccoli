@@ -8,58 +8,48 @@ void buildWorld( MemoryPool* pool, TileMap* map )
     u32 x = 0;
     u32 y = 0;
 
-    bool doorLeft   = false;
-    bool doorRight  = false;
-    bool doorTop    = false;
-    bool doorBottom = false;
-
-    bool lastDoorLeft   = false;
-    bool lastDoorRight  = false;
-    bool lastDoorTop    = false;
-    bool lastDoorBottom = false;
+    DOOR_DIRECTION nextRoomEntry = NONE;
+    DOOR_DIRECTION door          = NONE;
 
     for( u32 i=0; i<NR_OF_TILEAREAS; ++i )
     {
         TileArea* area = buildTileArea( pool, map, x, y );
+        door      = (DOOR_DIRECTION)(randomNumber() % 2 + 2);
 
-        doorRight  = lastDoorLeft   ? true : false;
-        doorLeft   = lastDoorRight  ? true : false;
-        doorTop    = lastDoorBottom ? true : false;
-        doorBottom = lastDoorTop    ? true : false;
-        
-        if( randomNumber() % 2 == 0 )
+        if( nextRoomEntry != NONE )
         {
-            doorRight      = true;
-            lastDoorRight  = true;
-
-            lastDoorLeft   = false;
-            lastDoorTop    = false;
-            lastDoorBottom = false;
-            x++;
-        }
-        else
-        {
-            doorTop        = true;
-            lastDoorTop    = true;
-
-            lastDoorRight  = false;
-            lastDoorLeft   = false;
-            lastDoorBottom = false;
-            y++;
+            setDoor( area, nextRoomEntry );
         }
 
-        setDoors( area, doorLeft, doorRight, doorTop, doorBottom );
+        switch( door ) 
+        {
+            case RIGHT:  
+                ++x; 
+                nextRoomEntry = LEFT;   
+                break;
+            case TOP:    
+                ++y; 
+                nextRoomEntry = BOTTOM; 
+                break;
+            
+            default:
+                Assert( door == LEFT || door == BOTTOM );
+                break;
+        }    
+         
+        setDoor( area, door );
     }
 }
-void drawImage( RenderBuffer* buffer, f32 x, f32 y, Image* img )
+
+void drawImage( RenderBuffer* buffer, v2 position, Image* img )
 {
     u32 screenWidth  = buffer->width;
     u32 screenHeight = buffer->height;
 
-    s32 xmin = roundToS32( x );
-    s32 ymin = roundToS32( y );
-    s32 xmax = roundToS32( x + img->width );
-    s32 ymax = roundToS32( y + img->height );
+    s32 xmin = roundToS32( position.x );
+    s32 ymin = roundToS32( position.y );
+    s32 xmax = roundToS32( position.x + img->width );
+    s32 ymax = roundToS32( position.y + img->height );
 
     if( xmin < 0 ) xmin = 0;
     if( xmax < 0 ) xmax = 0;
@@ -90,15 +80,15 @@ void drawImage( RenderBuffer* buffer, f32 x, f32 y, Image* img )
     }
 }
 
-void drawRectangle( RenderBuffer* buffer, f32 minX, f32 minY, f32 maxX, f32 maxY, Color c )
+void drawRectangle( RenderBuffer* buffer, v2 min, v2 max, Color c )
 {
     u32 screenWidth  = buffer->width;
     u32 screenHeight = buffer->height;
 
-    s32 xmin = roundToS32( minX );
-    s32 ymin = roundToS32( minY );
-    s32 xmax = roundToS32( maxX );
-    s32 ymax = roundToS32( maxY );
+    s32 xmin = roundToS32( min.x );
+    s32 ymin = roundToS32( min.y );
+    s32 xmax = roundToS32( max.x );
+    s32 ymax = roundToS32( max.y );
 
     if( xmin < 0 ) xmin = 0;
     if( xmax < 0 ) xmax = 0;
@@ -126,6 +116,12 @@ void drawRectangle( RenderBuffer* buffer, f32 minX, f32 minY, f32 maxX, f32 maxY
     }
 }
 
+void drawBackground( RenderBuffer* buffer )
+{
+    Color backgroundColor = { 0.3f, 0.3f, 0.3f, 1.0f };
+    drawRectangle( buffer, V2(0, 0), V2(buffer->width, buffer->height), backgroundColor );
+}
+
 void drawPlayer( RenderBuffer* buffer, Player* player, TileMap* tilemap )
 {
     DecomposedPosition pos = decomposePosition( player->playerPos );
@@ -136,20 +132,19 @@ void drawPlayer( RenderBuffer* buffer, Player* player, TileMap* tilemap )
     f32 tileY = pos.tileY * tilemap->tileInMeters;
     f32 tileX = pos.tileX * tilemap->tileInMeters;
 
-    Color tilecolor = { 1.0f, 0.0f, 0.0f, 1.0f };
+    Color tilecolor = { 1.0f, 0.0f, 0.0f, 0.5f };
 
     f32 tileMinx = tilemap->metersToPixels * tileX;
     f32 tileMaxx = tilemap->metersToPixels * (tileX + tilemap->tileInMeters);
     f32 tileMiny = buffer->height - tilemap->metersToPixels * tileY;
     f32 tileMaxy = tileMiny - (tilemap->metersToPixels * tilemap->tileInMeters);
-    drawRectangle( buffer, tileMinx, tileMaxy, tileMaxx, tileMiny, tilecolor );
+    drawRectangle( buffer, V2(tileMinx, tileMaxy), V2(tileMaxx, tileMiny), tilecolor );
 
-
-    f32 minx  = tilemap->metersToPixels * ( tileX + player->playerPos.x - player->width/2 );
-    f32 maxx  = tilemap->metersToPixels * ( tileX + player->playerPos.x + player->width/2 );
-    f32 miny  = buffer->height - tilemap->metersToPixels * ( tileY + player->playerPos.y - player->height/2 );
-    f32 maxy  = miny - (tilemap->metersToPixels * player->height);
-    drawRectangle( buffer, minx, maxy, maxx, miny, player->color );
+    f32 minx  = tilemap->metersToPixels * ( tileX + player->playerPos.tileRelative.x - player->size.x/2 );
+    f32 maxx  = tilemap->metersToPixels * ( tileX + player->playerPos.tileRelative.x + player->size.x/2 );
+    f32 miny  = buffer->height - tilemap->metersToPixels * ( tileY + player->playerPos.tileRelative.y - player->size.y/2 );
+    f32 maxy  = miny - (tilemap->metersToPixels * player->size.y);
+    drawRectangle( buffer, V2(minx, maxy), V2(maxx, miny), player->color );
 }
 
 void drawTileArea( RenderBuffer* buffer, TileMap* tilemap, TileArea* area )
@@ -174,8 +169,7 @@ void drawTileArea( RenderBuffer* buffer, TileMap* tilemap, TileArea* area )
                 u32 minY = buffer->height - (row * tileHeight);
                 u32 maxY = minY - tileHeight;
 
-                drawImage( buffer, minX, maxY, tilemap->brickImage );
-                //drawRectangle( buffer, minX, maxY, maxX, minY, tilecolor );
+                drawImage( buffer, V2(minX, maxY), tilemap->brickImage );
             }
         }
     }
@@ -196,28 +190,38 @@ void drawWorld( RenderBuffer* buffer, TileMap* world, Player* player )
 
 void updatePlayer( UserInput* input, Player* player, TileMap* tilemap, f32 dt )
 {
-    f32 playerX  = player->playerPos.x;
-    f32 playerY  = player->playerPos.y;
-    f32 speed    = input->space.isDown ? 3.0f * player->speed : player->speed;
-
-    f32 movement = dt * speed; // s * m/s = m -> so movement is a displacement in meters
+    v2 playerRelativePosition = player->playerPos.tileRelative;
+    f32 acceleration          = input->space.isDown ? 3.0f * player->acceleration : player->acceleration;
+    v2 direction              = V2(0.0f, 0.0f);
+    v2 accelerationVector     = V2(0.0f, 0.0f);
+    v2 velocityVector         = player->velocityVector;
 
     if( input->arrowUp.isDown )    
     {
-        playerY += movement;
+        direction.y = 1.0f;
     }
     if( input->arrowDown.isDown )  
     {
-        playerY -= movement;
+        direction.y = -1.0f;
     }
     if( input->arrowRight.isDown ) 
     {
-        playerX += movement;
+        direction.x = 1.0f;
     }
     if( input->arrowLeft.isDown )  
     {
-        playerX -= movement;
+        direction.x = -1.0f;
     }
+
+    direction.normalize();
+    accelerationVector = direction * acceleration - (2.75f * velocityVector);
+    // equations of motion:
+    // p' = 1/2at^2 + vt + p -> acceleration based position
+    // v' = 2at + v          -> acceleration based velocity ( 1st derivative of the position  )
+    // a' = a                -> acceleration                ( 2nd derivative of the velocity )
+
+    v2 newPosition = ((0.5f * accelerationVector) * square( dt )) + (velocityVector * dt) + playerRelativePosition;
+    player->velocityVector = ((2.0f * accelerationVector) * dt) + velocityVector;
 
     // old player position
     GeneralizedPosition p = player->playerPos;
@@ -228,32 +232,59 @@ void updatePlayer( UserInput* input, Player* player, TileMap* tilemap, f32 dt )
     GeneralizedPosition topLeft     = p;
     GeneralizedPosition topRight    = p;
 
-    bottomLeft.x  = playerX - player->width * 0.5f;
-    bottomLeft.y  = playerY + player->height * 0.5f;
-
-    bottomRight.x = playerX + player->width * 0.5f;
-    bottomRight.y = playerY + player->height * 0.5f;
-
-    topLeft.x     = playerX - player->width * 0.5f;
-    topLeft.y     = playerY - player->height * 0.5f;
-
-    topRight.x    = playerX + player->width * 0.5f;
-    topRight.y    = playerY - player->height * 0.5f;
+    bottomLeft.tileRelative    = newPosition + V2( -player->size.x * 0.5f, -player->size.y * 0.5f );
+    bottomRight.tileRelative   = newPosition + V2( player->size.x * 0.5f, -player->size.y * 0.5f );
+    topLeft.tileRelative       = newPosition + V2( -player->size.x * 0.5f, player->size.y * 0.5f );
+    topRight.tileRelative      = newPosition + V2(player->size.x * 0.5f, player->size.y * 0.5f);
 
     bottomLeft  = getGeneralizedPosition( tilemap, bottomLeft );
     bottomRight = getGeneralizedPosition( tilemap, bottomRight );
     topLeft     = getGeneralizedPosition( tilemap, topLeft );
     topRight    = getGeneralizedPosition( tilemap, topRight );
 
-    if( isMoveAllowed( bottomLeft,  tilemap ) &&
-        isMoveAllowed( bottomRight, tilemap ) &&
-        isMoveAllowed( topLeft,     tilemap ) &&
-        isMoveAllowed( topRight,    tilemap )  )
+    bool bottomLeftOk  = isMoveAllowed( bottomLeft,  tilemap );
+    bool bottomRightOk = isMoveAllowed( bottomRight, tilemap );
+    bool topLeftOk     = isMoveAllowed( topLeft,     tilemap );
+    bool topRightOk    = isMoveAllowed( topRight,    tilemap );
+
+    bool collision = !(bottomLeftOk && bottomRightOk && topLeftOk && topRightOk);
+    
+    if( !collision )
     {
         // update old position with new x and y
-        p.x = playerX;
-        p.y = playerY;
+        p.tileRelative    = newPosition;
         player->playerPos = getGeneralizedPosition( tilemap, p );
+    }
+    else
+    {
+        v2 v = player->velocityVector;
+        v2 r = V2(0.0f, 0.0f);
+
+        if( !bottomRightOk && !topRightOk ) // right wall collision -> normal pointing left
+        {
+            Print( "* right wall *\n" );
+            r = V2( -1.0f, 0.0f );
+        }
+
+        if( !bottomLeftOk && !topLeftOk ) // left wall collision -> normal pointing right
+        {
+            Print( "* left wall *\n" );
+            r = V2( 1.0f, 0.0f );
+        }
+
+        if( !topLeftOk && !topRightOk ) // top wall collision -> normal pointing down
+        {
+            Print( "* top wall *\n" );
+            r = V2( 0.0f, -1.0f );
+        }
+
+        if( !bottomLeftOk && !bottomRightOk ) // bottom wall collision -> normal pointing up
+        {
+            Print( "* bottom wall *\n" );
+            r = V2( 0.0f, 1.0f );
+        }
+
+        player->velocityVector = v - 2 * v.dot(r) * r;
     }
 }
 
@@ -297,8 +328,8 @@ void UpdateAndRender( ApplicationMemory* memory,
         tileMemory->base            = (u8*)memory->permanentMemory + sizeof( ApplicationState );
         tileMemory->usedBytes       = 0;
 
-        tilemap->tileCountX         = TILEMAP_X;
-        tilemap->tileCountY         = TILEMAP_Y;
+        tilemap->tileCountX         = TILES_PER_AREA_X;
+        tilemap->tileCountY         = TILES_PER_AREA_Y;
         tilemap->tileInMeters       = 2.0f;
         tilemap->tileInPixels       = TILE_SIZE;
         tilemap->metersToPixels     = (f32)((f32)tilemap->tileInPixels/tilemap->tileInMeters);
@@ -320,24 +351,30 @@ void UpdateAndRender( ApplicationMemory* memory,
 
         Color playerColor = { 0.8, 0.8, 1.0, 1.0 };
 
-        player->playerPos.unifiedPositionX = 1;
-        player->playerPos.unifiedPositionY = 1;
-        player->playerPos.x                = tilemap->tileInMeters * 0.5f;
-        player->playerPos.y                = tilemap->tileInMeters * 0.5f + 1.0f;
-        player->width                      = 0.9f * tilemap->tileInMeters;
-        player->height                     = 0.9f * tilemap->tileInMeters;
-        player->speed                      = 4.0f;
+        DecomposedPosition startposition = {0};
+        startposition.tileareaX = 0;
+        startposition.tileareaY = 0;
+        startposition.tileX     = 2;
+        startposition.tileY     = 2;
+
+        composePosition( startposition, &player->playerPos );
+
+        player->playerPos.tileRelative.x   = tilemap->tileInMeters * 0.5f;
+        player->playerPos.tileRelative.y   = tilemap->tileInMeters * 0.5f + 1.0f;
+        player->size.x                     = 0.9f * tilemap->tileInMeters;
+        player->size.y                     = 0.9f * tilemap->tileInMeters;
+        player->acceleration               = 20.0f; // in meters per second squared -> m/s^2
+        player->velocityVector             = V2(0.0f, 0.0f);
         player->color                      = playerColor;
         
-        info->debugMode       = true; // set this to true to get platform debug info printed to stdout
+        info->debugMode       = false; // set this to true to get platform debug info printed to stdout
         memory->isInitialized = true;
         state->loading        = false;
     }
 
     updatePlayer( input, player, tilemap, info->deltaTimeS );
 
-    Color backgroundColor = { 0.3f, 0.3f, 0.3f, 1.0f };
-    drawRectangle( buffer, 0, 0, buffer->width, buffer->height, backgroundColor );
+    drawBackground( buffer );
     drawWorld( buffer, tilemap, player );
     drawPlayer( buffer, player, tilemap );
 }

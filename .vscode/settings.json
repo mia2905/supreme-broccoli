@@ -1,5 +1,6 @@
 {
     "files.associations": {
         "nullptr": "cpp"
-    }
+    },
+    "C_Cpp.errorSquiggles": "Disabled"
 }
