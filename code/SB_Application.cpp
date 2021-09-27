@@ -255,37 +255,6 @@ void updatePlayer( UserInput* input, Player* player, TileMap* tilemap, f32 dt )
         p.tileRelative    = newPosition;
         player->playerPos = getGeneralizedPosition( tilemap, p );
     }
-    else
-    {
-        v2 v = player->velocityVector;
-        v2 r = V2(0.0f, 0.0f);
-
-        if( !bottomRightOk && !topRightOk ) // right wall collision -> normal pointing left
-        {
-            Print( "* right wall *\n" );
-            r = V2( -1.0f, 0.0f );
-        }
-
-        if( !bottomLeftOk && !topLeftOk ) // left wall collision -> normal pointing right
-        {
-            Print( "* left wall *\n" );
-            r = V2( 1.0f, 0.0f );
-        }
-
-        if( !topLeftOk && !topRightOk ) // top wall collision -> normal pointing down
-        {
-            Print( "* top wall *\n" );
-            r = V2( 0.0f, -1.0f );
-        }
-
-        if( !bottomLeftOk && !bottomRightOk ) // bottom wall collision -> normal pointing up
-        {
-            Print( "* bottom wall *\n" );
-            r = V2( 0.0f, 1.0f );
-        }
-
-        player->velocityVector = v - 2 * v.dot(r) * r;
-    }
 }
 
 void UpdateAndRender( ApplicationMemory* memory, 
