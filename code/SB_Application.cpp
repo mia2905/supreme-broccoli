@@ -332,7 +332,7 @@ void UpdateAndRender( ApplicationMemory* memory,
         player->playerPos.tileRelative.y   = tilemap->tileInMeters * 0.5f + 1.0f;
         player->size.x                     = 0.9f * tilemap->tileInMeters;
         player->size.y                     = 0.9f * tilemap->tileInMeters;
-        player->acceleration               = 20.0f; // in meters per second squared -> m/s^2
+        player->acceleration               = 50.0f; // in meters per second squared -> m/s^2
         player->velocityVector             = V2(0.0f, 0.0f);
         player->color                      = playerColor;
         
