@@ -118,7 +118,7 @@ void drawRectangle( RenderBuffer* buffer, v2 min, v2 max, Color c )
 
 void drawBackground( RenderBuffer* buffer )
 {
-    Color backgroundColor = { 0.3f, 0.3f, 0.3f, 1.0f };
+    Color backgroundColor = { 25.0f/255.0f, 25.0f/255.0f, 25.0f/255.0f, 1.0f };
     drawRectangle( buffer, V2(0, 0), V2(buffer->width, buffer->height), backgroundColor );
 }
 
@@ -132,7 +132,7 @@ void drawPlayer( RenderBuffer* buffer, Player* player, TileMap* tilemap )
     f32 tileY = pos.tileY * tilemap->tileInMeters;
     f32 tileX = pos.tileX * tilemap->tileInMeters;
 
-    Color tilecolor = { 1.0f, 0.0f, 0.0f, 0.5f };
+    Color tilecolor = { 75.0f/255.0f, 75.0f/255.0f, 75.0f/255.0f, 1.0f };
 
     f32 tileMinx = tilemap->metersToPixels * tileX;
     f32 tileMaxx = tilemap->metersToPixels * (tileX + tilemap->tileInMeters);
@@ -149,7 +149,7 @@ void drawPlayer( RenderBuffer* buffer, Player* player, TileMap* tilemap )
 
 void drawTileArea( RenderBuffer* buffer, TileMap* tilemap, TileArea* area )
 {
-    Color tilecolor = { 0.4f, 0.4f, 0.4f, 1.0f };
+    Color tilecolor = { 53.0f/255.0f, 51.0f/255.0f, 47.0f/255.0f, 1.0f };
 
     u32 tileWidth   = tilemap->tileInMeters * tilemap->metersToPixels;
     u32 tileHeight  = tilemap->tileInMeters * tilemap->metersToPixels;
@@ -169,7 +169,8 @@ void drawTileArea( RenderBuffer* buffer, TileMap* tilemap, TileArea* area )
                 u32 minY = buffer->height - (row * tileHeight);
                 u32 maxY = minY - tileHeight;
 
-                drawImage( buffer, V2(minX, maxY), tilemap->brickImage );
+                //drawImage( buffer, V2(minX, maxY), tilemap->brickImage );
+                drawRectangle( buffer, V2(minX, maxY), V2(maxX, minY), tilecolor );
             }
         }
     }
@@ -224,18 +225,18 @@ void updatePlayer( UserInput* input, Player* player, TileMap* tilemap, f32 dt )
     player->velocityVector = ((2.0f * accelerationVector) * dt) + velocityVector;
 
     // old player position
-    GeneralizedPosition p = player->playerPos;
+    GeneralizedPosition oldPosition = player->playerPos;
 
     // new positions of the four corners
-    GeneralizedPosition bottomLeft  = p;
-    GeneralizedPosition bottomRight = p;
-    GeneralizedPosition topLeft     = p;
-    GeneralizedPosition topRight    = p;
+    GeneralizedPosition bottomLeft  = oldPosition;
+    GeneralizedPosition bottomRight = oldPosition;
+    GeneralizedPosition topLeft     = oldPosition;
+    GeneralizedPosition topRight    = oldPosition;
 
     bottomLeft.tileRelative    = newPosition + V2( -player->size.x * 0.5f, -player->size.y * 0.5f );
-    bottomRight.tileRelative   = newPosition + V2( player->size.x * 0.5f, -player->size.y * 0.5f );
-    topLeft.tileRelative       = newPosition + V2( -player->size.x * 0.5f, player->size.y * 0.5f );
-    topRight.tileRelative      = newPosition + V2(player->size.x * 0.5f, player->size.y * 0.5f);
+    bottomRight.tileRelative   = newPosition + V2(  player->size.x * 0.5f, -player->size.y * 0.5f );
+    topLeft.tileRelative       = newPosition + V2( -player->size.x * 0.5f,  player->size.y * 0.5f );
+    topRight.tileRelative      = newPosition + V2(  player->size.x * 0.5f,  player->size.y * 0.5f );
 
     bottomLeft  = getGeneralizedPosition( tilemap, bottomLeft );
     bottomRight = getGeneralizedPosition( tilemap, bottomRight );
@@ -252,8 +253,8 @@ void updatePlayer( UserInput* input, Player* player, TileMap* tilemap, f32 dt )
     if( !collision )
     {
         // update old position with new x and y
-        p.tileRelative    = newPosition;
-        player->playerPos = getGeneralizedPosition( tilemap, p );
+        player->playerPos.tileRelative = newPosition;
+        player->playerPos              = getGeneralizedPosition( tilemap, player->playerPos );
     }
 }
 
@@ -318,7 +319,7 @@ void UpdateAndRender( ApplicationMemory* memory,
         const char* bgrFile   = "./art/background.png";
         state->background     = state->services.loadImage( imageMemory, bgrFile );
 
-        Color playerColor = { 0.8, 0.8, 1.0, 1.0 };
+        Color playerColor = { 1.0f, 162.0f/255.0f, 0.0f, 1.0f };
 
         DecomposedPosition startposition = {0};
         startposition.tileareaX = 0;
