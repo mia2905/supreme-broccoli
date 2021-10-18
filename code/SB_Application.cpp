@@ -215,7 +215,7 @@ void updatePlayer( UserInput* input, Player* player, TileMap* tilemap, f32 dt )
     }
 
     direction.normalize();
-    accelerationVector = direction * acceleration - (2.75f * velocityVector);
+    accelerationVector = direction * acceleration - (4.0f * velocityVector);
     // equations of motion:
     // p' = 1/2at^2 + vt + p -> acceleration based position
     // v' = 2at + v          -> acceleration based velocity ( 1st derivative of the position  )
