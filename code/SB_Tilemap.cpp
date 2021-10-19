@@ -108,6 +108,13 @@ GeneralizedPosition getGeneralizedPosition( TileMap* tilemap, GeneralizedPositio
     return result;
 }
 
+u32 getTileValue( TileMap* tilemap, TileArea* area, u32 tileX, u32 tileY )
+{
+    Assert( tilemap != nullptr );
+
+    return area->tiles[tileY * tilemap->tileCountX + tileX];
+}
+
 bool isMoveAllowed( GeneralizedPosition newPos, TileMap* tilemap )
 {
     bool allowed = false;

@@ -23,6 +23,38 @@ struct DecomposedPosition
     s32 tileY;
 };
 
+enum DIRECTION
+{
+    NORTH,
+    SOUTH,
+    WEST,
+    EAST
+};
+
+struct Wall
+{
+    DIRECTION direction;
+    v2        normal;
+
+    Wall( DIRECTION d, v2 n )
+    {
+        direction = d;
+        normal    = n;
+    }
+};
+
+struct Tile
+{
+    u32 x;
+    u32 y;
+
+    Tile( u32 x, u32 y )
+    {
+        this->x = x;
+        this->y = y;
+    }
+};
+
 enum DOOR_DIRECTION
 {
     NONE   = 0,

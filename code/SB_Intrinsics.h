@@ -43,6 +43,11 @@ inline f32 arcusTanges2( f32 x, f32 y )
     return atan2f( x, y );
 }
 
+inline f32 arcusCosine( f32 x )
+{
+    return acosf( x );
+}
+
 inline f32 sinus( f32 x )
 {
     return sinf( x );

@@ -3,6 +3,8 @@
 #include "SB_Tilemap.h"
 #include "SB_Tilemap.cpp"
 
+#include <vector>
+
 void buildWorld( MemoryPool* pool, TileMap* map )
 {
     u32 x = 0;
@@ -189,6 +191,118 @@ void drawWorld( RenderBuffer* buffer, TileMap* world, Player* player )
     }
 }
 
+GeneralizedPosition collisionDetection( Player* player, 
+                                        TileMap* tilemap, 
+                                        v2 direction, 
+                                        f32 acceleration, 
+                                        f32 dt )
+{
+    static v2 north = V2(  0.0f,  1.0f );
+    static v2 south = V2(  0.0f, -1.0f );
+    static v2 east  = V2(  1.0f,  0.0f );
+    static v2 west  = V2( -1.0f,  0.0f );
+
+    GeneralizedPosition checkedPosition;
+
+    // exit if no movement is required
+    if( direction.length() == 0.0f )
+        return checkedPosition;
+
+    DecomposedPosition tilePosition = decomposePosition( player->playerPos );
+    TileArea*          tileArea     = getTileArea( tilemap, tilePosition.tileareaX, tilePosition.tileareaY );
+    v2 velocity                     = player->velocityVector;
+    v2 accelerationVector           = direction * acceleration - (4.0f * player->velocityVector);
+    // equations of motion:
+    // p' = 1/2at^2 + vt + p -> acceleration based position
+    // v' = 2at + v          -> acceleration based velocity ( 1st derivative of the position  )
+    // a' = a                -> acceleration                ( 2nd derivative of the velocity )
+
+    v2 positionNew = ((0.5f * accelerationVector) * square( dt )) + (velocity * dt) + player->playerPos.tileRelative;
+    v2 tileNew     = {};
+    tileNew.x      = tilePosition.tileX + (positionNew.x / tilemap->tileInMeters);
+    tileNew.y      = tilePosition.tileY + (positionNew.y / tilemap->tileInMeters);
+
+
+    bool collision = false;
+    // 1. constuct the search area
+    u32 searchTilesMinX = (tilePosition.tileX < tileNew.x) ? tilePosition.tileX : tileNew.x;
+    u32 searchTilesMinY = (tilePosition.tileY < tileNew.y) ? tilePosition.tileY : tileNew.y;
+    u32 searchTilesMaxX = (tilePosition.tileX < tileNew.x) ? tileNew.x : tilePosition.tileX;
+    u32 searchTilesMaxY = (tilePosition.tileY < tileNew.y) ? tileNew.y : tilePosition.tileY;
+
+    // 2. check if collision is even possible (is thera tile which is NOT empty)
+    std::vector< Tile > tilesToCheck;
+    for( u32 searchY = searchTilesMinY; searchY <= searchTilesMaxY; searchY++ )
+    {
+        for( u32 searchX = searchTilesMinX; searchX <= searchTilesMaxX; searchX++ )
+        {
+            if( getTileValue( tilemap, tileArea, searchX, searchY ) == 1 )
+            {
+                tilesToCheck.push_back( Tile(searchX, searchY) );
+                collision = true;
+                break;
+            }
+        }
+    }
+
+    // 3. find out for which wall(s) to test 
+    // try the angle between the wall normal and the direction vector
+    // - angle <= PI/2 no collision possible
+    // - angle > PI/2 collision possible
+    
+    std::vector< Wall > wallsToCheck;
+    f32 angleNorth = direction.angleBetween( north );
+    f32 angleSouth = direction.angleBetween( south );
+    f32 angleEast  = direction.angleBetween( east );
+    f32 angleWest  = direction.angleBetween( west );
+
+    f32 testAngle = PI / 2;
+    if( angleNorth > testAngle )
+    {
+        wallsToCheck.push_back( Wall( NORTH, north ) );
+    }
+
+    if( angleSouth > testAngle )
+    {
+        wallsToCheck.push_back( Wall( SOUTH, south ) );
+    }
+
+    if( angleWest > testAngle )
+    {
+        wallsToCheck.push_back( Wall( WEST, west ) );
+    }
+
+    if( angleEast > testAngle )
+    {
+        wallsToCheck.push_back( Wall( EAST, east ) );
+    }
+
+    PrintVector( "direction: ", direction );
+    PrintNumber( "angle north: ", toDegrees( angleNorth ) );
+    PrintNumber( "angle south: ", toDegrees( angleSouth ) );
+    PrintNumber( "angle east: ",  toDegrees( angleEast ) );
+    PrintNumber( "angle west: ",  toDegrees( angleWest ) );
+
+    // 4. calculate time of collision and the collision point
+    for( u32 i=0; i < tilesToCheck.size(); ++i )
+    {
+        Tile t = tilesToCheck[i];
+        for( u32 j=0; j < wallsToCheck.size(); ++j )
+        {
+            Wall w = wallsToCheck[j];
+            switch( w.direction )
+            {
+                case NORTH: break;
+                case SOUTH: break;
+                case WEST:  break;
+                case EAST:  break;
+            }
+        }
+    }
+
+    return checkedPosition;
+}
+
 void updatePlayer( UserInput* input, Player* player, TileMap* tilemap, f32 dt )
 {
     v2 playerRelativePosition = player->playerPos.tileRelative;
@@ -256,6 +370,8 @@ void updatePlayer( UserInput* input, Player* player, TileMap* tilemap, f32 dt )
         player->playerPos.tileRelative = newPosition;
         player->playerPos              = getGeneralizedPosition( tilemap, player->playerPos );
     }
+
+    collisionDetection( player, tilemap, direction, acceleration, dt );
 }
 
 void UpdateAndRender( ApplicationMemory* memory, 
