@@ -21,6 +21,8 @@ struct DecomposedPosition
 
     s32 tileX;
     s32 tileY;
+
+    v2 tileRelative;
 };
 
 enum DIRECTION

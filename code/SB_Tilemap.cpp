@@ -19,21 +19,28 @@ DecomposedPosition decomposePosition( GeneralizedPosition pos )
 {
     DecomposedPosition newPos = {0};
 
-    newPos.tileareaX = pos.unifiedPositionX >> TILEAREA_SHIFT;
-    newPos.tileareaY = pos.unifiedPositionY >> TILEAREA_SHIFT;
+    newPos.tileareaX    = pos.unifiedPositionX >> TILEAREA_SHIFT;
+    newPos.tileareaY    = pos.unifiedPositionY >> TILEAREA_SHIFT;
 
-    newPos.tileX     = pos.unifiedPositionX & TILE_MASK;
-    newPos.tileY     = pos.unifiedPositionY & TILE_MASK;
+    newPos.tileX        = pos.unifiedPositionX & TILE_MASK;
+    newPos.tileY        = pos.unifiedPositionY & TILE_MASK;
+
+    newPos.tileRelative = pos.tileRelative;
 
     return newPos;
 }
 
-void composePosition( DecomposedPosition pos, GeneralizedPosition* newPos )
+GeneralizedPosition composePosition( DecomposedPosition pos )
 {
-    newPos->unifiedPositionX = pos.tileareaX << TILEAREA_SHIFT;
-    newPos->unifiedPositionY = pos.tileareaY << TILEAREA_SHIFT;
-    newPos->unifiedPositionX = newPos->unifiedPositionX | pos.tileX;
-    newPos->unifiedPositionY = newPos->unifiedPositionY | pos.tileY;
+    GeneralizedPosition result;
+
+    result.unifiedPositionX = pos.tileareaX << TILEAREA_SHIFT;
+    result.unifiedPositionY = pos.tileareaY << TILEAREA_SHIFT;
+    result.unifiedPositionX = result.unifiedPositionX | pos.tileX;
+    result.unifiedPositionY = result.unifiedPositionY | pos.tileY;
+    result.tileRelative     = pos.tileRelative;
+
+    return result;
 }
 
 s32 generalizeTileIndex( s32* tileIndex, s32 tileCount )
@@ -55,57 +62,49 @@ s32 generalizeTileIndex( s32* tileIndex, s32 tileCount )
     return result;
 }
 
-v2 getNewTilesAndUpdateOffset( v2* tileRelativePosition /* in meters */, f32 tileSize /* in meters */ )
+GeneralizedPosition buildNewPosition( DecomposedPosition oldPosition, v2 movement, TileMap* tilemap )
 {
-    v2 result;
+    GeneralizedPosition result;
+    DecomposedPosition  p = oldPosition;
+    // 1. calculate new tile x and y coords in the tile area along with a new tilerelative offset in meters
+    v2 tempTileRelative = oldPosition.tileRelative + movement;
+    f32 x               = tempTileRelative.x;
+    f32 y               = tempTileRelative.y;
+    u32 tileX           = oldPosition.tileX;
+    u32 tileY           = oldPosition.tileY;
+    f32 tileSize        = tilemap->tileInMeters;
+    p.tileRelative      = tempTileRelative;
 
-    f32 x = tileRelativePosition->x;
-    f32 y = tileRelativePosition->y;
-
-    if( x >= tileSize ) 
+    if( x >= tileSize )
     {
-        result.x = 1;
-        tileRelativePosition->x = x - tileSize;
+        p.tileX         += 1;
+        p.tileRelative.x = x - tileSize;
     }
-
-    if( x < 0) 
-    {
-        result.x = -1;
-        tileRelativePosition->x = tileSize - x;
-    }
-
-    if( y >= tileSize ) 
-    {
-        result.y = 1;
-        tileRelativePosition->y = y - tileSize;
-    }
-
-    if( y < 0) 
-    {
-        result.y = -1;
-        tileRelativePosition->y = tileSize + y;
-    }
-
-    return result;
-}
-
-GeneralizedPosition getGeneralizedPosition( TileMap* tilemap, GeneralizedPosition pos )
-{
-    GeneralizedPosition result = pos;
-    DecomposedPosition  newPos = decomposePosition( pos );
     
-    // 1. calculate the new tiles in x and y
-    v2 tileOffset = getNewTilesAndUpdateOffset( &result.tileRelative, tilemap->tileInMeters );
-    newPos.tileX = newPos.tileX + tileOffset.x;
-    newPos.tileY = newPos.tileY + tileOffset.y;
+    if( x < 0 ) 
+    {
+        p.tileX         -= 1;
+        p.tileRelative.x = tileSize - x;
+    }
+
+    if( y >= tileSize )
+    {
+        p.tileY         += 1;
+        p.tileRelative.y = y - tileSize;
+    }
+
+    if( y < 0 )
+    {
+        p.tileY         -= 1;
+        p.tileRelative.y = tileSize - y;
+    }
 
     // 2. calculate the new tile x and y and update tilemap x and y
-    newPos.tileareaX = newPos.tileareaX + generalizeTileIndex( (s32*)&newPos.tileX, tilemap->tileCountX );
-    newPos.tileareaY = newPos.tileareaY + generalizeTileIndex( (s32*)&newPos.tileY, tilemap->tileCountY );
+    p.tileareaX = p.tileareaX + generalizeTileIndex( (s32*)&p.tileX, tilemap->tileCountX );
+    p.tileareaY = p.tileareaY + generalizeTileIndex( (s32*)&p.tileY, tilemap->tileCountY );
 
-    composePosition( newPos, &result );
-
-    return result;
+    result = composePosition( p );
+    return result;;
 }
 
 u32 getTileValue( TileMap* tilemap, TileArea* area, u32 tileX, u32 tileY )
@@ -113,25 +112,6 @@ u32 getTileValue( TileMap* tilemap, TileArea* area, u32 tileX, u32 tileY )
     Assert( tilemap != nullptr );
 
     return area->tiles[tileY * tilemap->tileCountX + tileX];
-}
-
-bool isMoveAllowed( GeneralizedPosition newPos, TileMap* tilemap )
-{
-    bool allowed = false;
-
-    DecomposedPosition pos = decomposePosition( newPos );
-    TileArea* area = getTileArea( tilemap, pos.tileareaX, pos.tileareaY );
-    
-    if( area->tiles )
-    {
-        if( (pos.tileX >= 0) && (pos.tileX < tilemap->tileCountX) &&
-            (pos.tileY >= 0) && (pos.tileY < tilemap->tileCountY) )
-        {
-            allowed = ( area->tiles[pos.tileY * tilemap->tileCountX + pos.tileX] == 0 ); 
-        }
-    }
-    
-    return allowed;
 }
 
 /***********************************

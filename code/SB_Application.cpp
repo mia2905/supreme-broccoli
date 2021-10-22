@@ -191,11 +191,11 @@ void drawWorld( RenderBuffer* buffer, TileMap* world, Player* player )
     }
 }
 
-GeneralizedPosition collisionDetection( Player* player, 
+GeneralizedPosition collisionDetection( Player*  player, 
                                         TileMap* tilemap, 
-                                        v2 direction, 
-                                        f32 acceleration, 
-                                        f32 dt )
+                                        v2       direction, 
+                                        f32      acceleration, 
+                                        f32      dt )
 {
     static v2 north = V2(  0.0f,  1.0f );
     static v2 south = V2(  0.0f, -1.0f );
@@ -205,30 +205,32 @@ GeneralizedPosition collisionDetection( Player* player,
     GeneralizedPosition checkedPosition;
 
     // exit if no movement is required
-    if( direction.length() == 0.0f )
-        return checkedPosition;
+    //if( direction.length() == 0.0f )
+    //    return player->playerPos;
 
-    DecomposedPosition tilePosition = decomposePosition( player->playerPos );
-    TileArea*          tileArea     = getTileArea( tilemap, tilePosition.tileareaX, tilePosition.tileareaY );
-    v2 velocity                     = player->velocityVector;
-    v2 accelerationVector           = direction * acceleration - (4.0f * player->velocityVector);
+    DecomposedPosition oldPosition = decomposePosition( player->playerPos );
+    TileArea*          tileArea    = getTileArea( tilemap, oldPosition.tileareaX, oldPosition.tileareaY );
+    
+    v2 accelerationVector          = direction * acceleration - (4.0f * player->velocityVector);
+    v2 velocity                    = ((2.0f * accelerationVector) * dt) + player->velocityVector;
+    player->velocityVector         = velocity;
+    
     // equations of motion:
     // p' = 1/2at^2 + vt + p -> acceleration based position
     // v' = 2at + v          -> acceleration based velocity ( 1st derivative of the position  )
     // a' = a                -> acceleration                ( 2nd derivative of the velocity )
 
-    v2 positionNew = ((0.5f * accelerationVector) * square( dt )) + (velocity * dt) + player->playerPos.tileRelative;
-    v2 tileNew     = {};
-    tileNew.x      = tilePosition.tileX + (positionNew.x / tilemap->tileInMeters);
-    tileNew.y      = tilePosition.tileY + (positionNew.y / tilemap->tileInMeters);
-
+    v2 movement = ((0.5f * accelerationVector) * square( dt )) + (velocity * dt);
+    v2 tileNew  = {};
+    tileNew.x   = oldPosition.tileX + ((movement.x + oldPosition.tileRelative.x) / tilemap->tileInMeters);
+    tileNew.y   = oldPosition.tileY + ((movement.y + oldPosition.tileRelative.y) / tilemap->tileInMeters);
 
     bool collision = false;
     // 1. constuct the search area
-    u32 searchTilesMinX = (tilePosition.tileX < tileNew.x) ? tilePosition.tileX : tileNew.x;
-    u32 searchTilesMinY = (tilePosition.tileY < tileNew.y) ? tilePosition.tileY : tileNew.y;
-    u32 searchTilesMaxX = (tilePosition.tileX < tileNew.x) ? tileNew.x : tilePosition.tileX;
-    u32 searchTilesMaxY = (tilePosition.tileY < tileNew.y) ? tileNew.y : tilePosition.tileY;
+    u32 searchTilesMinX = (oldPosition.tileX < tileNew.x) ? oldPosition.tileX : tileNew.x;
+    u32 searchTilesMinY = (oldPosition.tileY < tileNew.y) ? oldPosition.tileY : tileNew.y;
+    u32 searchTilesMaxX = (oldPosition.tileX < tileNew.x) ? tileNew.x : oldPosition.tileX;
+    u32 searchTilesMaxY = (oldPosition.tileY < tileNew.y) ? tileNew.y : oldPosition.tileY;
 
     // 2. check if collision is even possible (is thera tile which is NOT empty)
     std::vector< Tile > tilesToCheck;
@@ -240,9 +242,14 @@ GeneralizedPosition collisionDetection( Player* player,
             {
                 tilesToCheck.push_back( Tile(searchX, searchY) );
                 collision = true;
-                break;
             }
         }
+    }
+
+    if( !collision ) // generate the new poistion and return it
+    {
+        checkedPosition = buildNewPosition( oldPosition, movement, tilemap );
+        return checkedPosition;
     }
 
     // 3. find out for which wall(s) to test 
@@ -277,26 +284,40 @@ GeneralizedPosition collisionDetection( Player* player,
         wallsToCheck.push_back( Wall( EAST, east ) );
     }
 
-    PrintVector( "direction: ", direction );
-    PrintNumber( "angle north: ", toDegrees( angleNorth ) );
-    PrintNumber( "angle south: ", toDegrees( angleSouth ) );
-    PrintNumber( "angle east: ",  toDegrees( angleEast ) );
-    PrintNumber( "angle west: ",  toDegrees( angleWest ) );
+    //PrintVector( "direction: ", direction );
+    //PrintNumber( "angle north: ", toDegrees( angleNorth ) );
+    //PrintNumber( "angle south: ", toDegrees( angleSouth ) );
+    //PrintNumber( "angle east: ",  toDegrees( angleEast ) );
+    //PrintNumber( "angle west: ",  toDegrees( angleWest ) );
 
     // 4. calculate time of collision and the collision point
+    v2  collisionPoint;
+    f32 timeToCollision = dt;
+
     for( u32 i=0; i < tilesToCheck.size(); ++i )
     {
         Tile t = tilesToCheck[i];
+
+        f32 wallY = t.y * tilemap->tileInMeters;
+        f32 wallX = t.x * tilemap->tileInMeters;
+                    
         for( u32 j=0; j < wallsToCheck.size(); ++j )
         {
             Wall w = wallsToCheck[j];
+            
             switch( w.direction )
             {
-                case NORTH: break;
-                case SOUTH: break;
-                case WEST:  break;
-                case EAST:  break;
+                case NORTH:
+                    break;
+                case SOUTH: 
+                    break;
+                case WEST:  
+                    break;
+                case EAST:  
+                    break;
             }
+
+            // shortest time means shortest distance -> hence this is the collision point
         }
     }
 
@@ -308,9 +329,7 @@ void updatePlayer( UserInput* input, Player* player, TileMap* tilemap, f32 dt )
     v2 playerRelativePosition = player->playerPos.tileRelative;
     f32 acceleration          = input->space.isDown ? 3.0f * player->acceleration : player->acceleration;
     v2 direction              = V2(0.0f, 0.0f);
-    v2 accelerationVector     = V2(0.0f, 0.0f);
-    v2 velocityVector         = player->velocityVector;
-
+    
     if( input->arrowUp.isDown )    
     {
         direction.y = 1.0f;
@@ -329,49 +348,8 @@ void updatePlayer( UserInput* input, Player* player, TileMap* tilemap, f32 dt )
     }
 
     direction.normalize();
-    accelerationVector = direction * acceleration - (4.0f * velocityVector);
-    // equations of motion:
-    // p' = 1/2at^2 + vt + p -> acceleration based position
-    // v' = 2at + v          -> acceleration based velocity ( 1st derivative of the position  )
-    // a' = a                -> acceleration                ( 2nd derivative of the velocity )
 
-    v2 newPosition = ((0.5f * accelerationVector) * square( dt )) + (velocityVector * dt) + playerRelativePosition;
-    player->velocityVector = ((2.0f * accelerationVector) * dt) + velocityVector;
-
-    // old player position
-    GeneralizedPosition oldPosition = player->playerPos;
-
-    // new positions of the four corners
-    GeneralizedPosition bottomLeft  = oldPosition;
-    GeneralizedPosition bottomRight = oldPosition;
-    GeneralizedPosition topLeft     = oldPosition;
-    GeneralizedPosition topRight    = oldPosition;
-
-    bottomLeft.tileRelative    = newPosition + V2( -player->size.x * 0.5f, -player->size.y * 0.5f );
-    bottomRight.tileRelative   = newPosition + V2(  player->size.x * 0.5f, -player->size.y * 0.5f );
-    topLeft.tileRelative       = newPosition + V2( -player->size.x * 0.5f,  player->size.y * 0.5f );
-    topRight.tileRelative      = newPosition + V2(  player->size.x * 0.5f,  player->size.y * 0.5f );
-
-    bottomLeft  = getGeneralizedPosition( tilemap, bottomLeft );
-    bottomRight = getGeneralizedPosition( tilemap, bottomRight );
-    topLeft     = getGeneralizedPosition( tilemap, topLeft );
-    topRight    = getGeneralizedPosition( tilemap, topRight );
-
-    bool bottomLeftOk  = isMoveAllowed( bottomLeft,  tilemap );
-    bool bottomRightOk = isMoveAllowed( bottomRight, tilemap );
-    bool topLeftOk     = isMoveAllowed( topLeft,     tilemap );
-    bool topRightOk    = isMoveAllowed( topRight,    tilemap );
-
-    bool collision = !(bottomLeftOk && bottomRightOk && topLeftOk && topRightOk);
-    
-    if( !collision )
-    {
-        // update old position with new x and y
-        player->playerPos.tileRelative = newPosition;
-        player->playerPos              = getGeneralizedPosition( tilemap, player->playerPos );
-    }
-
-    collisionDetection( player, tilemap, direction, acceleration, dt );
+    player->playerPos = collisionDetection( player, tilemap, direction, acceleration, dt );
 }
 
 void UpdateAndRender( ApplicationMemory* memory, 
@@ -442,16 +420,14 @@ void UpdateAndRender( ApplicationMemory* memory,
         startposition.tileareaY = 0;
         startposition.tileX     = 2;
         startposition.tileY     = 2;
-
-        composePosition( startposition, &player->playerPos );
-
-        player->playerPos.tileRelative.x   = tilemap->tileInMeters * 0.5f;
-        player->playerPos.tileRelative.y   = tilemap->tileInMeters * 0.5f + 1.0f;
-        player->size.x                     = 0.9f * tilemap->tileInMeters;
-        player->size.y                     = 0.9f * tilemap->tileInMeters;
-        player->acceleration               = 50.0f; // in meters per second squared -> m/s^2
-        player->velocityVector             = V2(0.0f, 0.0f);
-        player->color                      = playerColor;
+        startposition.tileRelative = V2( tilemap->tileInMeters * 0.5f, tilemap->tileInMeters * 0.5f );
+        
+        player->playerPos       = composePosition( startposition );
+        player->size.x          = 0.9f * tilemap->tileInMeters;
+        player->size.y          = 0.9f * tilemap->tileInMeters;
+        player->acceleration    = 50.0f; // in meters per second squared -> m/s^2
+        player->velocityVector  = V2(0.0f, 0.0f);
+        player->color           = playerColor;
         
         info->debugMode       = false; // set this to true to get platform debug info printed to stdout
         memory->isInitialized = true;
