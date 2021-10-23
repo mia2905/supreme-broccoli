@@ -143,7 +143,12 @@ int main()
                                                        styleMask: NSWindowStyleMaskTitled | NSWindowStyleMaskClosable
                                                        backing: NSBackingStoreBuffered
                                                        defer: NO];
-    
+
+    NSPoint pos; 
+    pos.x = [[NSScreen mainScreen] frame].size.width - [window frame].size.width ;
+    pos.y = 0.0f;
+
+    [window setFrame:CGRectMake(pos.x, pos.y, [window frame].size.width , [window frame].size.height) display:YES];    
     [window setTitle: @"SUPREME BROCCOLI"];
     [window makeKeyAndOrderFront: nil];
     [window setDelegate: windowDelegate];

@@ -232,7 +232,7 @@ GeneralizedPosition collisionDetection( Player*  player,
     u32 searchTilesMaxX = (oldPosition.tileX < tileNew.x) ? tileNew.x : oldPosition.tileX;
     u32 searchTilesMaxY = (oldPosition.tileY < tileNew.y) ? tileNew.y : oldPosition.tileY;
 
-    // 2. check if collision is even possible (is thera tile which is NOT empty)
+    // 2. check if collision is even possible (is there a tile which is NOT empty)
     std::vector< Tile > tilesToCheck;
     for( u32 searchY = searchTilesMinY; searchY <= searchTilesMaxY; searchY++ )
     {
@@ -252,16 +252,18 @@ GeneralizedPosition collisionDetection( Player*  player,
         return checkedPosition;
     }
 
+    Print( "\nCOLLISION:\n===============");
+
     // 3. find out for which wall(s) to test 
     // try the angle between the wall normal and the direction vector
     // - angle <= PI/2 no collision possible
     // - angle > PI/2 collision possible
     
     std::vector< Wall > wallsToCheck;
-    f32 angleNorth = direction.angleBetween( north );
-    f32 angleSouth = direction.angleBetween( south );
-    f32 angleEast  = direction.angleBetween( east );
-    f32 angleWest  = direction.angleBetween( west );
+    f32 angleNorth = movement.angleBetween( north );
+    f32 angleSouth = movement.angleBetween( south );
+    f32 angleEast  = movement.angleBetween( east );
+    f32 angleWest  = movement.angleBetween( west );
 
     f32 testAngle = PI / 2;
     if( angleNorth > testAngle )
@@ -284,43 +286,82 @@ GeneralizedPosition collisionDetection( Player*  player,
         wallsToCheck.push_back( Wall( EAST, east ) );
     }
 
-    //PrintVector( "direction: ", direction );
-    //PrintNumber( "angle north: ", toDegrees( angleNorth ) );
-    //PrintNumber( "angle south: ", toDegrees( angleSouth ) );
-    //PrintNumber( "angle east: ",  toDegrees( angleEast ) );
-    //PrintNumber( "angle west: ",  toDegrees( angleWest ) );
-
     // 4. calculate time of collision and the collision point
     v2  collisionPoint;
+    v2  pointInside;
+    v2  newMovement     = movement;;
     f32 timeToCollision = dt;
 
+    PrintNumber( "tiles to check: ", (f32)tilesToCheck.size() );
+    PrintNumber( "walls to check: ", (f32)wallsToCheck.size() );
+    
     for( u32 i=0; i < tilesToCheck.size(); ++i )
     {
-        Tile t = tilesToCheck[i];
+        Tile tile = tilesToCheck[i];
 
-        f32 wallY = t.y * tilemap->tileInMeters;
-        f32 wallX = t.x * tilemap->tileInMeters;
-                    
+        v2 wallCoord = V2( tile.x * tilemap->tileInMeters, tile.y * tilemap->tileInMeters );
+        v2 p0        = V2( oldPosition.tileX * tilemap->tileInMeters, oldPosition.tileY * tilemap->tileInMeters ) + oldPosition.tileRelative;;            
+        
         for( u32 j=0; j < wallsToCheck.size(); ++j )
         {
             Wall w = wallsToCheck[j];
-            
+            f32  t = 0.0;
             switch( w.direction )
             {
                 case NORTH:
+                    Print("collision NORTH");
+                    // y is known
+                    t = (wallCoord.y - p0.y) / movement.y;
+                    collisionPoint.y = wallCoord.y;
+                    collisionPoint.x = t * movement.x + p0.x;
                     break;
+
                 case SOUTH: 
-                    break;
+                    Print("collision SOUTH");
+                    // y is known
+                    t = (wallCoord.y - tilemap->tileInMeters - p0.y) / movement.y;
+                    collisionPoint.y = wallCoord.y - tilemap->tileInMeters;
+                    collisionPoint.x = t * movement.x + p0.x;
+                    break;                    
+
                 case WEST:  
+                    Print("collision WEST");
+                    // x is known
+                    t = (wallCoord.x - p0.x) / movement.x;
+                    collisionPoint.x = wallCoord.x;
+                    collisionPoint.y = t * movement.y + p0.y;
                     break;
-                case EAST:  
+
+                case EAST:        
+                    Print("collision EAST");              
+                    // x is known
+                    t = (wallCoord.x + tilemap->tileInMeters - p0.x) / movement.x;
+                    collisionPoint.x = wallCoord.x + tilemap->tileInMeters;
+                    collisionPoint.y = t * movement.y + p0.y;
+
+                    pointInside.x = dt * movement.x + p0.x;
+                    pointInside.y = dt * movement.y + p0.y;
                     break;
             }
 
-            // shortest time means shortest distance -> hence this is the collision point
+            PrintNumber( "collision point x: ", collisionPoint.x );
+            PrintNumber( "collision point y: ", collisionPoint.y );
+
+            PrintNumber( "point inside x: ", pointInside.x );
+            PrintNumber( "point inside y: ", pointInside.y );
+
+            PrintNumber( "time to collision: ", t );
+            PrintNumber( "delta t: ", dt );
+            newMovement     = movement * -1.0f;
+            timeToCollision = t;
+
         }
     }
 
+    // correct velocity
+    player->velocityVector = velocity * -0.1;
+
+    checkedPosition = buildNewPosition( oldPosition, newMovement, tilemap );
     return checkedPosition;
 }
 
