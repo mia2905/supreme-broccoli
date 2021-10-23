@@ -238,9 +238,18 @@ GeneralizedPosition collisionDetection( Player*  player,
     {
         for( u32 searchX = searchTilesMinX; searchX <= searchTilesMaxX; searchX++ )
         {
-            if( getTileValue( tilemap, tileArea, searchX, searchY ) == 1 )
+            // the new tile could be on the next area
+            s32 testX = searchX;
+            s32 testY = searchY;
+
+            u32 areaX = oldPosition.tileareaX + generalizeTileIndex( &testX, tilemap->tileCountX );
+            u32 areaY = oldPosition.tileareaY + generalizeTileIndex( &testY, tilemap->tileCountY );
+
+            TileArea* area = getTileArea( tilemap, areaX, areaY );
+
+            if( getTileValue( tilemap, area, testX, testY ) == 1 )
             {
-                tilesToCheck.push_back( Tile(searchX, searchY) );
+                tilesToCheck.push_back( Tile(testX, testY) );
                 collision = true;
             }
         }
@@ -288,7 +297,6 @@ GeneralizedPosition collisionDetection( Player*  player,
 
     // 4. calculate time of collision and the collision point
     v2  collisionPoint;
-    v2  pointInside;
     v2  newMovement     = movement;;
     f32 timeToCollision = dt;
 
@@ -339,16 +347,11 @@ GeneralizedPosition collisionDetection( Player*  player,
                     collisionPoint.x = wallCoord.x + tilemap->tileInMeters;
                     collisionPoint.y = t * movement.y + p0.y;
 
-                    pointInside.x = dt * movement.x + p0.x;
-                    pointInside.y = dt * movement.y + p0.y;
                     break;
             }
 
             PrintNumber( "collision point x: ", collisionPoint.x );
             PrintNumber( "collision point y: ", collisionPoint.y );
-
-            PrintNumber( "point inside x: ", pointInside.x );
-            PrintNumber( "point inside y: ", pointInside.y );
 
             PrintNumber( "time to collision: ", t );
             PrintNumber( "delta t: ", dt );
