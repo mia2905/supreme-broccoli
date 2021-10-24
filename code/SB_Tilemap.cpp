@@ -3,6 +3,22 @@
 #include "SB_Intrinsics.h"
 
 
+void printPosition( GeneralizedPosition p, TileMap* tilemap )
+{
+    DecomposedPosition d = decomposePosition( p );
+
+    PrintNumber( "Tile x: ", (f32)d.tileX );
+    PrintNumber( "Tile y: ", (f32)d.tileY );
+    PrintNumber( "relative x: ", (f32)d.tileRelative.x );
+    PrintNumber( "relative y: ", (f32)d.tileRelative.y );
+
+    f32 absoluteX = d.tileX * tilemap->tileInMeters + d.tileRelative.x;
+    f32 absoluteY = d.tileY * tilemap->tileInMeters + d.tileRelative.y;
+
+    PrintNumber( "absolute Position x: ", absoluteX );
+    PrintNumber( "absoulte Position y: ", absoluteY );
+}
+
 TileArea* getTileArea( TileMap* tilemap, s32 x, s32 y )
 {
     TileArea* area = NULL;

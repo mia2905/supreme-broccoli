@@ -297,8 +297,10 @@ GeneralizedPosition collisionDetection( Player*  player,
 
     // 4. calculate time of collision and the collision point
     v2  collisionPoint;
-    v2  newMovement     = movement;;
-    f32 timeToCollision = dt;
+    v2  newMovement = movement;
+
+    // with this at 1 we would move the original distance
+    f32 timeToCollision = 1.0f;
 
     PrintNumber( "tiles to check: ", (f32)tilesToCheck.size() );
     PrintNumber( "walls to check: ", (f32)wallsToCheck.size() );
@@ -319,16 +321,16 @@ GeneralizedPosition collisionDetection( Player*  player,
                 case NORTH:
                     Print("collision NORTH");
                     // y is known
-                    t = (wallCoord.y - p0.y) / movement.y;
-                    collisionPoint.y = wallCoord.y;
+                    t = (wallCoord.y + tilemap->tileInMeters - p0.y) / movement.y;
+                    collisionPoint.y = wallCoord.y + tilemap->tileInMeters;
                     collisionPoint.x = t * movement.x + p0.x;
                     break;
 
                 case SOUTH: 
                     Print("collision SOUTH");
                     // y is known
-                    t = (wallCoord.y - tilemap->tileInMeters - p0.y) / movement.y;
-                    collisionPoint.y = wallCoord.y - tilemap->tileInMeters;
+                    t = (wallCoord.y - p0.y) / movement.y;
+                    collisionPoint.y = wallCoord.y;
                     collisionPoint.x = t * movement.x + p0.x;
                     break;                    
 
@@ -352,12 +354,18 @@ GeneralizedPosition collisionDetection( Player*  player,
 
             PrintNumber( "collision point x: ", collisionPoint.x );
             PrintNumber( "collision point y: ", collisionPoint.y );
-
             PrintNumber( "time to collision: ", t );
-            PrintNumber( "delta t: ", dt );
-            newMovement     = movement * -1.0f;
-            timeToCollision = t;
 
+
+            // adjust the new position and the velocity
+            if( t < timeToCollision )
+            {
+                v2 movementDiff = movement - newMovement;
+                newMovement = movementDiff * 0.99f;
+                velocity    = velocity * -(1.0f - t);
+
+                timeToCollision = t;
+            }
         }
     }
 
@@ -365,6 +373,8 @@ GeneralizedPosition collisionDetection( Player*  player,
     player->velocityVector = velocity * -0.1;
 
     checkedPosition = buildNewPosition( oldPosition, newMovement, tilemap );
+
+    printPosition( checkedPosition, tilemap );
     return checkedPosition;
 }
 
