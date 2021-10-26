@@ -194,7 +194,7 @@ void drawWorld( RenderBuffer* buffer, TileMap* world, Player* player )
 bool wallCollision( f32 wallCoord, f32 movement, f32 p0, f32* collisionTime )
 {
     bool hit = false;
-    static f32 epsilon = 0.00001f;
+    static f32 epsilon = 0.0001f;
     if( movement != 0.0f )
     {
         f32 t = (wallCoord - p0) / movement;
