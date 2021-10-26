@@ -58,4 +58,9 @@ inline f32 cosinus( f32 x )
     return cosf( x );
 }
 
+inline f32 maximum( f32 x, f32 y )
+{
+    return fmax( x, y );
+}
+
 #endif//SB_INTRINSICS_H
