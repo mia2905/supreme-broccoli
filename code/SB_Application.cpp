@@ -191,17 +191,24 @@ void drawWorld( RenderBuffer* buffer, TileMap* world, Player* player )
     }
 }
 
-bool wallCollision( f32 wallCoord, f32 movement, f32 p0, f32* collisionTime )
+bool wallCollision( f32 wallCoord, f32 movementX, f32 movementY, f32 p0X, f32 p0Y, f32* collisionTime, f32 ymin, f32 ymax )
 {
     bool hit = false;
     static f32 epsilon = 0.0001f;
-    if( movement != 0.0f )
+    if( movementX != 0.0f )
     {
-        f32 t = (wallCoord - p0) / movement;
+        f32 t = (wallCoord - p0X) / movementX;
+        f32 y = p0Y + t * movementY;
+
+        v2 collisionPoint = V2( wallCoord, y );
         if( (t >= 0.0f) && (*collisionTime > t) )
         {
-            *collisionTime = maximum( 0.0f, t - epsilon );
-            hit = true;
+            if( y >= ymin && y <= ymax  )
+            {
+                *collisionTime = maximum( 0.0f, t - epsilon );
+                hit = true;
+                PrintNumber( "wall collision t: ", t );
+            }                
         }
     }
 
@@ -214,10 +221,15 @@ GeneralizedPosition collisionDetection( Player*  player,
                                         f32      acceleration, 
                                         f32      dt )
 {
+    static u32 counter = 0;
+
     static v2 north = V2(  0.0f,  1.0f );
     static v2 south = V2(  0.0f, -1.0f );
     static v2 east  = V2(  1.0f,  0.0f );
     static v2 west  = V2( -1.0f,  0.0f );
+
+    f32 tileWidth   = tilemap->tileInMeters;
+    f32 tileHeight  = tileWidth;
 
     GeneralizedPosition checkedPosition;
 
@@ -239,10 +251,10 @@ GeneralizedPosition collisionDetection( Player*  player,
 
     v2 movement = ((0.5f * accelerationVector) * square( dt )) + (velocity * dt);
     v2 tileNew  = {};
-    tileNew.x   = floor(((oldPosition.tileX * tilemap->tileInMeters) + oldPosition.tileRelative.x + movement.x) / tilemap->tileInMeters);
-    tileNew.y   = floor(((oldPosition.tileY * tilemap->tileInMeters) + oldPosition.tileRelative.y + movement.y) / tilemap->tileInMeters);
+    tileNew.x   = floor(((oldPosition.tileX * tileWidth) + oldPosition.tileRelative.x + movement.x) / tileWidth);
+    tileNew.y   = floor(((oldPosition.tileY * tileHeight) + oldPosition.tileRelative.y + movement.y) / tileHeight);
 
-    if( tileNew.x < 0 )
+    if( tileNew.x < 0  || tileNew.y < 0 )
     {
         PrintError( "TILE UNDERFLOW" );
     }
@@ -290,45 +302,63 @@ GeneralizedPosition collisionDetection( Player*  player,
     // 4. calculate time of collision and the collision point
     f32 timeToCollision = 1.0f;
     v2  wallNormal      = V2(0,0);
-
-    PrintNumber( "tiles to check: ", (f32)tilesToCheck.size() );
     
-    for( u32 i=0; i < tilesToCheck.size(); ++i )
+    for( u32 iternation=0; (iternation < 4) && (timeToCollision > 0.0f); ++iternation )
     {
-        Tile tile = tilesToCheck[i];
+        f32 t = 1.0f;
 
-        v2 wallCoord = V2( tile.x * tilemap->tileInMeters, tile.y * tilemap->tileInMeters );
-        v2 p0        = V2( oldPosition.tileX * tilemap->tileInMeters, oldPosition.tileY * tilemap->tileInMeters ) + oldPosition.tileRelative;;            
+        for( u32 i=0; i < tilesToCheck.size(); ++i )
+        {
+            Tile tile = tilesToCheck[i];
+
+            v2 minCorner = V2( tile.x * tileWidth, tile.y * tileHeight );
+            v2 maxCorner = V2( minCorner.x + tileWidth, minCorner.y + tileHeight );
+            v2 p0        = V2( oldPosition.tileX * tileWidth, oldPosition.tileY * tileHeight ) + oldPosition.tileRelative;
+            
+            if( getTileValue( tilemap, tileArea, tile.x, tile.y ) == 1 )
+            {
+                if( wallCollision( maxCorner.y, movement.y, movement.x, p0.y, p0.x, &t, minCorner.x, maxCorner.x ) )
+                {
+                    Print("collision NORTH");
+                    wallNormal = north;
+                }
+                if( wallCollision( minCorner.y, movement.y, movement.x, p0.y, p0.x, &t, minCorner.x, maxCorner.x ) )
+                {
+                    Print("collision SOUTH");
+                    wallNormal = south;
+                }
+                if( wallCollision( minCorner.x, movement.x, movement.y, p0.x, p0.y, &t, minCorner.y, maxCorner.y ) )
+                {
+                    Print("collision WEST");
+                    wallNormal = west;
+                }
+                if( wallCollision( maxCorner.x, movement.x, movement.y, p0.x, p0.y, &t, minCorner.y, maxCorner.y ) )
+                {
+                    Print("collision EAST");           
+                    wallNormal = east;
+                }
+            }
+        }
+
+        // update the player position
+        checkedPosition = buildNewPosition( oldPosition, movement * t, tilemap );
+        oldPosition = decomposePosition( checkedPosition );
         
+        // update the velocity
+        PrintVector( "old velocity: ", velocity );
+        velocity = velocity - velocity.dot(wallNormal)*wallNormal;
+        player->velocityVector = velocity;
         
-        if( wallCollision( wallCoord.y + tilemap->tileInMeters, movement.y, p0.y, &timeToCollision ) )
-        {
-            Print("collision NORTH");
-            wallNormal = north;
-        }
-        if( wallCollision( wallCoord.y, movement.y, p0.y, &timeToCollision ) )
-        {
-            Print("collision SOUTH");
-            wallNormal = south;
-        }
-        if( wallCollision( wallCoord.x, movement.x, p0.x, &timeToCollision ) )
-        {
-            Print("collision WEST");
-            wallNormal = west;
-        }
-        if( wallCollision( wallCoord.x + tilemap->tileInMeters, movement.x, p0.x, &timeToCollision ) )
-        {
-            Print("collision EAST");           
-            wallNormal = east;
-        }
+        // update the movement
+        movement = movement - movement.dot(wallNormal)*wallNormal;
+
+        // update time to collision
+        timeToCollision -= timeToCollision * t;
+        
+        PrintVector( "new velocity: ", velocity );
+        PrintNumber( "counter: ", (f32)counter++ );
     }
 
-    PrintNumber( "time to collision: ", timeToCollision );
-    checkedPosition = buildNewPosition( oldPosition, movement * timeToCollision, tilemap );
-    // correct velocity
-    player->velocityVector = velocity - velocity.dot(wallNormal)*wallNormal;
-
-    printPosition( checkedPosition, tilemap );
     return checkedPosition;
 }
 
