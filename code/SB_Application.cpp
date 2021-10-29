@@ -201,13 +201,14 @@ bool wallCollision( f32 wallCoord, f32 movementX, f32 movementY, f32 p0X, f32 p0
         f32 y = p0Y + t * movementY;
 
         v2 collisionPoint = V2( wallCoord, y );
+
+        PrintNumber( "wall collision t: ", t );
         if( (t >= 0.0f) && (*collisionTime > t) )
         {
             if( y >= ymin && y <= ymax  )
             {
                 *collisionTime = maximum( 0.0f, t - epsilon );
-                hit = true;
-                PrintNumber( "wall collision t: ", t );
+                hit = true;                
             }                
         }
     }
@@ -315,28 +316,25 @@ GeneralizedPosition collisionDetection( Player*  player,
             v2 maxCorner = V2( minCorner.x + tileWidth, minCorner.y + tileHeight );
             v2 p0        = V2( oldPosition.tileX * tileWidth, oldPosition.tileY * tileHeight ) + oldPosition.tileRelative;
             
-            if( getTileValue( tilemap, tileArea, tile.x, tile.y ) == 1 )
+            if( wallCollision( maxCorner.y, movement.y, movement.x, p0.y, p0.x, &t, minCorner.x, maxCorner.x ) )
             {
-                if( wallCollision( maxCorner.y, movement.y, movement.x, p0.y, p0.x, &t, minCorner.x, maxCorner.x ) )
-                {
-                    Print("collision NORTH");
-                    wallNormal = north;
-                }
-                if( wallCollision( minCorner.y, movement.y, movement.x, p0.y, p0.x, &t, minCorner.x, maxCorner.x ) )
-                {
-                    Print("collision SOUTH");
-                    wallNormal = south;
-                }
-                if( wallCollision( minCorner.x, movement.x, movement.y, p0.x, p0.y, &t, minCorner.y, maxCorner.y ) )
-                {
-                    Print("collision WEST");
-                    wallNormal = west;
-                }
-                if( wallCollision( maxCorner.x, movement.x, movement.y, p0.x, p0.y, &t, minCorner.y, maxCorner.y ) )
-                {
-                    Print("collision EAST");           
-                    wallNormal = east;
-                }
+                Print("collision NORTH");
+                wallNormal = north;
+            }
+            if( wallCollision( minCorner.y, movement.y, movement.x, p0.y, p0.x, &t, minCorner.x, maxCorner.x ) )
+            {
+                Print("collision SOUTH");
+                wallNormal = south;
+            }
+            if( wallCollision( minCorner.x, movement.x, movement.y, p0.x, p0.y, &t, minCorner.y, maxCorner.y ) )
+            {
+                Print("collision WEST");
+                wallNormal = west;
+            }
+            if( wallCollision( maxCorner.x, movement.x, movement.y, p0.x, p0.y, &t, minCorner.y, maxCorner.y ) )
+            {
+                Print("collision EAST");           
+                wallNormal = east;
             }
         }
 
