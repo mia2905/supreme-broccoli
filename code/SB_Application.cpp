@@ -246,8 +246,8 @@ void collisionDetection( Player*  player,
 
     v2 movement = ((0.5f * accelerationVector) * square( dt )) + (velocity * dt);
     v2 tileNew  = {};
-    tileNew.x   = floor(((oldPosition.tileX * tileWidth) + oldPosition.tileRelative.x + movement.x) / tileWidth);
-    tileNew.y   = floor(((oldPosition.tileY * tileHeight) + oldPosition.tileRelative.y + movement.y) / tileHeight);
+    tileNew.x   = ((oldPosition.tileX * tileWidth)  + oldPosition.tileRelative.x + movement.x) / tileWidth;
+    tileNew.y   = ((oldPosition.tileY * tileHeight) + oldPosition.tileRelative.y + movement.y) / tileHeight;
 
     if( tileNew.x < 0  || tileNew.y < 0 )
     {
