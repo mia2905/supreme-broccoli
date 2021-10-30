@@ -216,11 +216,11 @@ bool wallCollision( f32 wallCoord, f32 movementX, f32 movementY, f32 p0X, f32 p0
     return hit;
 }
 
-GeneralizedPosition collisionDetection( Player*  player, 
-                                        TileMap* tilemap, 
-                                        v2       direction, 
-                                        f32      acceleration, 
-                                        f32      dt )
+void collisionDetection( Player*  player, 
+                         TileMap* tilemap, 
+                         v2       direction, 
+                         f32      acceleration, 
+                         f32      dt )
 {
     static u32 counter = 0;
 
@@ -231,12 +231,6 @@ GeneralizedPosition collisionDetection( Player*  player,
 
     f32 tileWidth   = tilemap->tileInMeters;
     f32 tileHeight  = tileWidth;
-
-    GeneralizedPosition checkedPosition;
-
-    // exit if no movement is required
-    //if( direction.length() == 0.0f )
-    //    return player->playerPos;
 
     DecomposedPosition oldPosition = decomposePosition( player->playerPos );
     TileArea*          tileArea    = getTileArea( tilemap, oldPosition.tileareaX, oldPosition.tileareaY );
@@ -292,8 +286,8 @@ GeneralizedPosition collisionDetection( Player*  player,
 
     if( !collision ) // generate the new poistion and return it
     {
-        checkedPosition = buildNewPosition( oldPosition, movement, tilemap );
-        return checkedPosition;
+        player->playerPos = buildNewPosition( oldPosition, movement, tilemap );
+        return;
     }
 
     Print( "\nCOLLISION:\n===============");
@@ -339,8 +333,8 @@ GeneralizedPosition collisionDetection( Player*  player,
         }
 
         // update the player position
-        checkedPosition = buildNewPosition( oldPosition, movement * t, tilemap );
-        oldPosition = decomposePosition( checkedPosition );
+        player->playerPos = buildNewPosition( oldPosition, movement * t, tilemap );
+        oldPosition = decomposePosition( player->playerPos );
         
         // update the velocity
         PrintVector( "old velocity: ", velocity );
@@ -357,7 +351,7 @@ GeneralizedPosition collisionDetection( Player*  player,
         PrintNumber( "counter: ", (f32)counter++ );
     }
 
-    return checkedPosition;
+    return;
 }
 
 void updatePlayer( UserInput* input, Player* player, TileMap* tilemap, f32 dt )
@@ -385,7 +379,7 @@ void updatePlayer( UserInput* input, Player* player, TileMap* tilemap, f32 dt )
 
     direction.normalize();
 
-    player->playerPos = collisionDetection( player, tilemap, direction, acceleration, dt );
+    collisionDetection( player, tilemap, direction, acceleration, dt );
 }
 
 void UpdateAndRender( ApplicationMemory* memory, 
