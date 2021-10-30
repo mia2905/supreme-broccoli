@@ -245,21 +245,22 @@ void collisionDetection( Player*  player,
     // a' = a                -> acceleration                ( 2nd derivative of the velocity )
 
     v2 movement = ((0.5f * accelerationVector) * square( dt )) + (velocity * dt);
-    v2 tileNew  = {};
-    tileNew.x   = ((oldPosition.tileX * tileWidth)  + oldPosition.tileRelative.x + movement.x) / tileWidth;
-    tileNew.y   = ((oldPosition.tileY * tileHeight) + oldPosition.tileRelative.y + movement.y) / tileHeight;
+    
+    // create the new position
+    GeneralizedPosition newPos = buildNewPosition( oldPosition, movement, tilemap );
+    DecomposedPosition  newPosition = decomposePosition( newPos );
 
-    if( tileNew.x < 0  || tileNew.y < 0 )
+    if( newPosition.tileX < 0  || newPosition.tileY < 0 )
     {
         PrintError( "TILE UNDERFLOW" );
     }
 
     bool collision = false;
     // 1. constuct the search area
-    u32 searchTilesMinX = (oldPosition.tileX < tileNew.x) ? oldPosition.tileX : tileNew.x;
-    u32 searchTilesMinY = (oldPosition.tileY < tileNew.y) ? oldPosition.tileY : tileNew.y;
-    u32 searchTilesMaxX = (oldPosition.tileX < tileNew.x) ? tileNew.x : oldPosition.tileX;
-    u32 searchTilesMaxY = (oldPosition.tileY < tileNew.y) ? tileNew.y : oldPosition.tileY;
+    u32 searchTilesMinX = (oldPosition.tileX < newPosition.tileX) ? oldPosition.tileX : newPosition.tileX;
+    u32 searchTilesMinY = (oldPosition.tileY < newPosition.tileY) ? oldPosition.tileY : newPosition.tileY;
+    u32 searchTilesMaxX = (oldPosition.tileX < newPosition.tileX) ? newPosition.tileX : oldPosition.tileX;
+    u32 searchTilesMaxY = (oldPosition.tileY < newPosition.tileY) ? newPosition.tileY : oldPosition.tileY;
 
     // 2. check if collision is even possible (is there a tile which is NOT empty)
     std::vector< Tile > tilesToCheck;
@@ -286,7 +287,7 @@ void collisionDetection( Player*  player,
 
     if( !collision ) // generate the new poistion and return it
     {
-        player->playerPos = buildNewPosition( oldPosition, movement, tilemap );
+        player->playerPos = newPos;
         return;
     }
 
