@@ -243,19 +243,12 @@ void collisionDetection( Player*  player,
     // p' = 1/2at^2 + vt + p -> acceleration based position
     // v' = 2at + v          -> acceleration based velocity ( 1st derivative of the position  )
     // a' = a                -> acceleration                ( 2nd derivative of the velocity )
-
     v2 movement = ((0.5f * accelerationVector) * square( dt )) + (velocity * dt);
     
     // create the new position
     GeneralizedPosition newPos = buildNewPosition( oldPosition, movement, tilemap );
     DecomposedPosition  newPosition = decomposePosition( newPos );
 
-    if( newPosition.tileX < 0  || newPosition.tileY < 0 )
-    {
-        PrintError( "TILE UNDERFLOW" );
-    }
-
-    bool collision = false;
     // 1. constuct the search area
     u32 searchTilesMinX = (oldPosition.tileX < newPosition.tileX) ? oldPosition.tileX : newPosition.tileX;
     u32 searchTilesMinY = (oldPosition.tileY < newPosition.tileY) ? oldPosition.tileY : newPosition.tileY;
@@ -280,26 +273,15 @@ void collisionDetection( Player*  player,
             if( getTileValue( tilemap, area, testX, testY ) == 1 )
             {
                 tilesToCheck.push_back( Tile(testX, testY) );
-                collision = true;
             }
         }
     }
-
-    if( !collision ) // generate the new poistion and return it
-    {
-        player->playerPos = newPos;
-        return;
-    }
-
-    Print( "\nCOLLISION:\n===============");
-
-    printPosition( player->playerPos, tilemap );
 
     // 4. calculate time of collision and the collision point
     f32 timeToCollision = 1.0f;
     v2  wallNormal      = V2(0,0);
     
-    for( u32 iternation=0; (iternation < 4) && (timeToCollision > 0.0f); ++iternation )
+    for( u32 iteration=0; (iteration < 4) && (timeToCollision > 0.0f); ++iteration )
     {
         f32 t = 1.0f;
 
@@ -333,23 +315,19 @@ void collisionDetection( Player*  player,
             }
         }
 
-        // update the player position
-        player->playerPos = buildNewPosition( oldPosition, movement * t, tilemap );
-        oldPosition = decomposePosition( player->playerPos );
-        
-        // update the velocity
-        PrintVector( "old velocity: ", velocity );
-        velocity = velocity - velocity.dot(wallNormal)*wallNormal;
-        player->velocityVector = velocity;
-        
         // update the movement
         movement = movement - movement.dot(wallNormal)*wallNormal;
 
-        // update time to collision
-        timeToCollision -= timeToCollision * t;
+        // update the player position
+        player->playerPos = buildNewPosition( oldPosition, movement, tilemap );
+        oldPosition = decomposePosition( player->playerPos );
         
-        PrintVector( "new velocity: ", velocity );
-        PrintNumber( "counter: ", (f32)counter++ );
+        // update the velocity
+        velocity = velocity - velocity.dot(wallNormal)*wallNormal;
+        player->velocityVector = velocity;
+        
+        // update time to collision
+        timeToCollision -= timeToCollision * t;        
     }
 
     return;
