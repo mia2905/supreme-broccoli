@@ -191,18 +191,19 @@ void drawWorld( RenderBuffer* buffer, TileMap* world, Player* player )
     }
 }
 
-bool wallCollision( f32 wallCoord, f32 movementX, f32 movementY, f32 p0X, f32 p0Y, f32* collisionTime, f32 ymin, f32 ymax )
+bool wallCollision( f32 wallCoord, 
+                    f32 movementX, f32 movementY, 
+                    f32 p0X, f32 p0Y, 
+                    f32* collisionTime, 
+                    f32 ymin, f32 ymax )
 {
     bool hit = false;
     static f32 epsilon = 0.0001f;
     if( movementX != 0.0f )
     {
         f32 t = (wallCoord - p0X) / movementX;
-        f32 y = p0Y + t * movementY;
+        f32 y = p0Y + (t * movementY);
 
-        v2 collisionPoint = V2( wallCoord, y );
-
-        PrintNumber( "wall collision t: ", t );
         if( (t >= 0.0f) && (*collisionTime > t) )
         {
             if( y >= ymin && y <= ymax  )
@@ -222,8 +223,6 @@ void collisionDetection( Player*  player,
                          f32      acceleration, 
                          f32      dt )
 {
-    static u32 counter = 0;
-
     static v2 north = V2(  0.0f,  1.0f );
     static v2 south = V2(  0.0f, -1.0f );
     static v2 east  = V2(  1.0f,  0.0f );
@@ -245,6 +244,10 @@ void collisionDetection( Player*  player,
     // a' = a                -> acceleration                ( 2nd derivative of the velocity )
     v2 movement = ((0.5f * accelerationVector) * square( dt )) + (velocity * dt);
     
+    // 4. calculate time of collision and the collision point
+    f32 timeRemaining = 1.0f;
+    v2  wallNormal      = V2(0,0);
+
     // create the new position
     GeneralizedPosition newPos = buildNewPosition( oldPosition, movement, tilemap );
     DecomposedPosition  newPosition = decomposePosition( newPos );
@@ -255,79 +258,65 @@ void collisionDetection( Player*  player,
     u32 searchTilesMaxX = (oldPosition.tileX < newPosition.tileX) ? newPosition.tileX : oldPosition.tileX;
     u32 searchTilesMaxY = (oldPosition.tileY < newPosition.tileY) ? newPosition.tileY : oldPosition.tileY;
 
-    // 2. check if collision is even possible (is there a tile which is NOT empty)
-    std::vector< Tile > tilesToCheck;
-    for( u32 searchY = searchTilesMinY; searchY <= searchTilesMaxY; searchY++ )
-    {
-        for( u32 searchX = searchTilesMinX; searchX <= searchTilesMaxX; searchX++ )
-        {
-            // the new tile could be on the next area
-            s32 testX = searchX;
-            s32 testY = searchY;
-
-            u32 areaX = oldPosition.tileareaX + generalizeTileIndex( &testX, tilemap->tileCountX );
-            u32 areaY = oldPosition.tileareaY + generalizeTileIndex( &testY, tilemap->tileCountY );
-
-            TileArea* area = getTileArea( tilemap, areaX, areaY );
-
-            if( getTileValue( tilemap, area, testX, testY ) == 1 )
-            {
-                tilesToCheck.push_back( Tile(testX, testY) );
-            }
-        }
-    }
-
-    // 4. calculate time of collision and the collision point
-    f32 timeToCollision = 1.0f;
-    v2  wallNormal      = V2(0,0);
-    
-    for( u32 iteration=0; (iteration < 4) && (timeToCollision > 0.0f); ++iteration )
+    for( u32 iteration=0; (iteration < 4) && (timeRemaining > 0.0f); ++iteration )
     {
         f32 t = 1.0f;
+        TileArea* area = nullptr;
 
-        for( u32 i=0; i < tilesToCheck.size(); ++i )
+        for( u32 searchY = searchTilesMinY; searchY <= searchTilesMaxY; ++searchY )
         {
-            Tile tile = tilesToCheck[i];
+            for( u32 searchX = searchTilesMinX; searchX <= searchTilesMaxX; ++searchX )
+            {
+                v2 minCorner = V2( searchX * tileWidth, searchY * tileHeight );
+                v2 maxCorner = V2( minCorner.x + tileWidth, minCorner.y + tileHeight );
+                v2 p0        = V2( oldPosition.tileX * tileWidth, oldPosition.tileY * tileHeight ) + oldPosition.tileRelative;
+                
+                s32 testX = searchX;
+                s32 testY = searchY;
 
-            v2 minCorner = V2( tile.x * tileWidth, tile.y * tileHeight );
-            v2 maxCorner = V2( minCorner.x + tileWidth, minCorner.y + tileHeight );
-            v2 p0        = V2( oldPosition.tileX * tileWidth, oldPosition.tileY * tileHeight ) + oldPosition.tileRelative;
-            
-            if( wallCollision( maxCorner.y, movement.y, movement.x, p0.y, p0.x, &t, minCorner.x, maxCorner.x ) )
-            {
-                Print("collision NORTH");
-                wallNormal = north;
-            }
-            if( wallCollision( minCorner.y, movement.y, movement.x, p0.y, p0.x, &t, minCorner.x, maxCorner.x ) )
-            {
-                Print("collision SOUTH");
-                wallNormal = south;
-            }
-            if( wallCollision( minCorner.x, movement.x, movement.y, p0.x, p0.y, &t, minCorner.y, maxCorner.y ) )
-            {
-                Print("collision WEST");
-                wallNormal = west;
-            }
-            if( wallCollision( maxCorner.x, movement.x, movement.y, p0.x, p0.y, &t, minCorner.y, maxCorner.y ) )
-            {
-                Print("collision EAST");           
-                wallNormal = east;
+                u32 areaX = oldPosition.tileareaX + generalizeTileIndex( &testX, tilemap->tileCountX );
+                u32 areaY = oldPosition.tileareaY + generalizeTileIndex( &testY, tilemap->tileCountY );
+
+                area = getTileArea( tilemap, areaX, areaY );
+
+                if( getTileValue( tilemap, area, testX, testY ) == 1 )
+                {
+                    if( wallCollision( maxCorner.y, movement.y, movement.x, p0.y, p0.x, &t, minCorner.x, maxCorner.x ) )
+                    {
+                        Print("collision NORTH");
+                        wallNormal = north;
+                    }
+                    if( wallCollision( minCorner.y, movement.y, movement.x, p0.y, p0.x, &t, minCorner.x, maxCorner.x ) )
+                    {
+                        Print("collision SOUTH");
+                        wallNormal = south;
+                    }
+                    if( wallCollision( minCorner.x, movement.x, movement.y, p0.x, p0.y, &t, minCorner.y, maxCorner.y ) )
+                    {
+                        Print("collision WEST");
+                        wallNormal = west;
+                    }
+                    if( wallCollision( maxCorner.x, movement.x, movement.y, p0.x, p0.y, &t, minCorner.y, maxCorner.y ) )
+                    {
+                        Print("collision EAST");           
+                        wallNormal = east;
+                    }
+                }
             }
         }
 
-        // update the movement
-        movement = movement - movement.dot(wallNormal)*wallNormal;
-
         // update the player position
-        player->playerPos = buildNewPosition( oldPosition, movement, tilemap );
-        oldPosition = decomposePosition( player->playerPos );
+        player->playerPos = buildNewPosition( oldPosition, movement * t, tilemap );
+        
+        // update the movement
+        movement = movement - 1*movement.dot(wallNormal)*wallNormal;
         
         // update the velocity
-        velocity = velocity - velocity.dot(wallNormal)*wallNormal;
+        velocity = velocity - 1*velocity.dot(wallNormal)*wallNormal;
         player->velocityVector = velocity;
         
         // update time to collision
-        timeToCollision -= timeToCollision * t;        
+        timeRemaining -= timeRemaining * t;        
     }
 
     return;

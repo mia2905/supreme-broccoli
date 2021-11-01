@@ -91,29 +91,14 @@ GeneralizedPosition buildNewPosition( DecomposedPosition oldPosition, v2 movemen
     f32 tileSize        = tilemap->tileInMeters;
     p.tileRelative      = tempTileRelative;
 
-    if( x >= tileSize )
-    {
-        p.tileX         += 1;
-        p.tileRelative.x = x - tileSize;
-    }
-    
-    if( x < 0 ) 
-    {
-        p.tileX         -= 1;
-        p.tileRelative.x = tileSize - x;
-    }
+    x = oldPosition.tileX * tileSize + oldPosition.tileRelative.x + movement.x;
+    y = oldPosition.tileY * tileSize + oldPosition.tileRelative.y + movement.y;
 
-    if( y >= tileSize )
-    {
-        p.tileY         += 1;
-        p.tileRelative.y = y - tileSize;
-    }
+    p.tileX = x / tileSize;
+    p.tileRelative.x = x - (p.tileX * tileSize);
 
-    if( y < 0 )
-    {
-        p.tileY         -= 1;
-        p.tileRelative.y = tileSize - y;
-    }
+    p.tileY = y / tileSize;
+    p.tileRelative.y = y - (p.tileY * tileSize );
 
     // 2. calculate the new tile x and y and update tilemap x and y
     p.tileareaX = p.tileareaX + generalizeTileIndex( (s32*)&p.tileX, tilemap->tileCountX );
