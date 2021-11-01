@@ -283,22 +283,18 @@ void collisionDetection( Player*  player,
                 {
                     if( wallCollision( maxCorner.y, movement.y, movement.x, p0.y, p0.x, &t, minCorner.x, maxCorner.x ) )
                     {
-                        Print("collision NORTH");
                         wallNormal = north;
                     }
                     if( wallCollision( minCorner.y, movement.y, movement.x, p0.y, p0.x, &t, minCorner.x, maxCorner.x ) )
                     {
-                        Print("collision SOUTH");
                         wallNormal = south;
                     }
                     if( wallCollision( minCorner.x, movement.x, movement.y, p0.x, p0.y, &t, minCorner.y, maxCorner.y ) )
                     {
-                        Print("collision WEST");
                         wallNormal = west;
                     }
                     if( wallCollision( maxCorner.x, movement.x, movement.y, p0.x, p0.y, &t, minCorner.y, maxCorner.y ) )
                     {
-                        Print("collision EAST");           
                         wallNormal = east;
                     }
                 }
