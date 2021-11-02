@@ -82,17 +82,11 @@ GeneralizedPosition buildNewPosition( DecomposedPosition oldPosition, v2 movemen
 {
     GeneralizedPosition result;
     DecomposedPosition  p = oldPosition;
-    // 1. calculate new tile x and y coords in the tile area along with a new tilerelative offset in meters
-    v2 tempTileRelative = oldPosition.tileRelative + movement;
-    f32 x               = tempTileRelative.x;
-    f32 y               = tempTileRelative.y;
-    u32 tileX           = oldPosition.tileX;
-    u32 tileY           = oldPosition.tileY;
-    f32 tileSize        = tilemap->tileInMeters;
-    p.tileRelative      = tempTileRelative;
 
-    x = oldPosition.tileX * tileSize + oldPosition.tileRelative.x + movement.x;
-    y = oldPosition.tileY * tileSize + oldPosition.tileRelative.y + movement.y;
+    // 1. calculate new tile x and y coords in the tile area along with a new tilerelative offset in meters
+    f32 tileSize = tilemap->tileInMeters;
+    f32 x        = oldPosition.tileX * tileSize + oldPosition.tileRelative.x + movement.x;
+    f32 y        = oldPosition.tileY * tileSize + oldPosition.tileRelative.y + movement.y;
 
     p.tileX = x / tileSize;
     p.tileRelative.x = x - (p.tileX * tileSize);
@@ -105,7 +99,7 @@ GeneralizedPosition buildNewPosition( DecomposedPosition oldPosition, v2 movemen
     p.tileareaY = p.tileareaY + generalizeTileIndex( (s32*)&p.tileY, tilemap->tileCountY );
 
     result = composePosition( p );
-    return result;;
+    return result;
 }
 
 u32 getTileValue( TileMap* tilemap, TileArea* area, u32 tileX, u32 tileY )
