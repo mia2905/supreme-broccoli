@@ -289,9 +289,6 @@ void collisionDetection( Player*  player,
                 v2 minCorner = V2( testX * tileWidth, testY * tileHeight ) - (playerSize * 0.5f);
                 v2 maxCorner = V2( (testX * tileWidth) + tileWidth, (testY * tileHeight) + tileHeight ) + (playerSize * 0.5f);
                 v2 p0        = V2( oldPosition.tileX * tileWidth, oldPosition.tileY * tileHeight ) + oldPosition.tileRelative;
-                
-                if( minCorner.x < 0.0f) minCorner.x = 0.0f;
-                if( minCorner.y < 0.0f) minCorner.y = 0.0f;
 
                 if( getTileValue( tilemap, area, testX, testY ) == 1 )
                 {
