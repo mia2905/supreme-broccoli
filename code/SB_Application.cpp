@@ -236,6 +236,7 @@ void collisionDetection( Player*  player,
     
     v2 accelerationVector          = direction * acceleration - (4.0f * player->velocityVector);
     v2 velocity                    = ((2.0f * accelerationVector) * dt) + player->velocityVector;
+    v2 playerSize                  = player->size;
     player->velocityVector         = velocity;
     
     // equations of motion:
@@ -258,6 +259,15 @@ void collisionDetection( Player*  player,
     u32 searchTilesMaxX = (oldPosition.tileX < newPosition.tileX) ? newPosition.tileX : oldPosition.tileX;
     u32 searchTilesMaxY = (oldPosition.tileY < newPosition.tileY) ? newPosition.tileY : oldPosition.tileY;
 
+    // adjust the search area for the minkowski sum
+    u32 playerTileWidth  = ceilToS32( player->size.x / tileWidth );
+    u32 playerTileHeigth = ceilToS32( player->size.y / tileHeight );
+
+    searchTilesMinX -= playerTileWidth;
+    searchTilesMaxX += playerTileWidth;
+    searchTilesMinY -= playerTileHeigth;
+    searchTilesMaxY += playerTileHeigth;
+
     for( u32 iteration=0; (iteration < 4) && (timeRemaining > 0.0f); ++iteration )
     {
         f32 t = 1.0f;
@@ -267,10 +277,6 @@ void collisionDetection( Player*  player,
         {
             for( u32 searchX = searchTilesMinX; searchX <= searchTilesMaxX; ++searchX )
             {
-                v2 minCorner = V2( searchX * tileWidth, searchY * tileHeight );
-                v2 maxCorner = V2( minCorner.x + tileWidth, minCorner.y + tileHeight );
-                v2 p0        = V2( oldPosition.tileX * tileWidth, oldPosition.tileY * tileHeight ) + oldPosition.tileRelative;
-                
                 s32 testX = searchX;
                 s32 testY = searchY;
 
@@ -279,23 +285,35 @@ void collisionDetection( Player*  player,
 
                 area = getTileArea( tilemap, areaX, areaY );
 
+                // create the minkowski sum out of the wall tile and the player rectangle
+                v2 minCorner = V2( testX * tileWidth, testY * tileHeight ) - (playerSize * 0.5f);
+                v2 maxCorner = V2( (testX * tileWidth) + tileWidth, (testY * tileHeight) + tileHeight ) + (playerSize * 0.5f);
+                v2 p0        = V2( oldPosition.tileX * tileWidth, oldPosition.tileY * tileHeight ) + oldPosition.tileRelative;
+                
+                if( minCorner.x < 0.0f) minCorner.x = 0.0f;
+                if( minCorner.y < 0.0f) minCorner.y = 0.0f;
+
                 if( getTileValue( tilemap, area, testX, testY ) == 1 )
                 {
                     if( wallCollision( maxCorner.y, movement.y, movement.x, p0.y, p0.x, &t, minCorner.x, maxCorner.x ) )
                     {
+                        Print( "collision north" );
                         wallNormal = north;
                     }
                     if( wallCollision( minCorner.y, movement.y, movement.x, p0.y, p0.x, &t, minCorner.x, maxCorner.x ) )
                     {
                         wallNormal = south;
+                        Print( "collision south" );
                     }
                     if( wallCollision( minCorner.x, movement.x, movement.y, p0.x, p0.y, &t, minCorner.y, maxCorner.y ) )
                     {
                         wallNormal = west;
+                        Print( "collision west" );
                     }
                     if( wallCollision( maxCorner.x, movement.x, movement.y, p0.x, p0.y, &t, minCorner.y, maxCorner.y ) )
                     {
                         wallNormal = east;
+                        Print( "collision east" );
                     }
                 }
             }

@@ -23,6 +23,11 @@ inline s32 floorToS32( f32 value )
     return (s32)floorf( value );
 }
 
+inline s32 ceilToS32( f32 value )
+{
+    return (s32)ceilf( value );
+}
+
 inline u32 randomNumber()
 {
     return rand();
