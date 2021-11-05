@@ -23,9 +23,19 @@ TileArea* getTileArea( TileMap* tilemap, s32 x, s32 y )
 {
     TileArea* area = NULL;
 
+    if( x > NR_OF_TILEAREAS || y > NR_OF_TILEAREAS )
+    {
+        PrintError( "tile area index out of bounds" );
+    }
+
     if( x >= 0 && y >= 0 ) 
     {
         area = &tilemap->tileAreas[y * NR_OF_TILEAREAS + x];
+    }
+
+    if( area == nullptr )
+    {
+        PrintError( "no valid tile area" );
     }
     
     return area;
@@ -57,6 +67,23 @@ GeneralizedPosition composePosition( DecomposedPosition pos )
     result.tileRelative     = pos.tileRelative;
 
     return result;
+}
+
+s32 buildNewTileCoord( s32 tile, s32 tileCount )
+{
+    s32 newTile = tile;
+
+    if( tile < 0 )
+    {
+        newTile = tileCount + tile;
+    }
+
+    if( tile >= tileCount )
+    {
+        newTile = tile - tileCount;
+    }
+
+    return newTile;
 }
 
 s32 generalizeTileIndex( s32* tileIndex, s32 tileCount )
@@ -94,7 +121,7 @@ GeneralizedPosition buildNewPosition( DecomposedPosition oldPosition, v2 movemen
     p.tileY = y / tileSize;
     p.tileRelative.y = y - (p.tileY * tileSize );
 
-    // 2. calculate the new tile x and y and update tilemap x and y
+    // 2. calculate the new tile x and y and update tilearea x and y
     p.tileareaX = p.tileareaX + generalizeTileIndex( (s32*)&p.tileX, tilemap->tileCountX );
     p.tileareaY = p.tileareaY + generalizeTileIndex( (s32*)&p.tileY, tilemap->tileCountY );
 

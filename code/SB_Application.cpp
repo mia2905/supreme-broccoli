@@ -254,14 +254,14 @@ void collisionDetection( Player*  player,
     DecomposedPosition  newPosition = decomposePosition( newPos );
 
     // 1. constuct the search area
-    u32 searchTilesMinX = (oldPosition.tileX < newPosition.tileX) ? oldPosition.tileX : newPosition.tileX;
-    u32 searchTilesMinY = (oldPosition.tileY < newPosition.tileY) ? oldPosition.tileY : newPosition.tileY;
-    u32 searchTilesMaxX = (oldPosition.tileX < newPosition.tileX) ? newPosition.tileX : oldPosition.tileX;
-    u32 searchTilesMaxY = (oldPosition.tileY < newPosition.tileY) ? newPosition.tileY : oldPosition.tileY;
+    s32 searchTilesMinX = (oldPosition.tileX < newPosition.tileX) ? oldPosition.tileX : newPosition.tileX;
+    s32 searchTilesMinY = (oldPosition.tileY < newPosition.tileY) ? oldPosition.tileY : newPosition.tileY;
+    s32 searchTilesMaxX = (oldPosition.tileX < newPosition.tileX) ? newPosition.tileX : oldPosition.tileX;
+    s32 searchTilesMaxY = (oldPosition.tileY < newPosition.tileY) ? newPosition.tileY : oldPosition.tileY;
 
     // adjust the search area for the minkowski sum
-    u32 playerTileWidth  = ceilToS32( player->size.x / tileWidth );
-    u32 playerTileHeigth = ceilToS32( player->size.y / tileHeight );
+    s32 playerTileWidth  = ceilToS32( player->size.x / tileWidth );
+    s32 playerTileHeigth = ceilToS32( player->size.y / tileHeight );
 
     searchTilesMinX -= playerTileWidth;
     searchTilesMaxX += playerTileWidth;
@@ -273,15 +273,15 @@ void collisionDetection( Player*  player,
         f32 t = 1.0f;
         TileArea* area = nullptr;
 
-        for( u32 searchY = searchTilesMinY; searchY <= searchTilesMaxY; ++searchY )
+        for( s32 searchY = searchTilesMinY; searchY <= searchTilesMaxY; ++searchY )
         {
-            for( u32 searchX = searchTilesMinX; searchX <= searchTilesMaxX; ++searchX )
+            for( s32 searchX = searchTilesMinX; searchX <= searchTilesMaxX; ++searchX )
             {
-                s32 testX = searchX;
-                s32 testY = searchY;
+                s32 testX = buildNewTileCoord( searchX, (s32)tilemap->tileCountX );;
+                s32 testY = buildNewTileCoord( searchY, (s32)tilemap->tileCountY );;
 
-                u32 areaX = oldPosition.tileareaX + generalizeTileIndex( &testX, tilemap->tileCountX );
-                u32 areaY = oldPosition.tileareaY + generalizeTileIndex( &testY, tilemap->tileCountY );
+                u32 areaX = (u32)(testX / tilemap->tileCountX);
+                u32 areaY = (u32)(testY / tilemap->tileCountY);
 
                 area = getTileArea( tilemap, areaX, areaY );
 
@@ -289,6 +289,8 @@ void collisionDetection( Player*  player,
                 v2 minCorner = V2( testX * tileWidth, testY * tileHeight ) - (playerSize * 0.5f);
                 v2 maxCorner = V2( (testX * tileWidth) + tileWidth, (testY * tileHeight) + tileHeight ) + (playerSize * 0.5f);
                 v2 p0        = V2( oldPosition.tileX * tileWidth, oldPosition.tileY * tileHeight ) + oldPosition.tileRelative;
+
+                PrintTile(testX, testY, areaX, areaY);
 
                 if( getTileValue( tilemap, area, testX, testY ) == 1 )
                 {
