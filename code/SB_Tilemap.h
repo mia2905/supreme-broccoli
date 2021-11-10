@@ -29,11 +29,15 @@ struct Tile
 {
     u32 x;
     u32 y;
+    u32 areaX;
+    u32 areaY;
 
-    Tile( u32 x, u32 y )
+    Tile( u32 x, u32 y, u32 areaX, u32 areaY )
     {
         this->x = x;
         this->y = y;
+        this->areaX = areaX;
+        this->areaY = areaY;
     }
 };
 

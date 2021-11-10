@@ -251,66 +251,65 @@ void collisionDetection( Player*  player,
     GeneralizedPosition newPos = buildNewPosition( oldPosition, movement, tilemap );
     DecomposedPosition  newPosition = decomposePosition( newPos );
 
-    // 1. constuct the search area
-    s32 searchTilesMinX = (oldPosition.tileX < newPosition.tileX) ? oldPosition.tileX : newPosition.tileX;
-    s32 searchTilesMinY = (oldPosition.tileY < newPosition.tileY) ? oldPosition.tileY : newPosition.tileY;
-    s32 searchTilesMaxX = (oldPosition.tileX < newPosition.tileX) ? newPosition.tileX : oldPosition.tileX;
-    s32 searchTilesMaxY = (oldPosition.tileY < newPosition.tileY) ? newPosition.tileY : oldPosition.tileY;
+    u32 oldAbsTileX = oldPosition.tileX + oldPosition.tileareaX * tilemap->tileCountX;
+    u32 oldAbsTileY = oldPosition.tileY + oldPosition.tileareaY * tilemap->tileCountY;
 
+    u32 newAbsTileX = newPosition.tileX + newPosition.tileareaX * tilemap->tileCountX;
+    u32 newAbsTileY = newPosition.tileY + newPosition.tileareaY * tilemap->tileCountY;
+
+    // 1. constuct the search area
+    s32 searchTileMinX = (oldAbsTileX <= newAbsTileX) ? oldAbsTileX : newAbsTileX;
+    s32 searchTileMaxX = (oldAbsTileX > newAbsTileX) ? oldAbsTileX : newAbsTileX;
+    s32 searchTileMinY = (oldAbsTileY <= newAbsTileY) ? oldAbsTileY : newAbsTileY;
+    s32 searchTileMaxY = (oldAbsTileY > newAbsTileY) ? oldAbsTileY : newAbsTileY;
+ 
     // adjust the search area for the minkowski sum
     s32 playerTileWidth  = ceilToS32( player->size.x / tileWidth );
     s32 playerTileHeigth = ceilToS32( player->size.y / tileHeight );
 
-    searchTilesMinX -= playerTileWidth;
-    searchTilesMaxX += playerTileWidth;
-    searchTilesMinY -= playerTileHeigth;
-    searchTilesMaxY += playerTileHeigth;
-
+    searchTileMinX -= playerTileWidth;
+    searchTileMaxX += playerTileWidth;
+    searchTileMinY -= playerTileHeigth;
+    searchTileMaxY += playerTileHeigth;
+    
     for( u32 iteration=0; (iteration < 4) && (timeRemaining > 0.0f); ++iteration )
     {
         f32 t = 1.0f;
         TileArea* area = nullptr;
 
-        for( s32 searchY = searchTilesMinY; searchY <= searchTilesMaxY; ++searchY )
+        for( s32 searchY = searchTileMinY; searchY <= searchTileMaxY; ++searchY )
         {
-            for( s32 searchX = searchTilesMinX; searchX <= searchTilesMaxX; ++searchX )
+            for( s32 searchX = searchTileMinX; searchX <= searchTileMaxX; ++searchX )
             {
-                s32 testX = buildNewTileCoord( searchX, (s32)tilemap->tileCountX );
-                s32 testY = buildNewTileCoord( searchY, (s32)tilemap->tileCountY );
+                // create the minkowski sum out of the wall tile and the player rectangle
+                v2 minCorner = V2( searchX * tileWidth, searchY * tileHeight ) - (playerSize * 0.5f);
+                v2 maxCorner = V2( (searchX * tileWidth) + tileWidth, (searchY * tileHeight) + tileHeight ) + (playerSize * 0.5f);
+                v2 p0        = V2( oldAbsTileX * tileWidth, oldAbsTileY * tileHeight ) + oldPosition.tileRelative;
 
-                u32 areaX = (u32)(testX / tilemap->tileCountX);
-                u32 areaY = (u32)(testY / tilemap->tileCountY);
+                u32 areaX = (u32)(searchX / tilemap->tileCountX);
+                u32 areaY = (u32)(searchY / tilemap->tileCountY);
 
                 area = getTileArea( tilemap, areaX, areaY );
-
-                // create the minkowski sum out of the wall tile and the player rectangle
-                v2 minCorner = V2( testX * tileWidth, testY * tileHeight ) - (playerSize * 0.5f);
-                v2 maxCorner = V2( (testX * tileWidth) + tileWidth, (testY * tileHeight) + tileHeight ) + (playerSize * 0.5f);
-                v2 p0        = V2( oldPosition.tileX * tileWidth, oldPosition.tileY * tileHeight ) + oldPosition.tileRelative;
-
-                PrintTile(testX, testY, areaX, areaY);
+                s32 testX = buildNewTileCoord( searchX, tilemap->tileCountX );
+                s32 testY = buildNewTileCoord( searchY, tilemap->tileCountY );
 
                 if( getTileValue( tilemap, area, testX, testY ) == 1 )
                 {
                     if( wallCollision( maxCorner.y, movement.y, movement.x, p0.y, p0.x, &t, minCorner.x, maxCorner.x ) )
                     {
-                        Print( "collision north" );
                         wallNormal = north;
                     }
                     if( wallCollision( minCorner.y, movement.y, movement.x, p0.y, p0.x, &t, minCorner.x, maxCorner.x ) )
                     {
                         wallNormal = south;
-                        Print( "collision south" );
                     }
                     if( wallCollision( minCorner.x, movement.x, movement.y, p0.x, p0.y, &t, minCorner.y, maxCorner.y ) )
                     {
                         wallNormal = west;
-                        Print( "collision west" );
                     }
                     if( wallCollision( maxCorner.x, movement.x, movement.y, p0.x, p0.y, &t, minCorner.y, maxCorner.y ) )
                     {
                         wallNormal = east;
-                        Print( "collision east" );
                     }
                 }
             }
