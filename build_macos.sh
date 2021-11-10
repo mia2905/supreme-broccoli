@@ -14,9 +14,10 @@ main () {
     echo "-> CLEAN"
 
     rm -rf supreme-broccoli.dylib
+    rm -rf supreme-broccoli-temp.dylib
     rm -rf supreme-broccoli
 
-    clang -dynamiclib -o supreme-broccoli.dylib code/SB_Application.cpp --debug -std=c++11 -ffast-math
+    clang -dynamiclib -o supreme-broccoli.dylib code/SB_Application.cpp --debug -std=c++11 -ffast-math -lc++
     clang ${FRAMEWORKS} macos/SB_Main.mm -o supreme-broccoli -O3 --debug -std=c++11 -ffast-math
 
     if [ -e supreme-broccoli.dylib ]
@@ -24,6 +25,7 @@ main () {
         echo "-> BUILD APP: ${GREEN}SUCCESS${NORMAL}"
         sizeInKB=$(du -k supreme-broccoli.dylib | cut -f -1)
         echo "-> FILE SIZE: " $sizeInKB kB
+        echo 
     else
         echo "-> BUILD: ${RED}FAILED${NORMAL}"
     fi

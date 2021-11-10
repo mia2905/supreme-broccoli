@@ -15,7 +15,7 @@ union v2
     f32 length();
     f32 angle();
     f32 dot( v2 b );
-    f32 angelBetween( v2 b );
+    f32 angleBetween( v2 b );
     void normalize();
 };
 
@@ -108,12 +108,21 @@ f32 v2::dot( v2 b )
     return result;
 }
 
-f32 v2::angelBetween( v2 b )
+f32 v2::angleBetween( v2 b )
 {
-    f32 cosine = (this->dot(b)) / (this->length() * b.length() );
-    f32 angle  = cosine * PI_2;
-
+    f32 angle = arcusCosine(this->dot(b));
+    
     return angle;
+}
+
+f32 toDegrees( f32 radians )
+{
+    return (180.0f / PI) * radians;
+}
+
+f32 toRadians( f32 degrees )
+{
+    return (PI / 180.0f) * degrees;
 }
 
 void v2::normalize()

@@ -13,7 +13,7 @@ main () {
 
     rm -rf supreme-broccoli.dylib
 
-    clang -dynamiclib -o supreme-broccoli.dylib code/SB_Application.cpp --debug -std=c++11
+    clang -dynamiclib -o supreme-broccoli.dylib code/SB_Application.cpp --debug -std=c++11 -ffast-math -lc++
     
     if [ -e supreme-broccoli.dylib ]
     then

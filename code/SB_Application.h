@@ -4,11 +4,18 @@
 #include <stdio.h>
 
 #define Assert(expression) if(!(expression)) { int* a = 0; *a = 0; } // write to a null address to crash the program deliberately
-#define Print(text) { printf(text); fflush(stdout); }
-#define PrintNumber(label, number) printf( "%s: %f\n", label, number); fflush(stdout);
+#define Print(text) { printf("%s\n",text); fflush(stdout); }
+
 #define KiloBytes(x) (x * 1024)
 #define MegaBytes(x) (KiloBytes(x) * 1024)
 #define GigaBytes(x) (MegaBytes(x) * 1024)
+
+#define ConsoleColorRed "\033[0;31m"
+#define ConsoleColorDefault "\033[0m"
+#define PrintNumber(label, number) printf( "%s: %f\n", label, number); fflush(stdout);
+#define PrintVector(label, vector) printf( "%s: v2(%f | %f)\n", label, vector.x, vector.y); fflush(stdout);
+#define PrintError(label) printf(ConsoleColorRed); printf("%s\n", label); printf(ConsoleColorDefault); fflush(stdout);
+#define PrintTile(x,y,a,b) printf("tile [%d|%d] -> area [%d|%d]\n", x, y, a, b); fflush(stdout);
 
 #define PushStruct( pool, struct ) (struct*)PushStruct_( pool, sizeof(struct) )
 #define PushArray( pool, count, struct ) (struct*)PushStruct_( pool, (count)*sizeof(struct) )

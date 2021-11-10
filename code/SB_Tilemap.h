@@ -21,6 +21,24 @@ struct DecomposedPosition
 
     s32 tileX;
     s32 tileY;
+
+    v2 tileRelative;
+};
+
+struct Tile
+{
+    u32 x;
+    u32 y;
+    u32 areaX;
+    u32 areaY;
+
+    Tile( u32 x, u32 y, u32 areaX, u32 areaY )
+    {
+        this->x = x;
+        this->y = y;
+        this->areaX = areaX;
+        this->areaY = areaY;
+    }
 };
 
 enum DOOR_DIRECTION
@@ -49,5 +67,8 @@ struct TileMap
     TileArea* tileAreas;
     Image*    brickImage;
 };
+
+void printPosition( GeneralizedPosition p, TileMap* tilemap );
+DecomposedPosition decomposePosition( GeneralizedPosition p );
 
 #endif//SB_TILEMAP_H
