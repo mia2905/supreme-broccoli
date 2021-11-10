@@ -25,26 +25,6 @@ struct DecomposedPosition
     v2 tileRelative;
 };
 
-enum DIRECTION
-{
-    NORTH,
-    SOUTH,
-    WEST,
-    EAST
-};
-
-struct Wall
-{
-    DIRECTION direction;
-    v2        normal;
-
-    Wall( DIRECTION d, v2 n )
-    {
-        direction = d;
-        normal    = n;
-    }
-};
-
 struct Tile
 {
     u32 x;

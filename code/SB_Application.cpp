@@ -3,8 +3,6 @@
 #include "SB_Tilemap.h"
 #include "SB_Tilemap.cpp"
 
-#include <vector>
-
 void buildWorld( MemoryPool* pool, TileMap* map )
 {
     u32 x = 0;
@@ -277,8 +275,8 @@ void collisionDetection( Player*  player,
         {
             for( s32 searchX = searchTilesMinX; searchX <= searchTilesMaxX; ++searchX )
             {
-                s32 testX = buildNewTileCoord( searchX, (s32)tilemap->tileCountX );;
-                s32 testY = buildNewTileCoord( searchY, (s32)tilemap->tileCountY );;
+                s32 testX = buildNewTileCoord( searchX, (s32)tilemap->tileCountX );
+                s32 testY = buildNewTileCoord( searchY, (s32)tilemap->tileCountY );
 
                 u32 areaX = (u32)(testX / tilemap->tileCountX);
                 u32 areaY = (u32)(testY / tilemap->tileCountY);
