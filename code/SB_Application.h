@@ -113,10 +113,11 @@ struct Image
 struct Player
 {
     GeneralizedPosition playerPos;
-    v2    size;
-    v2    velocityVector;
-    f32   acceleration; // meters per second squared -> m/s^2
-    Color color;
+    v2     size;
+    v2     velocityVector;
+    f32    acceleration; // meters per second squared -> m/s^2
+    Color  color;
+    Image* playerImg;
 };
 
 struct MemoryPool

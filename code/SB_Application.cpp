@@ -45,38 +45,61 @@ void drawImage( RenderBuffer* buffer, v2 position, Image* img )
 {
     u32 screenWidth  = buffer->width;
     u32 screenHeight = buffer->height;
+    u32 imgWidth     = img->width;
+    u32 imgHeight    = img->height;
+    u32 srcRow       = 0;
+    u32 srcCol       = 0;
 
     s32 xmin = roundToS32( position.x );
     s32 ymin = roundToS32( position.y );
     s32 xmax = roundToS32( position.x + img->width );
     s32 ymax = roundToS32( position.y + img->height );
 
-    if( xmin < 0 ) xmin = 0;
-    if( xmax < 0 ) xmax = 0;
+    if( xmin < 0 ) 
+    {
+        srcCol = -xmin;
+        xmin   = 0;
+    }
+
+    if( ymin < 0 ) 
+    {
+        srcRow = -ymin;
+        ymin = 0;
+    }
+
     if( xmin >= screenWidth ) return; // offscreen
-    if( xmax >= screenWidth ) xmax = screenWidth;
-
-    if( ymin < 0 ) ymin = 0;
-    if( ymax < 0 ) ymax = 0;
     if( ymin >= screenHeight ) return; // offscreen
-    if( ymax >= screenHeight ) ymax = screenHeight;
 
-    u8* src = img->data;
+    if( xmax >= screenWidth )  xmax = screenWidth  - 1;
+    if( ymax >= screenHeight ) ymax = screenHeight - 1;
 
     // the start of the rectangle is the pixel at minX / minY
     for( u32 row=ymin; row<ymax; ++row )
     {
         u8* base = buffer->buffer + (u32)((row * buffer->width + xmin) * sizeof(Pixel));
-        Pixel* p = (Pixel*)base;
+        u8* src  = img->data + (u32)((srcRow * imgWidth + srcCol) * sizeof(Pixel)); 
+        Pixel* dest = (Pixel*)base;
         for( u32 col=xmin; col<xmax; ++col )
         {
-            p->red   = (u8)src[0];
-            p->green = (u8)src[1];
-            p->blue  = (u8)src[2];
-            p->alpha = (u8)src[3];
-            ++p;
+            f32 red   = (f32)src[0] / 255.0f;
+            f32 green = (f32)src[1] / 255.0f;
+            f32 blue  = (f32)src[2] / 255.0f;
+            f32 alpha = (f32)src[3] / 255.0f;
+
+            f32 destRed   = (f32)dest->red   / 255.0f;
+            f32 destGreen = (f32)dest->green / 255.0f;
+            f32 destBlue  = (f32)dest->blue  / 255.0f;
+            f32 destAlpha = (f32)dest->alpha / 255.0f;
+
+            // dest = src * alpha + dest( 1 - alpha )
+            dest->red   = (u8)((red   * alpha + destRed   * (1.0f - alpha)) * 255.0f);
+            dest->green = (u8)((green * alpha + destGreen * (1.0f - alpha)) * 255.0f);
+            dest->blue  = (u8)((blue  * alpha + destBlue  * (1.0f - alpha)) * 255.0f);
+            dest->alpha = (u8)((alpha * alpha + destAlpha * (1.0f - alpha)) * 255.0f);
+            ++dest;
             src += 4;
         }
+        srcRow++;
     }
 }
 
@@ -118,7 +141,7 @@ void drawRectangle( RenderBuffer* buffer, v2 min, v2 max, Color c )
 
 void drawBackground( RenderBuffer* buffer )
 {
-    Color backgroundColor = { 25.0f/255.0f, 25.0f/255.0f, 25.0f/255.0f, 1.0f };
+    Color backgroundColor = { 200.0f/255.0f, 200.0f/255.0f, 200.0f/255.0f, 1.0f };
     drawRectangle( buffer, V2(0, 0), V2(buffer->width, buffer->height), backgroundColor );
 }
 
@@ -145,6 +168,8 @@ void drawPlayer( RenderBuffer* buffer, Player* player, TileMap* tilemap )
     f32 miny  = buffer->height - tilemap->metersToPixels * ( tileY + player->playerPos.tileRelative.y - player->size.y/2 );
     f32 maxy  = miny - (tilemap->metersToPixels * player->size.y);
     drawRectangle( buffer, V2(minx, maxy), V2(maxx, miny), player->color );
+
+    drawImage( buffer, V2(minx, maxy), player->playerImg );
 }
 
 void drawTileArea( RenderBuffer* buffer, TileMap* tilemap, TileArea* area )
@@ -319,8 +344,6 @@ void collisionDetection( Player*  player,
                         Print( "COLLISION EAST\n" );
                         wallNormal = east;
                     }
-
-                    
                 }
             }
         }
@@ -430,6 +453,9 @@ void UpdateAndRender( ApplicationMemory* memory,
 
         const char* bgrFile   = "./art/background.png";
         state->background     = state->services.loadImage( imageMemory, bgrFile );
+
+        const char* playerfile = "./art/player.png";
+        player->playerImg      = state->services.loadImage( imageMemory, playerfile );
 
         Color playerColor = { 1.0f, 162.0f/255.0f, 0.0f, 1.0f };
 
