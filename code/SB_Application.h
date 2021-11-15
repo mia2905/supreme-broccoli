@@ -121,6 +121,12 @@ struct Image
     u8* data;
 };
 
+struct File
+{
+    u32 size;
+    u8* data;
+};
+
 #include "SB_Tilemap.h"
 
 struct Player
@@ -143,6 +149,7 @@ struct MemoryPool
 struct PlatformServices
 {
     Image* (*loadImage) (MemoryPool*, const char*); // image loading service
+    File*  (*loadFile)  (MemoryPool*, const char*);  // file loading service
 };
 
 struct ApplicationState
@@ -152,8 +159,9 @@ struct ApplicationState
     MemoryPool       tileMemory;
     TileMap          tilemap;
     MemoryPool       imageMemory;
+    MemoryPool       mp3Memory;
     PlatformServices services;
-    Image*           background;
+    File*            backgroundMp3;
 };
 
 void* PushStruct_( MemoryPool* pool, memory_index size )
@@ -169,7 +177,10 @@ void* PushStruct_( MemoryPool* pool, memory_index size )
 /******************************************************
  * SERVICES THE PLATFORM PROVIDES TO THE APPLICATION
  ******************************************************/
-
+extern "C" {
+    Image* LoadImage( MemoryPool* pool, const char* filename );
+    File*  LoadFile(  MemoryPool* pool, const char* filename );
+}
 
 /******************************************************
  * SERVICES THE APPLICATION PROVIDES TO THE PLATFORM

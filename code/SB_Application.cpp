@@ -2,6 +2,7 @@
 #include "SB_Intrinsics.h"
 #include "SB_Tilemap.h"
 #include "SB_Tilemap.cpp"
+#include "SB_Sound.cpp"
 
 void buildWorld( MemoryPool* pool, TileMap* map )
 {
@@ -142,7 +143,7 @@ void drawRectangle( RenderBuffer* buffer, v2 min, v2 max, Color c )
 void drawBackground( RenderBuffer* buffer )
 {
     Color backgroundColor = { 200.0f/255.0f, 200.0f/255.0f, 200.0f/255.0f, 1.0f };
-    drawRectangle( buffer, V2(0, 0), V2(buffer->width, buffer->height), backgroundColor );
+    drawRectangle( buffer, vec2(0, 0), vec2(buffer->width, buffer->height), backgroundColor );
 }
 
 void drawPlayer( RenderBuffer* buffer, Player* player, TileMap* tilemap )
@@ -161,15 +162,15 @@ void drawPlayer( RenderBuffer* buffer, Player* player, TileMap* tilemap )
     f32 tileMaxx = tilemap->metersToPixels * (tileX + tilemap->tileInMeters);
     f32 tileMiny = buffer->height - tilemap->metersToPixels * tileY;
     f32 tileMaxy = tileMiny - (tilemap->metersToPixels * tilemap->tileInMeters);
-    drawRectangle( buffer, V2(tileMinx, tileMaxy), V2(tileMaxx, tileMiny), tilecolor );
+    drawRectangle( buffer, vec2(tileMinx, tileMaxy), vec2(tileMaxx, tileMiny), tilecolor );
 
     f32 minx  = tilemap->metersToPixels * ( tileX + player->playerPos.tileRelative.x - player->size.x/2 );
     f32 maxx  = tilemap->metersToPixels * ( tileX + player->playerPos.tileRelative.x + player->size.x/2 );
     f32 miny  = buffer->height - tilemap->metersToPixels * ( tileY + player->playerPos.tileRelative.y - player->size.y/2 );
     f32 maxy  = miny - (tilemap->metersToPixels * player->size.y);
-    drawRectangle( buffer, V2(minx, maxy), V2(maxx, miny), player->color );
+    drawRectangle( buffer, vec2(minx, maxy), vec2(maxx, miny), player->color );
 
-    drawImage( buffer, V2(minx, maxy), player->playerImg );
+    drawImage( buffer, vec2(minx, maxy), player->playerImg );
 }
 
 void drawTileArea( RenderBuffer* buffer, TileMap* tilemap, TileArea* area )
@@ -195,7 +196,7 @@ void drawTileArea( RenderBuffer* buffer, TileMap* tilemap, TileArea* area )
                 u32 maxY = minY - tileHeight;
 
                 //drawImage( buffer, V2(minX, maxY), tilemap->brickImage );
-                drawRectangle( buffer, V2(minX, maxY), V2(maxX, minY), tilecolor );
+                drawRectangle( buffer, vec2(minX, maxY), vec2(maxX, minY), tilecolor );
             }
         }
     }
@@ -246,10 +247,10 @@ void collisionDetection( Player*  player,
                          f32      acceleration, 
                          f32      dt )
 {
-    static v2 north = V2(  0.0f,  1.0f );
-    static v2 south = V2(  0.0f, -1.0f );
-    static v2 east  = V2(  1.0f,  0.0f );
-    static v2 west  = V2( -1.0f,  0.0f );
+    static v2 north = vec2(  0.0f,  1.0f );
+    static v2 south = vec2(  0.0f, -1.0f );
+    static v2 east  = vec2(  1.0f,  0.0f );
+    static v2 west  = vec2( -1.0f,  0.0f );
 
     f32 tileWidth   = tilemap->tileInMeters;
     f32 tileHeight  = tileWidth;
@@ -270,7 +271,7 @@ void collisionDetection( Player*  player,
     
     // 4. calculate time of collision and the collision point
     f32 timeRemaining = 1.0f;
-    v2  wallNormal      = V2(0,0);
+    v2  wallNormal      = vec2(0,0);
 
     // create the new position
     GeneralizedPosition newPos = buildNewPosition( oldPosition, movement, tilemap );
@@ -307,9 +308,9 @@ void collisionDetection( Player*  player,
             for( s32 searchX = searchTileMinX; searchX <= searchTileMaxX; ++searchX )
             {
                 // create the minkowski sum out of the wall tile and the player rectangle
-                v2 minCorner = V2( searchX * tileWidth, searchY * tileHeight ) - (playerSize * 0.5f);
-                v2 maxCorner = V2( (searchX * tileWidth) + tileWidth, (searchY * tileHeight) + tileHeight ) + (playerSize * 0.5f);
-                v2 p0        = V2( oldAbsTileX * tileWidth, oldAbsTileY * tileHeight ) + oldPosition.tileRelative;
+                v2 minCorner = vec2( searchX * tileWidth, searchY * tileHeight ) - (playerSize * 0.5f);
+                v2 maxCorner = vec2( (searchX * tileWidth) + tileWidth, (searchY * tileHeight) + tileHeight ) + (playerSize * 0.5f);
+                v2 p0        = vec2( oldAbsTileX * tileWidth, oldAbsTileY * tileHeight ) + oldPosition.tileRelative;
 
                 u32 areaX = (u32)(searchX / tilemap->tileCountX);
                 u32 areaY = (u32)(searchY / tilemap->tileCountY);
@@ -369,7 +370,7 @@ void updatePlayer( UserInput* input, Player* player, TileMap* tilemap, f32 dt )
 {
     v2 playerRelativePosition = player->playerPos.tileRelative;
     f32 acceleration          = input->space.isDown ? 3.0f * player->acceleration : player->acceleration;
-    v2 direction              = V2(0.0f, 0.0f);
+    v2 direction              = vec2(0.0f, 0.0f);
     
     if( input->arrowUp.isDown )    
     {
@@ -411,6 +412,7 @@ void UpdateAndRender( ApplicationMemory* memory,
     MemoryPool*       tileMemory  = &state->tileMemory;
     TileMap*          tilemap     = &state->tilemap;
     MemoryPool*       imageMemory = &state->imageMemory;
+    MemoryPool*       mp3Memory   = &state->mp3Memory;
 
 
     // check if the ESC key was pressed
@@ -448,14 +450,18 @@ void UpdateAndRender( ApplicationMemory* memory,
         imageMemory->base      = (u8*)tileMemory->base + tileMemory->size;
         imageMemory->usedBytes = 0;
 
+        mp3Memory->size        = MegaBytes(10);
+        mp3Memory->base        = (u8*)imageMemory->base + imageMemory->size;
+        mp3Memory->usedBytes   = 0;
+
         const char* brickfile = "./art/bricktile.png";
         tilemap->brickImage   = state->services.loadImage( imageMemory, brickfile );
 
-        const char* bgrFile   = "./art/background.png";
-        state->background     = state->services.loadImage( imageMemory, bgrFile );
-
         const char* playerfile = "./art/player.png";
         player->playerImg      = state->services.loadImage( imageMemory, playerfile );
+
+        const char* mp3File    = "./assets/music/datahop.mp3";
+        state->backgroundMp3   = state->services.loadFile( mp3Memory, mp3File );
 
         Color playerColor = { 1.0f, 162.0f/255.0f, 0.0f, 1.0f };
 
@@ -464,13 +470,13 @@ void UpdateAndRender( ApplicationMemory* memory,
         startposition.tileareaY = 0;
         startposition.tileX     = 2;
         startposition.tileY     = 2;
-        startposition.tileRelative = V2( tilemap->tileInMeters * 0.5f, tilemap->tileInMeters * 0.5f );
+        startposition.tileRelative = vec2( tilemap->tileInMeters * 0.5f, tilemap->tileInMeters * 0.5f );
         
         player->playerPos       = composePosition( startposition );
         player->size.x          = 0.9f * tilemap->tileInMeters;
         player->size.y          = 0.9f * tilemap->tileInMeters;
         player->acceleration    = 50.0f; // in meters per second squared -> m/s^2
-        player->velocityVector  = V2(0.0f, 0.0f);
+        player->velocityVector  = vec2(0.0f, 0.0f);
         player->color           = playerColor;
         
         info->debugMode       = false; // set this to true to get platform debug info printed to stdout

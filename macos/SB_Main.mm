@@ -9,10 +9,6 @@
 #define STBI_ONLY_PNG
 #include "../tools/stb_image.h"
 
-extern "C" {
-    Image* LoadImage( MemoryPool* pool, const char* filename );
-}
-
 static bool              RUNNING       = false;
 static ApplicationMemory MEMORY        = {0};
 static RenderBuffer      RENDER_BUFFER = {0};
@@ -194,6 +190,7 @@ int main()
         RUNNING = true;
         ApplicationState* state   = (ApplicationState*)MEMORY.permanentMemory;
         state->services.loadImage = &LoadImage;
+        state->services.loadFile  = &LoadFile;
     }
 
     while( RUNNING )
@@ -289,5 +286,31 @@ extern "C" {
         }
 
         return image;
+    }
+
+    File* LoadFile( MemoryPool* pool, const char* filename )
+    {
+        File* file = nullptr;
+
+        FILE* f = fopen( filename, "r" );
+        if( f != nullptr )
+        {
+            file = PushStruct( pool, File );
+
+            fseek( f, 0, SEEK_END );
+            u32 numBytes = (u32)ftell( f );
+            fseek( f, 0, SEEK_SET );
+      
+            file->data = pool->base;
+            file->size = numBytes;
+
+            pool->usedBytes = numBytes;
+      
+            fread( file->data, numBytes, 1, f );
+
+            fclose( f );
+        }
+
+        return file;
     }
 }
