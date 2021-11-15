@@ -9,9 +9,6 @@
 #define STBI_ONLY_PNG
 #include "../tools/stb_image.h"
 
-// platform code
-#include "SB_Input.mm"
-
 extern "C" {
     Image* LoadImage( MemoryPool* pool, const char* filename );
 }
@@ -23,15 +20,27 @@ static UserInput         USER_INPUT    = {0};
 static PlatformInfo      INFO          = {0};
 
 typedef void UPDATE_AND_RENDER( ApplicationMemory* memory, RenderBuffer* buffer, UserInput* input, PlatformInfo* info );
+typedef void RENDER_AUDIO( ApplicationMemory* memory, SoundBuffer* buffer );
 
 static NSError*           ERROR         = nil;
 static void*              APPLICATION   = nullptr;
 static UPDATE_AND_RENDER* RENDER_FUNC   = nullptr;
+static RENDER_AUDIO*      AUDIO_FUNC    = nullptr;
+
+// platform code
+#include "SB_Input.mm"
+#include "SB_Audio.mm"
 
 void UpdateAndRenderStub( ApplicationMemory* memory, 
                           RenderBuffer*      buffer, 
                           UserInput*         input,
                           PlatformInfo*      info )
+{
+    // no op
+}
+
+void RenderAudioStub( ApplicationMemory* memory,
+                      SoundBuffer*       buffer )
 {
     // no op
 }
@@ -112,6 +121,7 @@ void loadApplication()
 
         APPLICATION = dlopen( "supreme-broccoli-temp.dylib", RTLD_LAZY );
         RENDER_FUNC = (UPDATE_AND_RENDER*)dlsym( APPLICATION, "UpdateAndRender" );
+        AUDIO_FUNC  = (RENDER_AUDIO*)dlsym( APPLICATION, "RenderAudio" );
     }     
     else
     {
@@ -136,6 +146,9 @@ int main()
     // init an error object 
     ERROR = [NSError errorWithDomain:@"APPLICATION" code:200 userInfo:nil];
     loadApplication();
+
+    Audio* audio = [[Audio alloc] init];
+    [audio play];
 
     WindowDelegate* windowDelegate = [[WindowDelegate alloc] init];
     NSRect          rect           = NSMakeRect( 0, 0, WINDOW_WIDTH, WINDOW_HEIGHT );

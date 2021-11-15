@@ -4,9 +4,6 @@
 #include "SB_Application.h"
 #include "SB_Intrinsics.h"
 
-#define PI 3.14159265359
-#define PI_2 PI/2
-
 union v2
 {
     struct { f32 x; f32 y; };

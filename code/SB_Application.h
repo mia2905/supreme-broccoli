@@ -6,6 +6,10 @@
 #define Assert(expression) if(!(expression)) { int* a = 0; *a = 0; } // write to a null address to crash the program deliberately
 #define Print(text) { printf("%s",text); fflush(stdout); }
 
+#define PI 3.14159265359
+#define PI_2 PI/2
+#define PI2  PI * 2.0
+
 #define KiloBytes(x) (x * 1024)
 #define MegaBytes(x) (KiloBytes(x) * 1024)
 #define GigaBytes(x) (MegaBytes(x) * 1024)
@@ -49,6 +53,15 @@ struct RenderBuffer
     u32 height;
     u32 pitch;
     u8* buffer;
+};
+
+struct SoundBuffer
+{
+    u32 numberOfSamples;
+    u32 sampleRate;
+    u32 numberOfChannels;
+
+    void* buffer;
 };
 
 struct KeyPress
@@ -166,6 +179,9 @@ extern "C" {
                          RenderBuffer*      buffer, 
                          UserInput*         input,
                          PlatformInfo*      info );
+
+    void RenderAudio(    ApplicationMemory* memory,
+                         SoundBuffer*       buffer );                    
 }
 
 

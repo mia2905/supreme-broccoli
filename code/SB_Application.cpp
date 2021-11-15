@@ -320,28 +320,28 @@ void collisionDetection( Player*  player,
 
                 if( getTileValue( tilemap, area, testX, testY ) == 1 )
                 {
-                    Print( "\n" );
-                    Print( "search: " ); PrintTile( searchX, searchY, areaX, areaY );
-                    Print( "test: " ); PrintTile( testX, testY, areaX, areaY );
+                    //Print( "\n" );
+                    //Print( "search: " ); PrintTile( searchX, searchY, areaX, areaY );
+                    //Print( "test: " ); PrintTile( testX, testY, areaX, areaY );
 
                     if( wallCollision( maxCorner.y, movement.y, movement.x, p0.y, p0.x, &t, minCorner.x, maxCorner.x ) )
                     {
-                        Print( "COLLISION NORTH\n" );
+                        //Print( "COLLISION NORTH\n" );
                         wallNormal = north;
                     }
                     if( wallCollision( minCorner.y, movement.y, movement.x, p0.y, p0.x, &t, minCorner.x, maxCorner.x ) )
                     {
-                        Print( "COLLISION SOUTH\n" );
+                        //Print( "COLLISION SOUTH\n" );
                         wallNormal = south;
                     }
                     if( wallCollision( minCorner.x, movement.x, movement.y, p0.x, p0.y, &t, minCorner.y, maxCorner.y ) )
                     {
-                        Print( "COLLISION WEST\n" );
+                        //Print( "COLLISION WEST\n" );
                         wallNormal = west;
                     }
                     if( wallCollision( maxCorner.x, movement.x, movement.y, p0.x, p0.y, &t, minCorner.y, maxCorner.y ) )
                     {
-                        Print( "COLLISION EAST\n" );
+                        //Print( "COLLISION EAST\n" );
                         wallNormal = east;
                     }
                 }
@@ -483,4 +483,29 @@ void UpdateAndRender( ApplicationMemory* memory,
     drawBackground( buffer );
     drawWorld( buffer, tilemap, player );
     drawPlayer( buffer, player, tilemap );
+}
+
+void RenderAudio( ApplicationMemory* memory,
+                  SoundBuffer*       buffer )
+{
+    static f32 phase = 0.0f;
+    static f32 amplitude = 0.5;
+    static f32 frequency = 440.0f;
+
+    f32  phaseIncrement = PI2 / ((f32)buffer->sampleRate / frequency);
+    f32* sample = (f32*)buffer->buffer;
+
+    f32 value = 0.0f;
+    for( u32 i=0; i<buffer->numberOfSamples; i++ )
+    {
+        value = sinus( phase ) * 0.1f;
+
+        *sample = value;
+        sample++;
+        
+        phase += phaseIncrement;
+
+        if( phase > PI2 ) phase -= PI2;
+        if( phase < 0.0f ) phase += PI2;
+    }
 }
