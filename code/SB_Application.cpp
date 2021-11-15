@@ -52,21 +52,23 @@ void drawImage( RenderBuffer* buffer, v2 position, Image* img )
     s32 ymax = roundToS32( position.y + img->height );
 
     if( xmin < 0 ) xmin = 0;
-    if( xmax < 0 ) xmax = 0;
-    if( xmin >= screenWidth ) return; // offscreen
-    if( xmax >= screenWidth ) xmax = screenWidth;
-
     if( ymin < 0 ) ymin = 0;
-    if( ymax < 0 ) ymax = 0;
-    if( ymin >= screenHeight ) return; // offscreen
-    if( ymax >= screenHeight ) ymax = screenHeight;
 
-    u8* src = img->data;
+    if( xmin >= screenWidth ) return; // offscreen
+    if( ymin >= screenHeight ) return; // offscreen
+
+    if( xmax >= screenWidth )  xmax = screenWidth  - 1;
+    if( ymax >= screenHeight ) ymax = screenHeight - 1;
+
+    u32 imgWidth  = img->width;
+    u32 imgHeight = img->height;
+    u32 srcRow    = 0;
 
     // the start of the rectangle is the pixel at minX / minY
     for( u32 row=ymin; row<ymax; ++row )
     {
         u8* base = buffer->buffer + (u32)((row * buffer->width + xmin) * sizeof(Pixel));
+        u8* src  = img->data + (u32)((srcRow * imgWidth) * sizeof(Pixel)); 
         Pixel* dest = (Pixel*)base;
         for( u32 col=xmin; col<xmax; ++col )
         {
@@ -88,6 +90,7 @@ void drawImage( RenderBuffer* buffer, v2 position, Image* img )
             ++dest;
             src += 4;
         }
+        srcRow++;
     }
 }
 
