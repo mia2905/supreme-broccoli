@@ -67,14 +67,25 @@ void drawImage( RenderBuffer* buffer, v2 position, Image* img )
     for( u32 row=ymin; row<ymax; ++row )
     {
         u8* base = buffer->buffer + (u32)((row * buffer->width + xmin) * sizeof(Pixel));
-        Pixel* p = (Pixel*)base;
+        Pixel* dest = (Pixel*)base;
         for( u32 col=xmin; col<xmax; ++col )
         {
-            p->red   = (u8)src[0];
-            p->green = (u8)src[1];
-            p->blue  = (u8)src[2];
-            p->alpha = (u8)src[3];
-            ++p;
+            f32 red   = (f32)src[0] / 255.0f;
+            f32 green = (f32)src[1] / 255.0f;
+            f32 blue  = (f32)src[2] / 255.0f;
+            f32 alpha = (f32)src[3] / 255.0f;
+
+            f32 destRed   = (f32)dest->red   / 255.0f;
+            f32 destGreen = (f32)dest->green / 255.0f;
+            f32 destBlue  = (f32)dest->blue  / 255.0f;
+            f32 destAlpha = (f32)dest->alpha / 255.0f;
+
+            // dest = src * alpha + dest( 1 - alpha )
+            dest->red   = (u8)((red   * alpha + destRed   * (1.0f - alpha)) * 255.0f);
+            dest->green = (u8)((green * alpha + destGreen * (1.0f - alpha)) * 255.0f);
+            dest->blue  = (u8)((blue  * alpha + destBlue  * (1.0f - alpha)) * 255.0f);
+            dest->alpha = (u8)((alpha * alpha + destAlpha * (1.0f - alpha)) * 255.0f);
+            ++dest;
             src += 4;
         }
     }
@@ -118,7 +129,7 @@ void drawRectangle( RenderBuffer* buffer, v2 min, v2 max, Color c )
 
 void drawBackground( RenderBuffer* buffer )
 {
-    Color backgroundColor = { 25.0f/255.0f, 25.0f/255.0f, 25.0f/255.0f, 1.0f };
+    Color backgroundColor = { 200.0f/255.0f, 200.0f/255.0f, 200.0f/255.0f, 1.0f };
     drawRectangle( buffer, V2(0, 0), V2(buffer->width, buffer->height), backgroundColor );
 }
 
@@ -145,6 +156,8 @@ void drawPlayer( RenderBuffer* buffer, Player* player, TileMap* tilemap )
     f32 miny  = buffer->height - tilemap->metersToPixels * ( tileY + player->playerPos.tileRelative.y - player->size.y/2 );
     f32 maxy  = miny - (tilemap->metersToPixels * player->size.y);
     drawRectangle( buffer, V2(minx, maxy), V2(maxx, miny), player->color );
+
+    drawImage( buffer, V2(minx, maxy), player->playerImg );
 }
 
 void drawTileArea( RenderBuffer* buffer, TileMap* tilemap, TileArea* area )
@@ -319,8 +332,6 @@ void collisionDetection( Player*  player,
                         Print( "COLLISION EAST\n" );
                         wallNormal = east;
                     }
-
-                    
                 }
             }
         }
@@ -430,6 +441,9 @@ void UpdateAndRender( ApplicationMemory* memory,
 
         const char* bgrFile   = "./art/background.png";
         state->background     = state->services.loadImage( imageMemory, bgrFile );
+
+        const char* playerfile = "./art/player.png";
+        player->playerImg      = state->services.loadImage( imageMemory, playerfile );
 
         Color playerColor = { 1.0f, 162.0f/255.0f, 0.0f, 1.0f };
 
