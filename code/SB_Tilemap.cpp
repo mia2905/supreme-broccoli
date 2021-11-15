@@ -2,23 +2,6 @@
 #include "SB_Tilemap.h"
 #include "SB_Intrinsics.h"
 
-
-void printPosition( GeneralizedPosition p, TileMap* tilemap )
-{
-    DecomposedPosition d = decomposePosition( p );
-
-    PrintNumber( "Tile x: ", (f32)d.tileX );
-    PrintNumber( "Tile y: ", (f32)d.tileY );
-    PrintNumber( "relative x: ", (f32)d.tileRelative.x );
-    PrintNumber( "relative y: ", (f32)d.tileRelative.y );
-
-    f32 absoluteX = d.tileX * tilemap->tileInMeters + d.tileRelative.x;
-    f32 absoluteY = d.tileY * tilemap->tileInMeters + d.tileRelative.y;
-
-    PrintNumber( "absolute Position x: ", absoluteX );
-    PrintNumber( "absoulte Position y: ", absoluteY );
-}
-
 TileArea* getTileArea( TileMap* tilemap, s32 x, s32 y )
 {
     TileArea* area = NULL;
@@ -81,6 +64,11 @@ s32 buildNewTileCoord( s32 tile, s32 tileCount )
     if( tile >= tileCount )
     {
         newTile = tile - tileCount;
+    }
+
+    if( newTile >= tileCount )
+    {
+        newTile = newTile % tileCount;
     }
 
     return newTile;
@@ -189,5 +177,28 @@ void setDoor( TileArea* area, DOOR_DIRECTION door )
             break;
     
         default: break;
+    }
+}
+
+void printTileArea( TileArea* area, TileMap* tilemap )
+{
+    u32 tilesX = tilemap->tileCountX;
+    u32 tilesY = tilemap->tileCountY;
+
+    for( s32 row = tilesY-1; row >= 0; row-- )
+    {
+        for( s32 col = 0; col < tilesX; col++ )
+        {
+            if( getTileValue( tilemap, area, col, row ) == 0 )
+            {
+                Print( "   " );
+            }
+            else
+            {
+                Print( " * " );
+            }
+        }
+
+        Print( "\n" );
     }
 }

@@ -68,7 +68,6 @@ struct TileMap
     Image*    brickImage;
 };
 
-void printPosition( GeneralizedPosition p, TileMap* tilemap );
 DecomposedPosition decomposePosition( GeneralizedPosition p );
 
 #endif//SB_TILEMAP_H
