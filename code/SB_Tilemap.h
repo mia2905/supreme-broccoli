@@ -3,8 +3,13 @@
 
 #include "SB_Application.h"
 
-#define TILEAREA_SHIFT 8
-#define TILE_MASK      0x000000ff
+#define NR_OF_TILEAREAS     100
+#define TILEAREA_SHIFT      8
+#define TILE_MASK           0x000000ff
+#define TILE_SIZE           40
+#define TILES_PER_AREA_Y    WINDOW_HEIGHT / TILE_SIZE
+#define TILES_PER_AREA_X    WINDOW_WIDTH  / TILE_SIZE
+
 
 struct GeneralizedPosition
 {

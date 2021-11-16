@@ -1,4 +1,5 @@
 #include "../code/SB_Application.h"
+#include "../code/SB_Memory.cpp"
 
 #include <AppKit/AppKit.h>
 #include <mach/mach_time.h>
@@ -181,11 +182,7 @@ int main()
     MEMORY.permanentMemorySize = MegaBytes(1024);
     MEMORY.permanentMemory = calloc( 1, MEMORY.permanentMemorySize );
 
-    MEMORY.transientMemorySize = MegaBytes(1024);
-    MEMORY.transientMemory = calloc( 1, MEMORY.transientMemorySize );
-
-    if( MEMORY.permanentMemory != nullptr && 
-        MEMORY.transientMemory != nullptr )
+    if( MEMORY.permanentMemory != nullptr )
     {
         RUNNING = true;
         ApplicationState* state   = (ApplicationState*)MEMORY.permanentMemory;

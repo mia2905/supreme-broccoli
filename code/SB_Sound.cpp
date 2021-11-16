@@ -1,5 +1,11 @@
 #include "SB_Sound.h"
 
+#define MINIMP3_IMPLEMENTATION
+#define MINIMP3_FLOAT_OUTPUT
+#define MINIMP3_ONLY_MP3
+
+#include "../tools/minimp3_ex.h"
+
 Mp3Buffer* loadMp3Data( MemoryPool* mp3Memory, File* mp3File )
 {
     mp3dec_t mp3;

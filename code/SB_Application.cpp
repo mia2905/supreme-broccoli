@@ -1,8 +1,18 @@
 #include "SB_Application.h"
 #include "SB_Intrinsics.h"
-#include "SB_Tilemap.h"
+#include "SB_Memory.cpp"
 #include "SB_Tilemap.cpp"
 #include "SB_Sound.cpp"
+
+struct Player
+{
+    GeneralizedPosition playerPos;
+    v2     size;
+    v2     velocityVector;
+    f32    acceleration; // meters per second squared -> m/s^2
+    Color  color;
+    Image* playerImg;
+};
 
 void buildWorld( MemoryPool* pool, TileMap* map )
 {
@@ -399,21 +409,22 @@ void UpdateAndRender( ApplicationMemory* memory,
                       UserInput*         input,
                       PlatformInfo*      info )
 {
-    /************************************
-     * MEMORY LAYOUT -> PERMANENT STORE
-     * --------------------------------
-     * 
-     * -> ApplicationState
-     * -> MemoryPool [TileMap]
-     ************************************/
+    /**
+        ++ ApplicationState ++
 
-    ApplicationState* state       = (ApplicationState*)memory->permanentMemory;
-    Player*           player      = &state->player;
-    MemoryPool*       tileMemory  = &state->tileMemory;
-    TileMap*          tilemap     = &state->tilemap;
-    MemoryPool*       imageMemory = &state->imageMemory;
-    MemoryPool*       mp3Memory   = &state->mp3Memory;
-
+        -  MemoryPool*       appMemory; // equal to the start of ApplicationState
+        -  PlatformServices  services;
+        -  TileMap*          tilemap;
+        -  Player*           player;
+        -  File*             backgroundMp3;
+        -  Mp3Buffer*        mp3Samples;
+        -  bool              loading;
+     */
+    ApplicationState* state = (ApplicationState*)memory->permanentMemory;
+    
+    MemoryPool*       appMemory   = state->appMemory;
+    TileMap*          tilemap     = state->tilemap;
+    Player*           player      = state->player;
 
     // check if the ESC key was pressed
     if( input->esc.isDown )
@@ -428,41 +439,53 @@ void UpdateAndRender( ApplicationMemory* memory,
     // NOTE: this part of the code is NOT reentrant!!!!
     if( !memory->isInitialized || info->reload )
     {
-        state->loading              = true;
+        state->loading = true;
         initMath();
 
-        tileMemory->size            = MegaBytes(64);
-        tileMemory->base            = (u8*)memory->permanentMemory + sizeof( ApplicationState );
-        tileMemory->usedBytes       = 0;
+        // setup the permanent memory
+        /*********************
+         *  
+         *  MEMORY LAYOUT
+         *  
+         *  ApplicationState
+         *  MemoryPool
+         *  Memory of MemoryPool
+         * 
+         *********************/ 
 
-        tilemap->tileCountX         = TILES_PER_AREA_X;
-        tilemap->tileCountY         = TILES_PER_AREA_Y;
-        tilemap->tileInMeters       = 2.0f;
-        tilemap->tileInPixels       = TILE_SIZE;
-        tilemap->metersToPixels     = (f32)((f32)tilemap->tileInPixels/tilemap->tileInMeters);
-        tilemap->tileAreas          = PushArray( tileMemory, 
+        state->appMemory                   = (MemoryPool*)( state + sizeof( ApplicationState ) );;
+        state->appMemory->base             = (u8*)( state->appMemory + sizeof( MemoryPool ) );
+        state->appMemory->size             = MegaBytes( 200 );
+        state->appMemory->usedBytes        = 0;
+
+        appMemory = state->appMemory;
+
+        // create the tilemap in permanent memory
+        state->tilemap                     = PushStruct( appMemory, TileMap );
+        state->player                      = PushStruct( appMemory, Player );
+        tilemap = state->tilemap;
+        player  = state->player;
+
+        state->tilemap->tileCountX         = TILES_PER_AREA_X;
+        state->tilemap->tileCountY         = TILES_PER_AREA_Y;
+        state->tilemap->tileInMeters       = 2.0f;
+        state->tilemap->tileInPixels       = TILE_SIZE;
+        state->tilemap->metersToPixels     = (f32)((f32)state->tilemap->tileInPixels/state->tilemap->tileInMeters);
+        state->tilemap->tileAreas          = PushArray( appMemory, 
                                                  NR_OF_TILEAREAS * NR_OF_TILEAREAS,
                                                  TileArea );
 
-        buildWorld( tileMemory, tilemap );             
+        buildWorld( appMemory, tilemap );             
 
-        imageMemory->size      = MegaBytes(64);
-        imageMemory->base      = (u8*)tileMemory->base + tileMemory->size;
-        imageMemory->usedBytes = 0;
+        const char* brickfile    = "./art/bricktile.png";
+        const char* playerfile   = "./art/player.png";
+        const char* mp3File      = "./assets/music/datahop.mp3";
 
-        mp3Memory->size        = MegaBytes(64);
-        mp3Memory->base        = (u8*)imageMemory->base + imageMemory->size;
-        mp3Memory->usedBytes   = 0;
-
-        const char* brickfile = "./art/bricktile.png";
-        tilemap->brickImage   = state->services.loadImage( imageMemory, brickfile );
-
-        const char* playerfile = "./art/player.png";
-        player->playerImg      = state->services.loadImage( imageMemory, playerfile );
-
-        const char* mp3File    = "./assets/music/datahop.mp3";
-        state->backgroundMp3   = state->services.loadFile( mp3Memory, mp3File );
-        state->mp3Samples      = loadMp3Data( mp3Memory, state->backgroundMp3 );
+        tilemap->brickImage      = state->services.loadImage( appMemory, brickfile );
+        player->playerImg        = state->services.loadImage( appMemory, playerfile );
+        state->backgroundMp3     = state->services.loadFile( appMemory, mp3File );
+        state->mp3Samples        = loadMp3Data( appMemory, state->backgroundMp3 );
+        
         Color playerColor = { 1.0f, 162.0f/255.0f, 0.0f, 1.0f };
 
         DecomposedPosition startposition = {0};
@@ -478,7 +501,7 @@ void UpdateAndRender( ApplicationMemory* memory,
         player->acceleration    = 50.0f; // in meters per second squared -> m/s^2
         player->velocityVector  = vec2(0.0f, 0.0f);
         player->color           = playerColor;
-        
+
         info->debugMode       = false; // set this to true to get platform debug info printed to stdout
         memory->isInitialized = true;
         state->loading        = false;

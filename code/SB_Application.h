@@ -4,11 +4,6 @@
 #include <stdio.h>
 
 #define Assert(expression) if(!(expression)) { int* a = 0; *a = 0; } // write to a null address to crash the program deliberately
-#define Print(text) { printf("%s",text); fflush(stdout); }
-
-#define PI 3.14159265359
-#define PI_2 PI/2
-#define PI2  PI * 2.0
 
 #define KiloBytes(x) (x * 1024)
 #define MegaBytes(x) (KiloBytes(x) * 1024)
@@ -16,22 +11,15 @@
 
 #define ConsoleColorRed "\033[0;31m"
 #define ConsoleColorDefault "\033[0m"
+
+#define Print(text) { printf("%s",text); fflush(stdout); }
 #define PrintNumber(label, number) printf( "%s: %f\n", label, number); fflush(stdout);
 #define PrintVector(label, vector) printf( "%s: v2(%f | %f)\n", label, vector.x, vector.y); fflush(stdout);
 #define PrintError(label) printf(ConsoleColorRed); printf("%s\n", label); printf(ConsoleColorDefault); fflush(stdout);
 #define PrintTile(x,y,a,b) printf("tile [%d|%d] -> area [%d|%d]\n", x, y, a, b); fflush(stdout);
 
-#define PushStruct( pool, struct ) (struct*)PushStruct_( pool, sizeof(struct) )
-#define PushArray( pool, count, struct ) (struct*)PushStruct_( pool, (count)*sizeof(struct) )
-#define PushBytes( pool, bytes ) (u8*)PushStruct_( pool, bytes )
-
 #define WINDOW_WIDTH   1200
 #define WINDOW_HEIGHT   600
-#define TILE_SIZE        40
-#define TILES_PER_AREA_Y        WINDOW_HEIGHT / TILE_SIZE
-#define TILES_PER_AREA_X        WINDOW_WIDTH / TILE_SIZE
-
-#define NR_OF_TILEAREAS 100
 
 typedef unsigned char       u8;
 typedef signed   char       s8;
@@ -76,9 +64,6 @@ struct ApplicationMemory
 
     u64   permanentMemorySize; // in bytes
     void* permanentMemory;
-
-    u64   transientMemorySize; // in bytes
-    void* transientMemory;
 };
 
 struct PlatformInfo
@@ -118,59 +103,21 @@ struct File
     u8* data;
 };
 
-#include "SB_Tilemap.h"
-
-struct Player
-{
-    GeneralizedPosition playerPos;
-    v2     size;
-    v2     velocityVector;
-    f32    acceleration; // meters per second squared -> m/s^2
-    Color  color;
-    Image* playerImg;
-};
-
-struct MemoryPool
-{
-    memory_index size;
-    u8*          base;
-    memory_index usedBytes;
-};
-
-struct PlatformServices
-{
-    Image* (*loadImage) (MemoryPool*, const char*); // image loading service
-    File*  (*loadFile)  (MemoryPool*, const char*);  // file loading service
-};
-
-#include "SB_Sound.h"
-
-struct ApplicationState
-{
-    bool             loading;
-    Player           player;
-    MemoryPool       tileMemory;
-    TileMap          tilemap;
-    MemoryPool       imageMemory;
-    MemoryPool       mp3Memory;
-    PlatformServices services;
-    File*            backgroundMp3;
-    Mp3Buffer*       mp3Samples;
-};
-
-void* PushStruct_( MemoryPool* pool, memory_index size )
-{
-    Assert( pool->usedBytes + size <= pool->size );
-    u8* allocatedMemory = pool->base + pool->usedBytes;
-
-    pool->usedBytes += size;
-
-    return allocatedMemory;
-}
+struct SoundBuffer;
+struct MemoryPool;
+struct Mp3Buffer;
+struct TileMap;
+struct Player;
 
 /******************************************************
  * SERVICES THE PLATFORM PROVIDES TO THE APPLICATION
  ******************************************************/
+struct PlatformServices
+{
+    Image* (*loadImage) (MemoryPool*, const char*); // image loading service
+    File*  (*loadFile)  (MemoryPool*, const char*); // file loading service
+};
+
 extern "C" {
     Image* LoadImage( MemoryPool* pool, const char* filename );
     File*  LoadFile(  MemoryPool* pool, const char* filename );
@@ -189,6 +136,15 @@ extern "C" {
                          SoundBuffer*       buffer );                    
 }
 
-
+struct ApplicationState
+{
+    MemoryPool*       appMemory;
+    PlatformServices  services;
+    TileMap*          tilemap;
+    Player*           player;
+    File*             backgroundMp3;
+    Mp3Buffer*        mp3Samples;
+    bool              loading;
+};
 
 #endif//SB_APPLICATION_H
