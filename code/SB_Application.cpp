@@ -1,5 +1,6 @@
 #include "SB_Application.h"
 #include "SB_Intrinsics.h"
+#include "SB_Math.h"
 #include "SB_Memory.cpp"
 #include "SB_Tilemap.cpp"
 #include "SB_Sound.cpp"
@@ -484,7 +485,7 @@ void UpdateAndRender( ApplicationMemory* memory,
         state->mp3Samples        = state->services.loadMp3( appMemory, mp3File );
         
         Color playerColor = { 1.0f, 162.0f/255.0f, 0.0f, 1.0f };
-        
+
         DecomposedPosition startposition = {0};
         startposition.tileareaX = 0;
         startposition.tileareaY = 0;

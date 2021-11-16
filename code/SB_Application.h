@@ -33,8 +33,6 @@ typedef float              f32;
 typedef double             f64;
 typedef unsigned long      memory_index;
 
-#include "SB_Math.h"
-
 struct RenderBuffer
 {
     u32 width;
@@ -130,13 +128,13 @@ extern "C" {
  * SERVICES THE APPLICATION PROVIDES TO THE PLATFORM
  ******************************************************/
 extern "C" {
-   void UpdateAndRender( ApplicationMemory* memory, 
-                         RenderBuffer*      buffer, 
-                         UserInput*         input,
-                         PlatformInfo*      info );
+    void UpdateAndRender( ApplicationMemory* memory, 
+                          RenderBuffer*      buffer, 
+                          UserInput*         input,
+                          PlatformInfo*      info );
 
-    void RenderAudio(    ApplicationMemory* memory,
-                         SoundBuffer*       buffer );                    
+    void RenderAudio(     ApplicationMemory* memory,
+                          SoundBuffer*       buffer );                    
 }
 
 struct ApplicationState
