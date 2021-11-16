@@ -1,4 +1,5 @@
 #include "../code/SB_Application.h"
+#include "../code/SB_Sound.h"
 #include "../code/SB_Memory.cpp"
 
 #include <AppKit/AppKit.h>
@@ -9,6 +10,12 @@
 #define STB_IMAGE_IMPLEMENTATION
 #define STBI_ONLY_PNG
 #include "../tools/stb_image.h"
+
+#define MINIMP3_IMPLEMENTATION
+#define MINIMP3_FLOAT_OUTPUT
+#define MINIMP3_ONLY_MP3
+
+#include "../tools/minimp3_ex.h"
 
 static bool              RUNNING       = false;
 static ApplicationMemory MEMORY        = {0};
@@ -188,6 +195,7 @@ int main()
         ApplicationState* state   = (ApplicationState*)MEMORY.permanentMemory;
         state->services.loadImage = &LoadImage;
         state->services.loadFile  = &LoadFile;
+        state->services.loadMp3   = &LoadMp3;
     }
 
     while( RUNNING )
@@ -306,5 +314,27 @@ extern "C" {
         }
 
         return file;
+    }
+
+    Mp3* LoadMp3( MemoryPool* pool, const char* filename )
+    {
+        File* f = LoadFile( pool, filename );
+
+        mp3dec_t mp3Internal;
+        mp3dec_file_info_t info;
+
+        if( mp3dec_load_buf( &mp3Internal, f->data, f->size, &info, NULL, NULL ) )
+        {
+            PrintError( "ERROR: MP3 DECODING FAILED" );
+        }
+
+        Mp3* mp3 = PushStruct( pool, Mp3 );
+        mp3->numberOfSamples = info.samples;
+        mp3->samples         = (f32*)PushBytes( pool, info.samples * sizeof(f32) );
+        mp3->streamPosition  = 0;
+
+        memcpy( mp3->samples, info.buffer, info.samples );
+
+        return mp3;
     }
 }

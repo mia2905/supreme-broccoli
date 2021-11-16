@@ -108,6 +108,7 @@ struct MemoryPool;
 struct Mp3Buffer;
 struct TileMap;
 struct Player;
+struct Mp3;
 
 /******************************************************
  * SERVICES THE PLATFORM PROVIDES TO THE APPLICATION
@@ -116,11 +117,13 @@ struct PlatformServices
 {
     Image* (*loadImage) (MemoryPool*, const char*); // image loading service
     File*  (*loadFile)  (MemoryPool*, const char*); // file loading service
+    Mp3*   (*loadMp3)   (MemoryPool*, const char*); // mp3 loading service
 };
 
 extern "C" {
     Image* LoadImage( MemoryPool* pool, const char* filename );
     File*  LoadFile(  MemoryPool* pool, const char* filename );
+    Mp3*   LoadMp3(   MemoryPool* pool, const char* filename );
 }
 
 /******************************************************
@@ -143,7 +146,7 @@ struct ApplicationState
     TileMap*          tilemap;
     Player*           player;
     File*             backgroundMp3;
-    Mp3Buffer*        mp3Samples;
+    Mp3*              mp3Samples;
     bool              loading;
 };
 

@@ -19,6 +19,12 @@ struct Mp3Buffer
     u32  numberOfSamples;
 };
 
-Mp3Buffer* loadMp3Data( MemoryPool* mp3Memory, File* mp3File );
+struct Mp3
+{
+    f32* samples;
+    u32  streamPosition;
+    u32  numberOfSamples;
+    u32  numberOfChannels;
+};
 
 #endif//SB_SOUND_H

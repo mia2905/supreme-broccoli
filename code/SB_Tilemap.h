@@ -70,7 +70,6 @@ struct TileMap
     f32 metersToPixels;
 
     TileArea* tileAreas;
-    Image*    brickImage;
 };
 
 DecomposedPosition decomposePosition( GeneralizedPosition p );

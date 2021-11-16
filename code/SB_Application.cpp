@@ -477,17 +477,14 @@ void UpdateAndRender( ApplicationMemory* memory,
 
         buildWorld( appMemory, tilemap );             
 
-        const char* brickfile    = "./art/bricktile.png";
         const char* playerfile   = "./art/player.png";
         const char* mp3File      = "./assets/music/datahop.mp3";
 
-        tilemap->brickImage      = state->services.loadImage( appMemory, brickfile );
         player->playerImg        = state->services.loadImage( appMemory, playerfile );
-        state->backgroundMp3     = state->services.loadFile( appMemory, mp3File );
-        state->mp3Samples        = loadMp3Data( appMemory, state->backgroundMp3 );
+        state->mp3Samples        = state->services.loadMp3( appMemory, mp3File );
         
         Color playerColor = { 1.0f, 162.0f/255.0f, 0.0f, 1.0f };
-
+        
         DecomposedPosition startposition = {0};
         startposition.tileareaX = 0;
         startposition.tileareaY = 0;
