@@ -1,30 +1,33 @@
 #include "SB_Sound.h"
+#include "SB_Math.h"
+#include "string.h"
 
 void RenderAudio( ApplicationMemory* memory,
                   SoundBuffer*       buffer )
 {
-    static f32 phase[2]  = {0,0};
-    static f32 amplitude = 0.5;
-    static f32 frequency[2] = {440.0f,800.0f};
+    ApplicationState* state = (ApplicationState*)memory->permanentMemory;
+  
+    if( !memory->isInitialized || state->mp3Samples == nullptr )         
+    {
+        return;
+    }
+
+    Mp3* mp3 = state->mp3Samples;
 
     for( u32 c=0; c<buffer->numberOfChannels; ++c )
     {
-        f32* sample = (f32*)buffer->buffer[c];
-
-        f32  phaseIncrement = PI2 / ((f32)buffer->sampleRate / frequency[c]);
-        f32  value = 0.0f;
-    
+        f32* sample    = (f32*)buffer->buffer[c];
+        u32  streamPos = mp3->streamPosition + c;
+        
         for( u32 i=0; i<buffer->numberOfSamples; i++ )
         {
-            value = sinus( phase[c] ) * 0.1f;
-
-            *sample = value;
+            *sample = mp3->samples[streamPos];
             sample++;
             
-            phase[c] += phaseIncrement;
-
-            if( phase[c] > PI2 )  phase[c] -= PI2;
-            if( phase[c] < 0.0f ) phase[c] += PI2;
+            streamPos += 2;
         }
-    }    
+    }
+
+    // update to the next position
+    mp3->streamPosition += buffer->numberOfSamples * 2;   
 }

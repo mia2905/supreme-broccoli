@@ -151,8 +151,8 @@ int main()
     ERROR = [NSError errorWithDomain:@"APPLICATION" code:200 userInfo:nil];
     loadApplication();
 
+    // init audio output (2 channel stereo - float samples)
     Audio* audio = [[Audio alloc] init];
-    [audio play];
 
     WindowDelegate* windowDelegate = [[WindowDelegate alloc] init];
     NSRect          rect           = NSMakeRect( 0, 0, WINDOW_WIDTH, WINDOW_HEIGHT );
@@ -197,6 +197,8 @@ int main()
         state->services.loadFile  = &LoadFile;
         state->services.loadMp3   = &LoadMp3;
     }
+
+    [audio play: &MEMORY];
 
     while( RUNNING )
     {

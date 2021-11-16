@@ -19,7 +19,7 @@
     f32                          m_amplitude;
 }
 
-- (void)play;
+- (void)play: (ApplicationMemory*)memory;
 
 @end
 
@@ -89,9 +89,12 @@
     return self;
 }
 
-- (void)play
+- (void)play: (ApplicationMemory*) memory
 {   
     NSError* error = [NSError alloc];
+
+    m_memory = memory;
+
     if( [m_audioEngine startAndReturnError:&error] == NO )
     {
         // something went wrong while starting the engine

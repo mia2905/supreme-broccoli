@@ -12,13 +12,6 @@ struct SoundBuffer
     void* buffer[2];
 };
 
-struct Mp3Buffer
-{
-    f32* samples;
-    u32  streamPosition;
-    u32  numberOfSamples;
-};
-
 struct Mp3
 {
     f32* samples;
