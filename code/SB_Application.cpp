@@ -490,28 +490,3 @@ void UpdateAndRender( ApplicationMemory* memory,
     drawWorld( buffer, tilemap, player );
     drawPlayer( buffer, player, tilemap );
 }
-
-void RenderAudio( ApplicationMemory* memory,
-                  SoundBuffer*       buffer )
-{
-    static f32 phase = 0.0f;
-    static f32 amplitude = 0.5;
-    static f32 frequency = 440.0f;
-
-    f32  phaseIncrement = PI2 / ((f32)buffer->sampleRate / frequency);
-    f32* sample = (f32*)buffer->buffer;
-
-    f32 value = 0.0f;
-    for( u32 i=0; i<buffer->numberOfSamples; i++ )
-    {
-        value = sinus( phase ) * 0.1f;
-
-        *sample = value;
-        sample++;
-        
-        phase += phaseIncrement;
-
-        if( phase > PI2 ) phase -= PI2;
-        if( phase < 0.0f ) phase += PI2;
-    }
-}

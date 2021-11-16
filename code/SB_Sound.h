@@ -9,6 +9,15 @@
 
 #include "../tools/minimp3_ex.h"
 
+struct SoundBuffer
+{
+    u32 numberOfSamples;
+    u32 sampleRate;
+    u32 numberOfChannels;
+
+    void* buffer[2];
+};
+
 struct Mp3Buffer
 {
     f32* samples;

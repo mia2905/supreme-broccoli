@@ -55,15 +55,6 @@ struct RenderBuffer
     u8* buffer;
 };
 
-struct SoundBuffer
-{
-    u32 numberOfSamples;
-    u32 sampleRate;
-    u32 numberOfChannels;
-
-    void* buffer;
-};
-
 struct KeyPress
 {
     bool isDown;

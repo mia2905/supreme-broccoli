@@ -54,7 +54,11 @@
             buffer.numberOfSamples  = framecount;
             buffer.sampleRate       = m_sampleRate;
             buffer.numberOfChannels = outputData->mNumberBuffers;
-            buffer.buffer           = outputData->mBuffers[0].mData;
+
+            for( u32 i=0; i<buffer.numberOfChannels; ++i )
+            {
+                buffer.buffer[i] = outputData->mBuffers[i].mData;
+            }
 
             AUDIO_FUNC( m_memory, &buffer );
             
@@ -64,8 +68,8 @@
         m_audioEngine   = [[AVAudioEngine alloc] init];
         m_mainMixerNode = m_audioEngine.mainMixerNode;
         m_output        = m_audioEngine.outputNode;
-        m_outputFormat  = [[AVAudioFormat alloc] initStandardFormatWithSampleRate: 48000.0
-                                          channels: 1];
+        m_outputFormat  = [[AVAudioFormat alloc] initStandardFormatWithSampleRate: 44100.0
+                                          channels: 2];
         m_inputFormat   = m_outputFormat;
         m_srcNode       = [[AVAudioSourceNode alloc] initWithRenderBlock:m_callback];                                          
 
@@ -74,7 +78,7 @@
         [m_audioEngine connect: m_mainMixerNode to: m_output        format: m_outputFormat];
 
         m_numberOfChannels = m_outputFormat.channelCount;
-        m_sampleRate       = 44100;
+        m_sampleRate       = m_outputFormat.sampleRate;
         m_amplitude        = 0.5f;
 
         m_mainMixerNode.outputVolume = m_amplitude;
