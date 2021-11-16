@@ -152,6 +152,8 @@ struct PlatformServices
     File*  (*loadFile)  (MemoryPool*, const char*);  // file loading service
 };
 
+#include "SB_Sound.h"
+
 struct ApplicationState
 {
     bool             loading;
@@ -162,6 +164,7 @@ struct ApplicationState
     MemoryPool       mp3Memory;
     PlatformServices services;
     File*            backgroundMp3;
+    Mp3Buffer*       mp3Samples;
 };
 
 void* PushStruct_( MemoryPool* pool, memory_index size )

@@ -450,7 +450,7 @@ void UpdateAndRender( ApplicationMemory* memory,
         imageMemory->base      = (u8*)tileMemory->base + tileMemory->size;
         imageMemory->usedBytes = 0;
 
-        mp3Memory->size        = MegaBytes(10);
+        mp3Memory->size        = MegaBytes(64);
         mp3Memory->base        = (u8*)imageMemory->base + imageMemory->size;
         mp3Memory->usedBytes   = 0;
 
@@ -462,7 +462,7 @@ void UpdateAndRender( ApplicationMemory* memory,
 
         const char* mp3File    = "./assets/music/datahop.mp3";
         state->backgroundMp3   = state->services.loadFile( mp3Memory, mp3File );
-
+        state->mp3Samples      = loadMp3Data( mp3Memory, state->backgroundMp3 );
         Color playerColor = { 1.0f, 162.0f/255.0f, 0.0f, 1.0f };
 
         DecomposedPosition startposition = {0};

@@ -74,7 +74,7 @@
         [m_audioEngine connect: m_mainMixerNode to: m_output        format: m_outputFormat];
 
         m_numberOfChannels = m_outputFormat.channelCount;
-        m_sampleRate       = 48000;
+        m_sampleRate       = 44100;
         m_amplitude        = 0.5f;
 
         m_mainMixerNode.outputVolume = m_amplitude;

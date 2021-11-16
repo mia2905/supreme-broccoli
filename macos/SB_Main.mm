@@ -300,14 +300,11 @@ extern "C" {
             fseek( f, 0, SEEK_END );
             u32 numBytes = (u32)ftell( f );
             fseek( f, 0, SEEK_SET );
-      
-            file->data = pool->base;
+
+            file->data = PushBytes( pool, numBytes );
             file->size = numBytes;
 
-            pool->usedBytes = numBytes;
-      
             fread( file->data, numBytes, 1, f );
-
             fclose( f );
         }
 
