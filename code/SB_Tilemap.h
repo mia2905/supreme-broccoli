@@ -10,7 +10,6 @@
 #define TILES_PER_AREA_Y    WINDOW_HEIGHT / TILE_SIZE
 #define TILES_PER_AREA_X    WINDOW_WIDTH  / TILE_SIZE
 
-
 struct GeneralizedPosition
 {
     u32 unifiedPositionX; // upper 24-bits tilearea and lower 8-bits tile inside the tile area
@@ -72,6 +71,17 @@ struct TileMap
     TileArea* tileAreas;
 };
 
-DecomposedPosition decomposePosition( GeneralizedPosition p );
+TileArea*           getTileArea( TileMap* tilemap, s32 x, s32 y );
+u32                 getTileValue( TileMap* tilemap, TileArea* area, u32 tileX, u32 tileY );
+
+DecomposedPosition  decomposePosition( GeneralizedPosition p );
+GeneralizedPosition composePosition( DecomposedPosition pos );
+GeneralizedPosition buildNewPosition( DecomposedPosition old, v2 movement, TileMap* tilemap );
+
+s32 buildNewTileCoord( s32 tile, s32 tileCount );
+s32 generalizeTileIndex( s32* tileIndex, s32 tileCount );
+
+TileArea* buildTileArea( MemoryPool* pool, TileMap* map, u32 areaX, u32 areaY );
+
 
 #endif//SB_TILEMAP_H
