@@ -335,7 +335,8 @@ extern "C" {
         mp3->samples         = (f32*)PushBytes( pool, info.samples * sizeof(f32) );
         mp3->streamPosition  = 0;
 
-        memcpy( mp3->samples, info.buffer, info.samples );
+        memcpy( mp3->samples, info.buffer, info.samples * sizeof(f32) );
+        free(info.buffer);
 
         return mp3;
     }
