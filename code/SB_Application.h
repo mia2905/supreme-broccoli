@@ -33,14 +33,6 @@ typedef float              f32;
 typedef double             f64;
 typedef unsigned long      memory_index;
 
-struct RenderBuffer
-{
-    u32 width;
-    u32 height;
-    u32 pitch;
-    u8* buffer;
-};
-
 struct KeyPress
 {
     bool isDown;
@@ -65,20 +57,18 @@ struct ApplicationMemory
     void* permanentMemory;
 };
 
-struct Pixel
+struct File
 {
-    u8 red;
-    u8 green;
-    u8 blue;
-    u8 alpha;
+    u32 size;
+    u8* data;
 };
 
-struct Color
+struct RenderBuffer
 {
-    f32 red;
-    f32 green;
-    f32 blue;
-    f32 alpha;
+    u32 width;
+    u32 height;
+    u32 pitch;
+    u8* buffer;
 };
 
 struct Image
@@ -86,12 +76,6 @@ struct Image
     s32 width;
     s32 height;
     s32 channels;
-    u8* data;
-};
-
-struct File
-{
-    u32 size;
     u8* data;
 };
 
