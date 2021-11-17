@@ -1,6 +1,4 @@
 #include "SB_Sound.h"
-#include "SB_Math.h"
-#include "string.h"
 
 void RenderAudio( ApplicationMemory* memory,
                   SoundBuffer*       buffer )

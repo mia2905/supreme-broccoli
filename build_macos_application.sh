@@ -21,11 +21,14 @@ main () {
 
     clang -dynamiclib -o ${APP_NAME}.dylib code/SB_Application.cpp ${CFLAGS}
     
+    CODE_SIZE=$(cloc ${APPLICATION_CODE} | grep -o -E '([0-9]+)' | tail -1)
+
     if [ -e ${APP_NAME}.dylib ]
     then
         echo "-> BUILD APP: ${GREEN}SUCCESS${NORMAL}"
         sizeInKB=$(du -k ${APP_NAME}.dylib | cut -f -1)
-        echo "-> FILE SIZE: " $sizeInKB kB
+        echo "-> FILE SIZE:" $sizeInKB kB
+        echo "-> LINES OF CODE: " $CODE_SIZE
     else
         echo "-> BUILD APP: ${RED}FAILED${NORMAL}"
     fi
