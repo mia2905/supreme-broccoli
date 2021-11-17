@@ -21,13 +21,15 @@ static bool              RUNNING       = false;
 static ApplicationMemory MEMORY        = {0};
 static RenderBuffer      RENDER_BUFFER = {0};
 static UserInput         USER_INPUT    = {0};
-static PlatformInfo      INFO          = {0};
 
-typedef void UPDATE_AND_RENDER( ApplicationMemory* memory, RenderBuffer* buffer, UserInput* input, PlatformInfo* info );
+typedef void UPDATE_AND_RENDER( ApplicationMemory* memory, RenderBuffer* buffer, UserInput* input );
 typedef void RENDER_AUDIO( ApplicationMemory* memory, SoundBuffer* buffer );
 
 static NSError*           ERROR         = nil;
+static NSWindow*          WINDOW        = nil;
+static CGRect             WINDOW_RECT   = {0};
 static void*              APPLICATION   = nullptr;
+static f32                DELTA_TIME_S  = 0.0f;     
 static UPDATE_AND_RENDER* RENDER_FUNC   = nullptr;
 static RENDER_AUDIO*      AUDIO_FUNC    = nullptr;
 
@@ -37,8 +39,7 @@ static RENDER_AUDIO*      AUDIO_FUNC    = nullptr;
 
 void UpdateAndRenderStub( ApplicationMemory* memory, 
                           RenderBuffer*      buffer, 
-                          UserInput*         input,
-                          PlatformInfo*      info )
+                          UserInput*         input )
 {
     // no op
 }
@@ -156,26 +157,27 @@ int main()
 
     WindowDelegate* windowDelegate = [[WindowDelegate alloc] init];
     NSRect          rect           = NSMakeRect( 0, 0, WINDOW_WIDTH, WINDOW_HEIGHT );
-    NSWindow*       window         = [[NSWindow alloc] initWithContentRect: rect
+    WINDOW                         = [[NSWindow alloc] initWithContentRect: rect
                                                        styleMask: NSWindowStyleMaskTitled | NSWindowStyleMaskClosable
                                                        backing: NSBackingStoreBuffered
                                                        defer: NO];
 
     NSPoint pos; 
-    pos.x = [[NSScreen mainScreen] frame].size.width - [window frame].size.width ;
+    pos.x = 0.0f ;
     pos.y = 0.0f;
 
-    [window setFrame:CGRectMake(pos.x, pos.y, [window frame].size.width , [window frame].size.height) display:YES];    
-    [window setTitle: @"SUPREME BROCCOLI"];
-    [window makeKeyAndOrderFront: nil];
-    [window setDelegate: windowDelegate];
+    WINDOW_RECT = CGRectMake(pos.x, pos.y, [WINDOW frame].size.width , [WINDOW frame].size.height);
+    [WINDOW setFrame: WINDOW_RECT display:YES];    
+    [WINDOW setTitle: @"SUPREME BROCCOLI"];
+    [WINDOW makeKeyAndOrderFront: nil];
+    [WINDOW setDelegate: windowDelegate];
 
     [NSApp setActivationPolicy:NSApplicationActivationPolicyRegular];
     [NSApp activateIgnoringOtherApps:YES];
     
     u32 bytesPerPixel    = 4;    
-    RENDER_BUFFER.width  = window.contentView.bounds.size.width;
-    RENDER_BUFFER.height = window.contentView.bounds.size.height;
+    RENDER_BUFFER.width  = WINDOW.contentView.bounds.size.width;
+    RENDER_BUFFER.height = WINDOW.contentView.bounds.size.height;
     RENDER_BUFFER.pitch  = RENDER_BUFFER.width * bytesPerPixel;
     RENDER_BUFFER.buffer = (u8*)calloc( 1, RENDER_BUFFER.pitch * RENDER_BUFFER.height );
     
@@ -189,13 +191,16 @@ int main()
     MEMORY.permanentMemorySize = MegaBytes(1024);
     MEMORY.permanentMemory = calloc( 1, MEMORY.permanentMemorySize );
 
+    ApplicationState* state = nullptr;
+
     if( MEMORY.permanentMemory != nullptr )
     {
         RUNNING = true;
-        ApplicationState* state   = (ApplicationState*)MEMORY.permanentMemory;
-        state->services.loadImage = &LoadImage;
-        state->services.loadFile  = &LoadFile;
-        state->services.loadMp3   = &LoadMp3;
+        state   = (ApplicationState*)MEMORY.permanentMemory;
+        state->services.loadImage        = &LoadImage;
+        state->services.loadFile         = &LoadFile;
+        state->services.loadMp3          = &LoadMp3;
+        state->services.toggleFullScreen = &ToggleFullScreen;
     }
 
     [audio play: &MEMORY];
@@ -206,12 +211,14 @@ int main()
         [windowDelegate->m_mainLoop wait];
 
         // reload the dylib every second
-        if( INFO.reload )
+        /*
+        if( ... )
         {
             unloadApplication();
             loadApplication();
             INFO.reload = false;
-        }        
+        }
+        */        
 
         NSEvent* event = nil;        
         do 
@@ -229,7 +236,8 @@ int main()
         }
         while( event != nil );
 
-        RENDER_FUNC( &MEMORY, &RENDER_BUFFER, &USER_INPUT, &INFO );
+        state->dt = DELTA_TIME_S;
+        RENDER_FUNC( &MEMORY, &RENDER_BUFFER, &USER_INPUT );
 
         @autoreleasepool {
             NSBitmapImageRep* bitmap = [[[NSBitmapImageRep alloc] initWithBitmapDataPlanes: &RENDER_BUFFER.buffer
@@ -247,17 +255,13 @@ int main()
             NSImage* image = [[[NSImage alloc] initWithSize: imageSize] autorelease];
             [image addRepresentation: bitmap];                                           ;
 
-            window.contentView.layer.contents = image;
+            WINDOW.contentView.layer.contents = image;
         }
 
         u64 endRender    = mach_absolute_time();
         f64 renderTimeNs = (f64)( endRender - last)  * ticksToNanoSeconds;
-        INFO.deltaTimeS  = (f32)( renderTimeNs / (1000*1000*1000) );
-
-        if( INFO.debugMode )
-        {
-            printf( "frame time [ms]: %f\n", (renderTimeNs / (1000 * 1000)));
-        }        
+        DELTA_TIME_S     = (f32)( renderTimeNs / (1000*1000*1000) );
+        //INFO.deltaTimeS  = (f32)( renderTimeNs / (1000*1000*1000) );
 
         last = endRender;
     }
@@ -339,5 +343,19 @@ extern "C" {
         free(info.buffer);
 
         return mp3;
+    }
+
+    void ToggleFullScreen( bool fullscreen )
+    {
+        if( fullscreen )
+        {
+            [WINDOW setFrame:NSScreen.mainScreen.visibleFrame display: true animate: true];
+        }
+        else
+        {
+            [WINDOW setFrame:WINDOW_RECT display: true animate: true];   
+        }
+        
+        Print( "toggle fullscreen\n" );
     }
 }

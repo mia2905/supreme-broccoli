@@ -20,6 +20,7 @@
 }
 
 - (void)play: (ApplicationMemory*)memory;
+- (void)stop;
 
 @end
 
@@ -100,6 +101,11 @@
         // something went wrong while starting the engine
         NSLog( @"Couldn't start the audio" );
     }
+}
+
+- (void)stop
+{
+    [m_audioEngine stop];
 }
 
 @end

@@ -54,6 +54,7 @@ struct UserInput
     KeyPress arrowRight;
     KeyPress esc;
     KeyPress space;
+    KeyPress command;
 };
 
 struct ApplicationMemory
@@ -62,13 +63,6 @@ struct ApplicationMemory
 
     u64   permanentMemorySize; // in bytes
     void* permanentMemory;
-};
-
-struct PlatformInfo
-{
-    f32  deltaTimeS;
-    bool debugMode;
-    bool reload;
 };
 
 struct Pixel
@@ -113,15 +107,17 @@ struct Mp3;
  ******************************************************/
 struct PlatformServices
 {
-    Image* (*loadImage) (MemoryPool*, const char*); // image loading service
-    File*  (*loadFile)  (MemoryPool*, const char*); // file loading service
-    Mp3*   (*loadMp3)   (MemoryPool*, const char*); // mp3 loading service
+    Image* (*loadImage)        (MemoryPool*, const char*); // image loading service
+    File*  (*loadFile)         (MemoryPool*, const char*); // file loading service
+    Mp3*   (*loadMp3)          (MemoryPool*, const char*); // mp3 loading service
+    void   (*toggleFullScreen) (bool);                     // toggle between window and fullscreen mode  
 };
 
 extern "C" {
     Image* LoadImage( MemoryPool* pool, const char* filename );
     File*  LoadFile(  MemoryPool* pool, const char* filename );
     Mp3*   LoadMp3(   MemoryPool* pool, const char* filename );
+    void   ToggleFullScreen( bool fullscreen );
 }
 
 /******************************************************
@@ -130,8 +126,7 @@ extern "C" {
 extern "C" {
     void UpdateAndRender( ApplicationMemory* memory, 
                           RenderBuffer*      buffer, 
-                          UserInput*         input,
-                          PlatformInfo*      info );
+                          UserInput*         input );
 
     void RenderAudio(     ApplicationMemory* memory,
                           SoundBuffer*       buffer );                    
@@ -146,6 +141,8 @@ struct ApplicationState
     File*             backgroundMp3;
     Mp3*              mp3Samples;
     bool              loading;
+    bool              fullscreen;
+    f32               dt;
 };
 
 #endif//SB_APPLICATION_H

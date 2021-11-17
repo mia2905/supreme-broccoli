@@ -405,10 +405,18 @@ void updatePlayer( UserInput* input, Player* player, TileMap* tilemap, f32 dt )
     collisionDetection( player, tilemap, direction, acceleration, dt );
 }
 
+void processInput( UserInput* input, ApplicationState* state )
+{
+    if( input->command.isDown )
+    {
+        state->fullscreen = !state->fullscreen;
+        state->services.toggleFullScreen(state->fullscreen);
+    }
+}
+
 void UpdateAndRender( ApplicationMemory* memory, 
                       RenderBuffer*      buffer,  
-                      UserInput*         input,
-                      PlatformInfo*      info )
+                      UserInput*         input )
 {
     /**
         ++ ApplicationState ++
@@ -427,18 +435,14 @@ void UpdateAndRender( ApplicationMemory* memory,
     TileMap*          tilemap     = state->tilemap;
     Player*           player      = state->player;
 
-    // check if the ESC key was pressed
-    if( input->esc.isDown )
-    {
-        info->reload = true;
-    }
+    processInput( input, state );
 
     // reentrant guard
     if( state->loading )
         return;
 
     // NOTE: this part of the code is NOT reentrant!!!!
-    if( !memory->isInitialized || info->reload )
+    if( !memory->isInitialized )
     {
         state->loading = true;
         initMath();
@@ -500,12 +504,12 @@ void UpdateAndRender( ApplicationMemory* memory,
         player->velocityVector  = vec2(0.0f, 0.0f);
         player->color           = playerColor;
 
-        info->debugMode       = false; // set this to true to get platform debug info printed to stdout
         memory->isInitialized = true;
         state->loading        = false;
+        state->fullscreen     = false;
     }
 
-    updatePlayer( input, player, tilemap, info->deltaTimeS );
+    updatePlayer( input, player, tilemap, state->dt );
 
     drawBackground( buffer );
     drawWorld( buffer, tilemap, player );
