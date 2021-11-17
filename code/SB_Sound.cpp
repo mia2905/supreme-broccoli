@@ -5,7 +5,7 @@ void RenderAudio( ApplicationMemory* memory,
 {
     ApplicationState* state = (ApplicationState*)memory->permanentMemory;
   
-    if( !memory->isInitialized || state->mp3Samples == nullptr )         
+    if( !memory->isInitialized || state->mp3Samples == NULL )         
     {
         return;
     }

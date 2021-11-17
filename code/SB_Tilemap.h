@@ -2,6 +2,7 @@
 #define SB_TILEMAP_H
 
 #include "SB_Application.h"
+#include "SB_Math.h"
 
 #define NR_OF_TILEAREAS     100
 #define TILEAREA_SHIFT      8
