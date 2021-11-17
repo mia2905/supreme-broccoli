@@ -8,4 +8,4 @@ NORMAL='\033[0m'
 ./supreme-broccoli &
 
 # watch the code folder for changes and trigger the dylib build in case the code changes
-fswatch ./code/SB_Application.cpp | xargs -n1 -I{} ./build_macos_application.sh
+fswatch ./code | xargs -n1 -I{} ./build_macos_application.sh

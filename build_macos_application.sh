@@ -4,21 +4,27 @@ RED='\033[0;31m'
 GREEN='\033[0;32m'
 NORMAL='\033[0m'
 
+APP_NAME='supreme-broccoli'
+PLATFORM_NAME='Mac OS'
+APPLICATION_CODE='./code'
+CFLAGS='--debug -std=c++11 -ffast-math -lc++'
+TIMEFORMAT=%R
+
 main () {
     echo ""
     echo "---------------------------------"
-    echo "    SUPREME BROCCOLI - APP"
+    echo "    SUPREME BROCCOLI - ${PLATFORM_NAME}"
     echo "---------------------------------"
     echo "-> CLEAN"
 
-    rm -rf supreme-broccoli.dylib
+    rm -rf ${APP_NAME}.dylib
 
-    clang -dynamiclib -o supreme-broccoli.dylib code/SB_Application.cpp --debug -std=c++11 -ffast-math -lc++
+    clang -dynamiclib -o ${APP_NAME}.dylib code/SB_Application.cpp ${CFLAGS}
     
-    if [ -e supreme-broccoli.dylib ]
+    if [ -e ${APP_NAME}.dylib ]
     then
         echo "-> BUILD APP: ${GREEN}SUCCESS${NORMAL}"
-        sizeInKB=$(du -k supreme-broccoli.dylib | cut -f -1)
+        sizeInKB=$(du -k ${APP_NAME}.dylib | cut -f -1)
         echo "-> FILE SIZE: " $sizeInKB kB
     else
         echo "-> BUILD APP: ${RED}FAILED${NORMAL}"
