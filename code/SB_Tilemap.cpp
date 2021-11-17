@@ -1,6 +1,5 @@
-#include "SB_Application.h"
+
 #include "SB_Tilemap.h"
-#include "SB_Intrinsics.h"
 
 TileArea* getTileArea( TileMap* tilemap, s32 x, s32 y )
 {

@@ -1,4 +1,6 @@
 #include "../code/SB_Application.h"
+#include "../code/SB_Sound.h"
+#include "../code/SB_Memory.cpp"
 
 #include <AppKit/AppKit.h>
 #include <mach/mach_time.h>
@@ -9,12 +11,11 @@
 #define STBI_ONLY_PNG
 #include "../tools/stb_image.h"
 
-// platform code
-#include "SB_Input.mm"
+#define MINIMP3_IMPLEMENTATION
+#define MINIMP3_FLOAT_OUTPUT
+#define MINIMP3_ONLY_MP3
 
-extern "C" {
-    Image* LoadImage( MemoryPool* pool, const char* filename );
-}
+#include "../tools/minimp3_ex.h"
 
 static bool              RUNNING       = false;
 static ApplicationMemory MEMORY        = {0};
@@ -23,15 +24,27 @@ static UserInput         USER_INPUT    = {0};
 static PlatformInfo      INFO          = {0};
 
 typedef void UPDATE_AND_RENDER( ApplicationMemory* memory, RenderBuffer* buffer, UserInput* input, PlatformInfo* info );
+typedef void RENDER_AUDIO( ApplicationMemory* memory, SoundBuffer* buffer );
 
 static NSError*           ERROR         = nil;
 static void*              APPLICATION   = nullptr;
 static UPDATE_AND_RENDER* RENDER_FUNC   = nullptr;
+static RENDER_AUDIO*      AUDIO_FUNC    = nullptr;
+
+// platform code
+#include "SB_Input.mm"
+#include "SB_Audio.mm"
 
 void UpdateAndRenderStub( ApplicationMemory* memory, 
                           RenderBuffer*      buffer, 
                           UserInput*         input,
                           PlatformInfo*      info )
+{
+    // no op
+}
+
+void RenderAudioStub( ApplicationMemory* memory,
+                      SoundBuffer*       buffer )
 {
     // no op
 }
@@ -112,6 +125,7 @@ void loadApplication()
 
         APPLICATION = dlopen( "supreme-broccoli-temp.dylib", RTLD_LAZY );
         RENDER_FUNC = (UPDATE_AND_RENDER*)dlsym( APPLICATION, "UpdateAndRender" );
+        AUDIO_FUNC  = (RENDER_AUDIO*)dlsym( APPLICATION, "RenderAudio" );
     }     
     else
     {
@@ -136,6 +150,9 @@ int main()
     // init an error object 
     ERROR = [NSError errorWithDomain:@"APPLICATION" code:200 userInfo:nil];
     loadApplication();
+
+    // init audio output (2 channel stereo - float samples)
+    Audio* audio = [[Audio alloc] init];
 
     WindowDelegate* windowDelegate = [[WindowDelegate alloc] init];
     NSRect          rect           = NSMakeRect( 0, 0, WINDOW_WIDTH, WINDOW_HEIGHT );
@@ -172,16 +189,16 @@ int main()
     MEMORY.permanentMemorySize = MegaBytes(1024);
     MEMORY.permanentMemory = calloc( 1, MEMORY.permanentMemorySize );
 
-    MEMORY.transientMemorySize = MegaBytes(1024);
-    MEMORY.transientMemory = calloc( 1, MEMORY.transientMemorySize );
-
-    if( MEMORY.permanentMemory != nullptr && 
-        MEMORY.transientMemory != nullptr )
+    if( MEMORY.permanentMemory != nullptr )
     {
         RUNNING = true;
         ApplicationState* state   = (ApplicationState*)MEMORY.permanentMemory;
         state->services.loadImage = &LoadImage;
+        state->services.loadFile  = &LoadFile;
+        state->services.loadMp3   = &LoadMp3;
     }
+
+    [audio play: &MEMORY];
 
     while( RUNNING )
     {
@@ -276,5 +293,51 @@ extern "C" {
         }
 
         return image;
+    }
+
+    File* LoadFile( MemoryPool* pool, const char* filename )
+    {
+        File* file = nullptr;
+
+        FILE* f = fopen( filename, "r" );
+        if( f != nullptr )
+        {
+            file = PushStruct( pool, File );
+
+            fseek( f, 0, SEEK_END );
+            u32 numBytes = (u32)ftell( f );
+            fseek( f, 0, SEEK_SET );
+
+            file->data = PushBytes( pool, numBytes );
+            file->size = numBytes;
+
+            fread( file->data, numBytes, 1, f );
+            fclose( f );
+        }
+
+        return file;
+    }
+
+    Mp3* LoadMp3( MemoryPool* pool, const char* filename )
+    {
+        File* f = LoadFile( pool, filename );
+
+        mp3dec_t mp3Internal;
+        mp3dec_file_info_t info;
+
+        if( mp3dec_load_buf( &mp3Internal, f->data, f->size, &info, NULL, NULL ) )
+        {
+            PrintError( "ERROR: MP3 DECODING FAILED" );
+        }
+
+        Mp3* mp3 = PushStruct( pool, Mp3 );
+        mp3->numberOfSamples = info.samples;
+        mp3->samples         = (f32*)PushBytes( pool, info.samples * sizeof(f32) );
+        mp3->streamPosition  = 0;
+
+        memcpy( mp3->samples, info.buffer, info.samples * sizeof(f32) );
+        free(info.buffer);
+
+        return mp3;
     }
 }

@@ -3,8 +3,12 @@
 
 #include "SB_Application.h"
 
-#define TILEAREA_SHIFT 8
-#define TILE_MASK      0x000000ff
+#define NR_OF_TILEAREAS     100
+#define TILEAREA_SHIFT      8
+#define TILE_MASK           0x000000ff
+#define TILE_SIZE           40
+#define TILES_PER_AREA_Y    WINDOW_HEIGHT / TILE_SIZE
+#define TILES_PER_AREA_X    WINDOW_WIDTH  / TILE_SIZE
 
 struct GeneralizedPosition
 {
@@ -65,9 +69,19 @@ struct TileMap
     f32 metersToPixels;
 
     TileArea* tileAreas;
-    Image*    brickImage;
 };
 
-DecomposedPosition decomposePosition( GeneralizedPosition p );
+TileArea*           getTileArea( TileMap* tilemap, s32 x, s32 y );
+u32                 getTileValue( TileMap* tilemap, TileArea* area, u32 tileX, u32 tileY );
+
+DecomposedPosition  decomposePosition( GeneralizedPosition p );
+GeneralizedPosition composePosition( DecomposedPosition pos );
+GeneralizedPosition buildNewPosition( DecomposedPosition old, v2 movement, TileMap* tilemap );
+
+s32 buildNewTileCoord( s32 tile, s32 tileCount );
+s32 generalizeTileIndex( s32* tileIndex, s32 tileCount );
+
+TileArea* buildTileArea( MemoryPool* pool, TileMap* map, u32 areaX, u32 areaY );
+
 
 #endif//SB_TILEMAP_H

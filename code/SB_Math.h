@@ -6,6 +6,7 @@
 
 #define PI 3.14159265359
 #define PI_2 PI/2
+#define PI2  PI * 2.0
 
 union v2
 {
@@ -19,7 +20,7 @@ union v2
     void normalize();
 };
 
-v2 V2( f32 x, f32 y )
+v2 vec2( f32 x, f32 y )
 {
     v2 result;
     result.x = x;
