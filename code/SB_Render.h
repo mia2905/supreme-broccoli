@@ -2,6 +2,7 @@
 #define SB_RENDER_H
 
 #include "SB_Application.h"
+#include "SB_Math.h"
 
 struct Pixel
 {
@@ -18,5 +19,8 @@ struct Color
     f32 blue;
     f32 alpha;
 };
+
+void drawRectangle( RenderBuffer* buffer, v2 min, v2 max, Color c );
+void drawImage( RenderBuffer* buffer, v2 position, Image* img );
 
 #endif//SB_RENDER_H

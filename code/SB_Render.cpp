@@ -1,5 +1,4 @@
 #include "SB_Render.h"
-#include "SB_Math.h"
 
 void drawRectangle( RenderBuffer* buffer, v2 min, v2 max, Color c )
 {
@@ -25,14 +24,20 @@ void drawRectangle( RenderBuffer* buffer, v2 min, v2 max, Color c )
     for( u32 row=ymin; row<ymax; ++row )
     {
         u8* base = buffer->buffer + (u32)((row * buffer->width + xmin) * sizeof(Pixel));
-        Pixel* p = (Pixel*)base;
+        
+        Pixel* dest = (Pixel*)base;
         for( u32 col=xmin; col<xmax; ++col )
         {
-            p->red   = (u8)(c.red   * 255);
-            p->green = (u8)(c.green * 255);
-            p->blue  = (u8)(c.blue  * 255);
-            p->alpha = (u8)(c.alpha * 255);
-            ++p;
+            f32 destRed   = (f32)dest->red   / 255.0f;
+            f32 destGreen = (f32)dest->green / 255.0f;
+            f32 destBlue  = (f32)dest->blue  / 255.0f;
+            f32 destAlpha = (f32)dest->alpha / 255.0f;
+
+            dest->red   = (u8)((c.red   * c.alpha + destRed   * (1.0f - c.alpha)) * 255.0f);;
+            dest->green = (u8)((c.green * c.alpha + destGreen * (1.0f - c.alpha)) * 255.0f);
+            dest->blue  = (u8)((c.blue  * c.alpha + destBlue  * (1.0f - c.alpha)) * 255.0f);
+            dest->alpha = (u8)((c.alpha * c.alpha + destAlpha * (1.0f - c.alpha)) * 255.0f);
+            ++dest;
         }
     }
 }
