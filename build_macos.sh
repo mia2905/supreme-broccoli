@@ -56,7 +56,7 @@ main () {
     rm -rf ${APP_NAME}.dylib
     rm -rf ${APP_NAME}-temp.dylib
     rm -rf ${APP_NAME}
-    rm -rf ${APP_NAME}.dyib.dSYM
+    rm -rf ${APP_NAME}.dylib.dSYM
     rm -rf ${APP_NAME}.dSYM
 
     time platform
