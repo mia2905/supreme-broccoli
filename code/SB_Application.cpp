@@ -5,13 +5,13 @@
 #include "SB_Memory.cpp"
 #include "SB_Tilemap.cpp"
 #include "SB_Sound.cpp"
+#include "SB_Entity.cpp"
 
 struct Player
 {
     GeneralizedPosition playerPos;
     v2     size;
     v2     velocityVector;
-    f32    acceleration; // meters per second squared -> m/s^2
     Color  color;
     Image* playerImg;
 };
@@ -283,7 +283,7 @@ void collisionDetection( Player*  player,
 void updatePlayer( UserInput* input, Player* player, TileMap* tilemap, f32 dt )
 {
     v2 playerRelativePosition = player->playerPos.tileRelative;
-    f32 acceleration          = input->space.isDown ? 3.0f * player->acceleration : player->acceleration;
+    f32 acceleration          = input->space.isDown ? 3.0f * 50.0f : 50.0f;
     v2 direction              = vec2(0.0f, 0.0f);
     
     if( input->arrowUp.isDown )    
@@ -355,9 +355,9 @@ void UpdateAndRender( ApplicationMemory* memory,
          *  
          *  MEMORY LAYOUT
          *  
-         *  ApplicationState
-         *  MemoryPool
-         *  Memory of MemoryPool
+         *  struct ApplicationState
+         *  struct MemoryPool
+         *  backing store of the MemoryPool
          * 
          *********************/ 
 
@@ -403,7 +403,6 @@ void UpdateAndRender( ApplicationMemory* memory,
         player->playerPos       = composePosition( startposition );
         player->size.x          = 0.9f * tilemap->tileInMeters;
         player->size.y          = 0.9f * tilemap->tileInMeters;
-        player->acceleration    = 50.0f; // in meters per second squared -> m/s^2
         player->velocityVector  = vec2(0.0f, 0.0f);
         player->color           = playerColor;
 
