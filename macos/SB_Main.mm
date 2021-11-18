@@ -249,6 +249,9 @@ int main()
             
             state->loading       = false;
             MEMORY.isInitialized = false;
+
+            // restart the audio
+            [audio play: &MEMORY];
         }
 
         NSEvent* event = nil;        
