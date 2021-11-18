@@ -70,7 +70,7 @@ void drawPlayer( RenderBuffer* buffer, Player* player, TileMap* tilemap )
     f32 tileY = pos.tileY * tilemap->tileInMeters;
     f32 tileX = pos.tileX * tilemap->tileInMeters;
 
-    Color tilecolor = { 75.0f/255.0f, 75.0f/255.0f, 75.0f/255.0f, 1.0f };
+    Color tilecolor = { 75.0f/255.0f, 75.0f/255.0f, 75.0f/255.0f, 0.9f };
 
     f32 tileMinx = tilemap->metersToPixels * tileX;
     f32 tileMaxx = tilemap->metersToPixels * (tileX + tilemap->tileInMeters);
@@ -89,7 +89,7 @@ void drawPlayer( RenderBuffer* buffer, Player* player, TileMap* tilemap )
 
 void drawTileArea( RenderBuffer* buffer, TileMap* tilemap, TileArea* area )
 {
-    Color tilecolor = { 53.0f/255.0f, 51.0f/255.0f, 47.0f/255.0f, 1.0f };
+    Color tilecolor = { 53.0f/255.0f, 51.0f/255.0f, 47.0f/255.0f, 0.8f };
 
     u32 tileWidth   = tilemap->tileInMeters * tilemap->metersToPixels;
     u32 tileHeight  = tilemap->tileInMeters * tilemap->metersToPixels;
@@ -391,7 +391,7 @@ void UpdateAndRender( ApplicationMemory* memory,
         player->playerImg        = state->services.loadImage( appMemory, playerfile );
         state->mp3Samples        = state->services.loadMp3( appMemory, mp3File );
         
-        Color playerColor = { 1.0f, 162.0f/255.0f, 0.0f, 1.0f };
+        Color playerColor = { 1.0f, 162.0f/255.0f, 0.0f, 0.7f };
 
         DecomposedPosition startposition = {0};
         startposition.tileareaX = 0;
