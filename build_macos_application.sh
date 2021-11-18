@@ -18,8 +18,7 @@ main () {
     echo "-> CLEAN"
 
     rm -rf ${APP_NAME}.dylib
-    rm -rf ${APP_NAME}-temp.dylib
-
+    
     clang -dynamiclib -o ${APP_NAME}.dylib code/SB_Application.cpp ${CFLAGS}
     
     CODE_SIZE=$(cloc ${APPLICATION_CODE} | grep -o -E '([0-9]+)' | tail -1)

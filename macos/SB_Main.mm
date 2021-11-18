@@ -6,6 +6,7 @@
 #include <mach/mach_time.h>
 #include <stdio.h>
 #include <dlfcn.h>
+#include <sys/stat.h>
 
 #define STB_IMAGE_IMPLEMENTATION
 #define STBI_ONLY_PNG
@@ -33,6 +34,8 @@ static f32                DELTA_TIME_S  = 0.0f;
 static UPDATE_AND_RENDER* RENDER_FUNC   = nullptr;
 static RENDER_AUDIO*      AUDIO_FUNC    = nullptr;
 
+static time_t applicationBuildTime;
+
 // platform code
 #include "SB_Input.mm"
 #include "SB_Audio.mm"
@@ -48,6 +51,24 @@ void RenderAudioStub( ApplicationMemory* memory,
                       SoundBuffer*       buffer )
 {
     // no op
+}
+
+bool isReloadNeccessary()
+{
+    const char* applicationPath = "supreme-broccoli.dylib";
+
+    struct stat file_stat;
+    stat( applicationPath, &file_stat );
+
+    if( applicationBuildTime < file_stat.st_mtime)
+    {
+        applicationBuildTime = file_stat.st_mtime;
+        return true;
+    }
+    else
+    {
+        return false;
+    }
 }
 
 @interface WindowDelegate : NSObject <NSWindowDelegate>
@@ -107,6 +128,10 @@ CVReturn update( CVDisplayLinkRef   displayLink,
 
 void loadApplication()
 {
+    struct stat applicationStat;
+    stat( "supreme-broccoli.dylib", &applicationStat );
+    applicationBuildTime = applicationStat.st_mtime;
+
     NSFileManager* fileManager = [NSFileManager defaultManager];
 
     BOOL exists = [fileManager fileExistsAtPath:@"supreme-broccoli.dylib"];
@@ -132,6 +157,7 @@ void loadApplication()
     {
         Print( "APPLICATION MISSING\n" );
         RENDER_FUNC = &UpdateAndRenderStub;
+        AUDIO_FUNC  = &RenderAudioStub;
     }                    
 }
 
@@ -210,15 +236,20 @@ int main()
         // this get signaled from the display link with 60FPS
         [windowDelegate->m_mainLoop wait];
 
-        // reload the dylib every second
-        /*
-        if( ... )
+        if( isReloadNeccessary() )
         {
+            // stop update and render
+            state->loading = true;
+
+            // stop audio playback
+            [audio stop];
+            
             unloadApplication();
             loadApplication();
-            INFO.reload = false;
+            
+            state->loading       = false;
+            MEMORY.isInitialized = false;
         }
-        */        
 
         NSEvent* event = nil;        
         do 
