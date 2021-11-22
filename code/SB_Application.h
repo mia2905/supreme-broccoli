@@ -68,6 +68,7 @@ struct RenderBuffer
     u32 width;
     u32 height;
     u32 pitch;
+    f32 metersToPixels;
     u8* buffer;
 };
 
@@ -116,12 +117,15 @@ extern "C" {
                           SoundBuffer*       buffer );                    
 }
 
+#include "SB_Entity.h"
+
 struct ApplicationState
 {
     MemoryPool*       appMemory;
     PlatformServices  services;
     TileMap*          tilemap;
-    Player*           player;
+    live_entities     liveEntities;
+    offline_entities  offlineEntities;
     File*             backgroundMp3;
     Mp3*              mp3Samples;
     bool              loading;

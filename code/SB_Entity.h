@@ -4,6 +4,8 @@
 #include "SB_Application.h"
 #include "SB_Math.h"
 
+#define MAX_ENTITIES 1000
+
 enum entity_type
 {
     PLAYER,
@@ -16,10 +18,23 @@ struct entity
 {
     v2          size;
     v2          velocity;
-    v2          position; // center point
+    v2          position; // center point relative to the bottom left corner of the screen
     entity_type type;
 };
 
+struct live_entities
+{
+    entity* entities[MAX_ENTITIES];
+    u32     numberOfEntities;
+};
+
+struct offline_entities
+{
+    entity* entities[MAX_ENTITIES];
+    u32     numberOfEntities;
+};
+
+void drawEntities( RenderBuffer* buffer, live_entities* entities );
 void drawEntity( RenderBuffer* buffer, entity* e );
 
 #endif//SB_ENTITY_H

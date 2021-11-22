@@ -67,7 +67,6 @@ struct TileMap
 
     u32 tileInPixels;
     f32 tileInMeters;
-    f32 metersToPixels;
 
     TileArea* tileAreas;
 };

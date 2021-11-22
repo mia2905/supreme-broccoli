@@ -2,13 +2,15 @@
 
 void drawRectangle( RenderBuffer* buffer, v2 min, v2 max, Color c )
 {
+    /* the incoming coords have the origin at the bottom left corner !! */
+
     u32 screenWidth  = buffer->width;
     u32 screenHeight = buffer->height;
 
     s32 xmin = roundToS32( min.x );
-    s32 ymin = roundToS32( min.y );
+    s32 ymin = buffer->height - roundToS32( min.y );
     s32 xmax = roundToS32( max.x );
-    s32 ymax = roundToS32( max.y );
+    s32 ymax = buffer->height - roundToS32( max.y );
 
     if( xmin < 0 ) xmin = 0;
     if( xmax < 0 ) xmax = 0;
@@ -21,7 +23,7 @@ void drawRectangle( RenderBuffer* buffer, v2 min, v2 max, Color c )
     if( ymax >= screenHeight ) ymax = screenHeight;
 
     // the start of the rectangle is the pixel at minX / minY
-    for( u32 row=ymin; row<ymax; ++row )
+    for( u32 row=ymax; row<ymin; ++row )
     {
         u8* base = buffer->buffer + (u32)((row * buffer->width + xmin) * sizeof(Pixel));
         
