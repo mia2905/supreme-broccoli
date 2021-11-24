@@ -291,40 +291,22 @@ void updateEntities( UserInput* input, live_entities* entities, TileMap* tilemap
     }
 }
 
-void updatePlayer( UserInput* input, Player* player, TileMap* tilemap, f32 dt )
-{
-    v2 playerRelativePosition; // = player->playerPos.tileRelative;
-    f32 acceleration          = input->space.isDown ? 3.0f * 50.0f : 50.0f;
-    v2 direction              = vec2(0.0f, 0.0f);
-    
-    if( input->arrowUp.isDown )    
-    {
-        direction.y = 1.0f;
-    }
-    if( input->arrowDown.isDown )  
-    {
-        direction.y = -1.0f;
-    }
-    if( input->arrowRight.isDown ) 
-    {
-        direction.x = 1.0f;
-    }
-    if( input->arrowLeft.isDown )  
-    {
-        direction.x = -1.0f;
-    }
-
-    direction.normalize();
-
-    //collisionDetection( player, tilemap, direction, acceleration, dt );
-}
-
 void processInput( UserInput* input, ApplicationState* state )
 {
-    if( input->command.isDown )
+    if( input->key_f.isDown )
     {
         state->fullscreen = !state->fullscreen;
         state->services.toggleFullScreen(state->fullscreen);
+    }
+
+    if( input->key_p.isDown )
+    {
+        state->services.playAudio();
+    }
+
+    if( input->key_s.isDown )
+    {
+        state->services.stopAudio();
     }
 }
 

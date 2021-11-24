@@ -46,7 +46,9 @@ struct UserInput
     KeyPress arrowRight;
     KeyPress esc;
     KeyPress space;
-    KeyPress command;
+    KeyPress key_f;
+    KeyPress key_p;
+    KeyPress key_s;
 };
 
 struct ApplicationMemory
@@ -96,6 +98,8 @@ struct PlatformServices
     File*  (*loadFile)         (MemoryPool*, const char*); // file loading service
     Mp3*   (*loadMp3)          (MemoryPool*, const char*); // mp3 loading service
     void   (*toggleFullScreen) (bool);                     // toggle between window and fullscreen mode  
+    void   (*playAudio)        ();
+    void   (*stopAudio)        ();
 };
 
 extern "C" {
@@ -103,6 +107,8 @@ extern "C" {
     File*  LoadFile(  MemoryPool* pool, const char* filename );
     Mp3*   LoadMp3(   MemoryPool* pool, const char* filename );
     void   ToggleFullScreen( bool fullscreen );
+    void   PlayAudio();
+    void   StopAudio();
 }
 
 /******************************************************

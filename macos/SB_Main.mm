@@ -23,6 +23,7 @@ static ApplicationMemory MEMORY        = {0};
 static RenderBuffer      RENDER_BUFFER = {0};
 static UserInput         USER_INPUT    = {0};
 
+
 typedef void UPDATE_AND_RENDER( ApplicationMemory* memory, RenderBuffer* buffer, UserInput* input );
 typedef void RENDER_AUDIO( ApplicationMemory* memory, SoundBuffer* buffer );
 
@@ -39,6 +40,7 @@ static time_t applicationBuildTime;
 // platform code
 #include "SB_Input.mm"
 #include "SB_Audio.mm"
+static Audio*              AUDIO         = nullptr;
 
 void UpdateAndRenderStub( ApplicationMemory* memory, 
                           RenderBuffer*      buffer, 
@@ -179,7 +181,7 @@ int main()
     loadApplication();
 
     // init audio output (2 channel stereo - float samples)
-    Audio* audio = [[Audio alloc] init];
+    AUDIO = [[Audio alloc] init];
 
     WindowDelegate* windowDelegate = [[WindowDelegate alloc] init];
     NSRect          rect           = NSMakeRect( 0, 0, WINDOW_WIDTH, WINDOW_HEIGHT );
@@ -227,9 +229,9 @@ int main()
         state->services.loadFile         = &LoadFile;
         state->services.loadMp3          = &LoadMp3;
         state->services.toggleFullScreen = &ToggleFullScreen;
+        state->services.playAudio        = &PlayAudio;
+        state->services.stopAudio        = &StopAudio;
     }
-
-    [audio play: &MEMORY];
 
     while( RUNNING )
     {
@@ -242,16 +244,13 @@ int main()
             state->loading = true;
 
             // stop audio playback
-            [audio stop];
+            [AUDIO stop];
             
             unloadApplication();
             loadApplication();
             
             state->loading       = false;
             MEMORY.isInitialized = false;
-
-            // restart the audio
-            [audio play: &MEMORY];
         }
 
         NSEvent* event = nil;        
@@ -391,5 +390,15 @@ extern "C" {
         }
         
         Print( "toggle fullscreen\n" );
+    }
+
+    void PlayAudio()
+    {
+        [AUDIO play: &MEMORY];
+    }
+
+    void StopAudio()
+    {
+        [AUDIO stop];
     }
 }
