@@ -1,9 +1,18 @@
 #include "SB_Render.h"
 
+/**
+ * SOFTWARE RENDERING
+ * 
+ * The origin of the coordinate system is in the bottom left corner of.
+ * That means all draw calls expect the min coordinate to be the lower
+ * left corner and max to be the upper right.
+ * 
+ * Since the layout of the render buffer does not reflect the same
+ * origin the draw calls draw backwards starting with the maxY row
+ */
+
 void drawRectangle( RenderBuffer* buffer, v2 min, v2 max, Color c )
 {
-    /* the incoming coords have the origin at the bottom left corner !! */
-
     u32 screenWidth  = buffer->width;
     u32 screenHeight = buffer->height;
 
@@ -19,7 +28,7 @@ void drawRectangle( RenderBuffer* buffer, v2 min, v2 max, Color c )
 
     if( ymin < 0 ) ymin = 0;
     if( ymax < 0 ) ymax = 0;
-    if( ymin >= screenHeight ) return; // offscreen
+    if( ymin > screenHeight ) return; // offscreen
     if( ymax >= screenHeight ) ymax = screenHeight;
 
     // the start of the rectangle is the pixel at minX / minY
