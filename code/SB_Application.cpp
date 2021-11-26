@@ -232,10 +232,10 @@ void collisionDetection( entity*  player,
         //player->playerPos = buildNewPosition( oldPosition, movement * t, tilemap );
         
         // update the movement
-        movement = movement - 1*movement.dot(wallNormal)*wallNormal;
+        movement = movement - dot(movement, wallNormal)*wallNormal;
         
         // update the velocity
-        velocity = velocity - 1*velocity.dot(wallNormal)*wallNormal;
+        velocity = velocity - dot(velocity, wallNormal)*wallNormal;
         player->velocity = velocity;
         
         // update time to collision
@@ -287,7 +287,7 @@ void updateEntities( UserInput* input, live_entities* entities, TileMap* tilemap
         direction.x = -1.0f;
     }
 
-    direction.normalize();
+    direction = normalize( direction );
 
     for( u32 i=0; i<entities->numberOfEntities; ++i )
     {
