@@ -79,6 +79,14 @@ v2 operator-( v2 a, v2 b )
     return result;
 }
 
+v2 operator-( v2 a, f32 b )
+{
+    v2 result = a;
+    result.x -= b;
+    result.y -= b;
+    return result;
+}
+
 f32 dot( v2 a, v2 b )
 {
     f32 result;
@@ -138,13 +146,43 @@ void v2::normalize()
     this->y = this->y / magnitude;
 }
 
-struct rect2
+struct rect
 {
     v2 min;
     v2 max;
 };
 
-bool isInsideRect( rect2 rect, v2 value )
+rect squareWithCenter( v2 center, f32 radius)
+{
+    rect result;
+    result.min = center - radius;
+    result.max = center + radius;
+    return result;
+}
+
+rect rectWithCenter( v2 center, v2 size )
+{
+    rect result;
+    result.min.x = center.x - size.x/2.0f;
+    result.min.y = center.y - size.y/2.0f;
+
+    result.max.x = result.min.x + size.x;
+    result.max.y = result.min.y + size.y;
+
+    return result;
+}
+
+rect square2WithCorner( v2 corner, f32 dim )
+{
+    rect result;
+    result.min = corner;
+    result.max = corner + dim;
+    return result;
+}
+
+rect rectWithCorner( v2 corner, v2 size );
+
+bool isInsideRect( rect rect, v2 value )
 {
     if( value.x < rect.min.x ) return false;
     if( value.x > rect.max.x ) return false;
