@@ -123,6 +123,12 @@ u32 getTileValue( TileMap* tilemap, TileArea* area, u32 tileX, u32 tileY )
     return area->tiles[tileY * tilemap->tileCountX + tileX];
 }
 
+GeneralizedPosition updatePosition( GeneralizedPosition p, v2 movement, TileMap* tilemap )
+{
+    DecomposedPosition dp = decomposePosition( p );
+    return buildNewPosition( dp, movement, tilemap );    
+}
+
 /***********************************
  * only called once during startup
  ***********************************/

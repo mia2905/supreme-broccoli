@@ -138,4 +138,20 @@ void v2::normalize()
     this->y = this->y / magnitude;
 }
 
+struct rect2
+{
+    v2 min;
+    v2 max;
+};
+
+bool isInsideRect( rect2 rect, v2 value )
+{
+    if( value.x < rect.min.x ) return false;
+    if( value.x > rect.max.x ) return false;
+    if( value.y < rect.min.y ) return false;
+    if( value.y > rect.max.y ) return false;
+
+    return true;
+}
+
 #endif//SB_MATH_H

@@ -2,6 +2,7 @@
 #define SB_ENTITY_H
 
 #include "SB_Application.h"
+#include "SB_Tilemap.h"
 #include "SB_Math.h"
 
 #define MAX_ENTITIES 1000
@@ -19,6 +20,9 @@ struct entity
     v2          size;
     v2          velocity;
     v2          position; // center point relative to the bottom left corner of the screen
+
+    GeneralizedPosition g_position;
+
     entity_type type;
 };
 

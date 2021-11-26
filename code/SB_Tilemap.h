@@ -76,6 +76,7 @@ u32                 getTileValue( TileMap* tilemap, TileArea* area, u32 tileX, u
 
 DecomposedPosition  decomposePosition( GeneralizedPosition p );
 GeneralizedPosition composePosition( DecomposedPosition pos );
+GeneralizedPosition updatePosition( GeneralizedPosition p, v2 movement, TileMap* tilemap );
 GeneralizedPosition buildNewPosition( DecomposedPosition old, v2 movement, TileMap* tilemap );
 
 s32 buildNewTileCoord( s32 tile, s32 tileCount );

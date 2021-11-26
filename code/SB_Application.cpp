@@ -67,14 +67,20 @@ void drawTileArea( RenderBuffer* buffer, TileMap* tilemap, TileArea* area )
             u32 tile = area->tiles[row * tilemap->tileCountX + col];
             if( tile == 1 )
             {
-                u32 minX = col * tileWidth;
-                u32 maxX = minX + tileWidth;
+                u32 minX = ( col  * tileWidth );
+                u32 maxX = ( minX + tileWidth );
 
-                u32 minY = buffer->height - (row * tileHeight);
-                u32 maxY = minY - tileHeight;
+                // leave a small space between tiles
+                minX += 1;
+                maxX -= 1;
 
-                //drawImage( buffer, V2(minX, maxY), tilemap->brickImage );
-                drawRectangle( buffer, vec2(minX, maxY), vec2(maxX, minY), tilecolor );
+                u32 minY = row * tileHeight;
+                u32 maxY = minY + tileHeight;
+
+                minY += 1;
+                maxY -= 1;
+
+                drawRectangle( buffer, vec2(minX, minY), vec2(maxX, maxY), tilecolor );
             }
         }
     }
@@ -246,19 +252,17 @@ void updateEntity( UserInput* input,
                    f32        acceleration,
                    v2         direction )
 {
-    if( entity->type == PLAYER )
-    {
-        v2 accelerationVector    = direction * acceleration - (4.0f * entity->velocity);
-        v2 velocity              = ((2.0f * accelerationVector) * dt) + entity->velocity;
-        entity->velocity         = velocity;
-    
-        // equations of motion:
-        // p' = 1/2at^2 + vt + p -> acceleration based position
-        // v' = 2at + v          -> acceleration based velocity ( 1st derivative of the position  )
-        // a' = a                -> acceleration                ( 2nd derivative of the velocity )
-        v2 movement = ((0.5f * accelerationVector) * square( dt )) + (velocity * dt);
-        entity->position = entity->position + movement;
-    }
+    v2 accelerationVector    = direction * acceleration - (4.0f * entity->velocity);
+    v2 velocity              = ((2.0f * accelerationVector) * dt) + entity->velocity;
+    entity->velocity         = velocity;
+
+    // equations of motion:
+    // p' = 1/2at^2 + vt + p -> acceleration based position
+    // v' = 2at + v          -> acceleration based velocity ( 1st derivative of the position  )
+    // a' = a                -> acceleration                ( 2nd derivative of the velocity )
+    v2 movement = ((0.5f * accelerationVector) * square( dt )) + (velocity * dt);
+    entity->position   = entity->position + movement;
+    entity->g_position = updatePosition( entity->g_position, movement, tilemap );
 }
 
 void updateEntities( UserInput* input, live_entities* entities, TileMap* tilemap, f32 dt )
