@@ -365,6 +365,9 @@ void UpdateAndRender( ApplicationMemory* memory,
 
         appMemory = state->appMemory;
 
+        // create the camera
+        state->camera                      = PushStruct( appMemory, Camera );
+
         // create the tilemap in permanent memory
         state->tilemap                     = PushStruct( appMemory, TileMap );
         state->liveEntities.entities[0]    = PushStruct( appMemory, entity );

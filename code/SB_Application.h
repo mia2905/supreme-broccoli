@@ -86,6 +86,7 @@ struct SoundBuffer;
 struct MemoryPool;
 struct Mp3Buffer;
 struct TileMap;
+struct Camera;
 struct Player;
 struct Mp3;
 
@@ -130,6 +131,7 @@ struct ApplicationState
     MemoryPool*       appMemory;
     PlatformServices  services;
     TileMap*          tilemap;
+    Camera*           camera;
     live_entities     liveEntities;
     offline_entities  offlineEntities;
     File*             backgroundMp3;

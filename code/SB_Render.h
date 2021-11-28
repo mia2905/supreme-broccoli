@@ -4,6 +4,11 @@
 #include "SB_Application.h"
 #include "SB_Math.h"
 
+struct Camera
+{
+    v2 position; // center of the screen
+};
+
 struct Pixel
 {
     u8 red;
