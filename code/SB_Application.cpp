@@ -268,8 +268,27 @@ void updateEntity( UserInput* input,
     entity->g_position = updatePosition( entity->g_position, movement, tilemap );
 }
 
-void updateEntities( UserInput* input, live_entities* entities, TileMap* tilemap, f32 dt )
+void processInput( UserInput* input, ApplicationState* state )
 {
+    if( input->key_f.isDown )
+    {
+        state->fullscreen = !state->fullscreen;
+        state->services.toggleFullScreen(state->fullscreen);
+    }
+
+    if( input->key_p.isDown )
+    {
+        state->services.playAudio();
+    }
+
+    if( input->key_s.isDown )
+    {
+        state->services.stopAudio();
+    }
+
+    live_entities* entities = &state->liveEntities;
+    TileMap*       tilemap  = state->tilemap;
+
     f32 acceleration = input->space.isDown ? 3.0f * 50.0f : 50.0f;
     v2 direction     = vec2(0.0f, 0.0f);
     
@@ -294,26 +313,12 @@ void updateEntities( UserInput* input, live_entities* entities, TileMap* tilemap
 
     for( u32 i=0; i<entities->numberOfEntities; ++i )
     {
-        updateEntity( input, entities->entities[i], tilemap, dt, acceleration, direction );
-    }
-}
-
-void processInput( UserInput* input, ApplicationState* state )
-{
-    if( input->key_f.isDown )
-    {
-        state->fullscreen = !state->fullscreen;
-        state->services.toggleFullScreen(state->fullscreen);
-    }
-
-    if( input->key_p.isDown )
-    {
-        state->services.playAudio();
-    }
-
-    if( input->key_s.isDown )
-    {
-        state->services.stopAudio();
+        updateEntity( input, 
+                      entities->entities[i], 
+                      tilemap, 
+                      state->dt, 
+                      acceleration, 
+                      direction );
     }
 }
 
@@ -338,8 +343,6 @@ void UpdateAndRender( ApplicationMemory* memory,
     TileMap*          tilemap     = state->tilemap;
     entity*           player      = state->liveEntities.entities[0];
     Camera*           camera      = state->camera;
-
-    processInput( input, state );
 
     // reentrant guard
     if( state->loading )
@@ -420,9 +423,8 @@ void UpdateAndRender( ApplicationMemory* memory,
         state->fullscreen     = false;
     }
 
-    updateEntities( input, &state->liveEntities, tilemap, state->dt );
-    //updatePlayer( input, player, tilemap, state->dt );
-
+    processInput( input, state );
+    
     drawBackground( buffer );
     drawWorld( buffer, tilemap, camera );
     drawEntities( buffer, &state->liveEntities );
