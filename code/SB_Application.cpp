@@ -50,7 +50,7 @@ void drawTileArea( RenderBuffer* buffer, TileMap* tilemap, TileArea* area )
 
 void drawWorld( RenderBuffer* buffer, TileMap* world, Camera* camera )
 {
-    DecomposedPosition p = decomposePosition( camera->position );
+    DecomposedPosition p = decomposePosition( camera->tilePosition );
 
     TileArea* area = getTileArea( world, p.tileareaX, p.tileareaY );
     if( area->tiles != nullptr )
@@ -299,14 +299,12 @@ void processInput( UserInput* input, ApplicationState* state )
 
     if( !isInsideRect( screen, player->position ) )
     {
-        DecomposedPosition p = decomposePosition(player->g_position);
-        DecomposedPosition c = decomposePosition(camera->position);
+        DecomposedPosition p = decomposePosition( player->g_position );
         
-        p.tileX = tilemap->tileCountX / 2;
-        p.tileY = tilemap->tileCountY / 2;
-        p.tileRelative = vec2( tilemap->tileInMeters / 2.0f, tilemap->tileInMeters / 2.0f );
+        u32 newTileAreaX = p.tileareaX;
+        u32 newTileAreaY = p.tileareaY;
 
-        camera->position = composePosition( p );
+
     }
 }
 
@@ -378,17 +376,19 @@ void UpdateAndRender( ApplicationMemory* memory,
                                                  NR_OF_TILEAREAS * NR_OF_TILEAREAS,
                                                  TileArea );
 
+        buffer->metersToPixels  = (f32)((f32)state->tilemap->tileInPixels/state->tilemap->tileInMeters);
+
         // create the camera
         state->camera                      = PushStruct( appMemory, Camera );
-        state->camera->position            = buildPosition( (u32)tilemap->tileCountX / 2,
+        state->camera->tilePosition        = buildPosition( (u32)tilemap->tileCountX / 2,
                                                             (u32)tilemap->tileCountY / 2,
-                                                            (u32)0,
-                                                            (u32)0,
+                                                            (u32)0, // tilearea x 
+                                                            (u32)0, // tilearea y
                                                             vec2( tilemap->tileInMeters / 2.0f, tilemap->tileInMeters / 2.0f ) );
+        state->camera->absolutePosition    = toAbsolutePosition( state->camera->tilePosition, tilemap->tileInMeters );                                                            
         state->camera->followingEntity     = player;                                                            
 
-        camera = state->camera;
-                                                 
+        camera = state->camera;                                                 
 
         buildWorld( appMemory, tilemap );             
 
@@ -397,16 +397,9 @@ void UpdateAndRender( ApplicationMemory* memory,
 
         state->mp3Samples        = state->services.loadMp3( appMemory, mp3File );
         
-        DecomposedPosition startposition = {0};
-        startposition.tileareaX = 0;
-        startposition.tileareaY = 0;
-        startposition.tileX     = 4;
-        startposition.tileY     = 4;
-        startposition.tileRelative = vec2( tilemap->tileInMeters * 0.5f, tilemap->tileInMeters * 0.5f );
-        
-        buffer->metersToPixels  = (f32)((f32)state->tilemap->tileInPixels/state->tilemap->tileInMeters);
-        player->position        = vec2( startposition.tileX * tilemap->tileInMeters, startposition.tileY * tilemap->tileInMeters );
-        player->position        = player->position + startposition.tileRelative;
+        // the player starts at the camera location
+        player->position        = vec2( 0.0f, 0.0f );
+        player->g_position      = camera->tilePosition;
         player->size            = vec2( 0.9f * tilemap->tileInMeters, 0.9f * tilemap->tileInMeters );
         player->velocity        = vec2(0.0f, 0.0f);
         player->type            = PLAYER;
@@ -420,5 +413,5 @@ void UpdateAndRender( ApplicationMemory* memory,
     
     drawBackground( buffer );
     drawWorld( buffer, tilemap, camera );
-    drawEntities( buffer, &state->liveEntities );
+    drawEntities( buffer, &state->liveEntities, camera );
 }

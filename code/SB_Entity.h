@@ -38,7 +38,7 @@ struct offline_entities
     u32     numberOfEntities;
 };
 
-void drawEntities( RenderBuffer* buffer, live_entities* entities );
-void drawEntity( RenderBuffer* buffer, Entity* e );
+void drawEntities( RenderBuffer* buffer, live_entities* entities, Camera* camera );
+void drawEntity( RenderBuffer* buffer, Entity* e, Camera* camera );
 
 #endif//SB_ENTITY_H

@@ -128,6 +128,15 @@ GeneralizedPosition buildPosition( u32 tileX, u32 tileY, u32 areaX, u32 areaY, v
     return composePosition( p );
 }
 
+v2 toAbsolutePosition( GeneralizedPosition p, f32 tileInMeters )
+{
+    DecomposedPosition d = decomposePosition( p );
+    v2 result = vec2( (d.tileX * tileInMeters) + (d.tileRelative.x * tileInMeters), 
+                      (d.tileY * tileInMeters) + (d.tileRelative.y * tileInMeters));
+
+    return result;
+}
+
 u32 getTileValue( TileMap* tilemap, TileArea* area, u32 tileX, u32 tileY )
 {
     Assert( tilemap != nullptr );

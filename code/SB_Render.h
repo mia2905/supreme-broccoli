@@ -6,7 +6,8 @@
 
 struct Camera
 {
-    GeneralizedPosition position;
+    GeneralizedPosition tilePosition;
+    v2                  absolutePosition; // in meters
     Entity*             followingEntity;
 };
 
