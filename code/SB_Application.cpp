@@ -123,7 +123,7 @@ bool wallCollision( f32 wallCoord,
     return hit;
 }
 
-void collisionDetection( entity*  player, 
+void collisionDetection( Entity*  player, 
                          TileMap* tilemap, 
                          v2       direction, 
                          f32      acceleration, 
@@ -249,7 +249,7 @@ void collisionDetection( entity*  player,
 }
 
 void updateEntity( UserInput* input, 
-                   entity*    entity, 
+                   Entity*    entity, 
                    TileMap*   tilemap, 
                    f32        dt,
                    f32        acceleration,
@@ -329,19 +329,22 @@ void UpdateAndRender( ApplicationMemory* memory,
     /**
         ++ ApplicationState ++
 
-        -  MemoryPool*       appMemory; // equal to the start of ApplicationState
-        -  PlatformServices  services;
-        -  TileMap*          tilemap;
-        -  Player*           player;
-        -  File*             backgroundMp3;
-        -  Mp3Buffer*        mp3Samples;
-        -  bool              loading;
+        -  MemoryPool*       appMemory      // equal to the start of ApplicationState
+        -  PlatformServices  services       // pointer to platform specific implementations
+        -  TileMap*          tilemap        // the world
+        -  Camera*           camera         // the camera (middle of the screen)
+        -  live_entities     liveEntities   // player, walls, monsters - everything which somehow interacts
+        -  File*             backgroundMp3
+        -  Mp3Buffer*        mp3Samples
+        -  bool              loading        // if true platform is not ready yet
+        -  bool              fullscreen
+        -  f32               dt             // time step this frame
      */
     ApplicationState* state = (ApplicationState*)memory->permanentMemory;
     
     MemoryPool*       appMemory   = state->appMemory;
     TileMap*          tilemap     = state->tilemap;
-    entity*           player      = state->liveEntities.entities[0];
+    Entity*           player      = state->liveEntities.entities[0];
     Camera*           camera      = state->camera;
 
     // reentrant guard
@@ -374,7 +377,7 @@ void UpdateAndRender( ApplicationMemory* memory,
 
         // create the tilemap in permanent memory
         state->tilemap                     = PushStruct( appMemory, TileMap );
-        state->liveEntities.entities[0]    = PushStruct( appMemory, entity );
+        state->liveEntities.entities[0]    = PushStruct( appMemory, Entity );
         state->liveEntities.numberOfEntities++;
         tilemap = state->tilemap;
         player  = state->liveEntities.entities[0];
@@ -394,6 +397,7 @@ void UpdateAndRender( ApplicationMemory* memory,
                                                             (u32)0,
                                                             (u32)0,
                                                             vec2( tilemap->tileInMeters / 2.0f, tilemap->tileInMeters / 2.0f ) );
+        state->camera->followingEntity     = player;                                                            
 
         camera = state->camera;
                                                  

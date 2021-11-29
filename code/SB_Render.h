@@ -7,6 +7,7 @@
 struct Camera
 {
     GeneralizedPosition position;
+    Entity*             followingEntity;
 };
 
 struct Pixel

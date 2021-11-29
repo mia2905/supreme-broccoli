@@ -133,7 +133,6 @@ struct ApplicationState
     TileMap*          tilemap;
     Camera*           camera;
     live_entities     liveEntities;
-    offline_entities  offlineEntities;
     File*             backgroundMp3;
     Mp3*              mp3Samples;
     bool              loading;

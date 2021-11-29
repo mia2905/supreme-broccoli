@@ -1,7 +1,7 @@
 #include "SB_Entity.h"
 #include "SB_Render.h"
 
-void drawPlayer( RenderBuffer* buffer, entity* player )
+void drawPlayer( RenderBuffer* buffer, Entity* player )
 {
     Color color = { 75.0f/255.0f, 75.0f/255.0f, 75.0f/255.0f, 0.9f };
 
@@ -12,17 +12,17 @@ void drawPlayer( RenderBuffer* buffer, entity* player )
     drawRectangle( buffer, vec2(tileMinx, tileMiny), vec2(tileMaxx, tileMaxy), color );
 }
 
-void drawMonster( RenderBuffer* buffer, entity* monster )
+void drawMonster( RenderBuffer* buffer, Entity* monster )
 {
 
 }
 
-void drawWall( RenderBuffer* buffer, entity* wall )
+void drawWall( RenderBuffer* buffer, Entity* wall )
 {
 
 }
 
-void drawDoor( RenderBuffer* buffer, entity* door )
+void drawDoor( RenderBuffer* buffer, Entity* door )
 {
 
 }
@@ -35,7 +35,7 @@ void drawEntities( RenderBuffer* buffer, live_entities* e )
     }
 }
 
-void drawEntity( RenderBuffer* buffer, entity* e )
+void drawEntity( RenderBuffer* buffer, Entity* e )
 {
     switch( e->type )
     {

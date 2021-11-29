@@ -15,7 +15,7 @@ enum entity_type
     DOOR
 };
 
-struct entity
+struct Entity
 {
     v2          size;
     v2          velocity;
@@ -28,17 +28,17 @@ struct entity
 
 struct live_entities
 {
-    entity* entities[MAX_ENTITIES];
+    Entity* entities[MAX_ENTITIES];
     u32     numberOfEntities;
 };
 
 struct offline_entities
 {
-    entity* entities[MAX_ENTITIES];
+    Entity* entities[MAX_ENTITIES];
     u32     numberOfEntities;
 };
 
 void drawEntities( RenderBuffer* buffer, live_entities* entities );
-void drawEntity( RenderBuffer* buffer, entity* e );
+void drawEntity( RenderBuffer* buffer, Entity* e );
 
 #endif//SB_ENTITY_H
