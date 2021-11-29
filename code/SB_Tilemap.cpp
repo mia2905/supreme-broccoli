@@ -144,6 +144,44 @@ GeneralizedPosition updatePosition( GeneralizedPosition p, v2 movement, TileMap*
 /***********************************
  * only called once during startup
  ***********************************/
+void buildWorld( MemoryPool* pool, TileMap* map )
+{
+    u32 x = 0;
+    u32 y = 0;
+
+    DOOR_DIRECTION nextRoomEntry = NONE;
+    DOOR_DIRECTION door          = NONE;
+
+    for( u32 i=0; i<NR_OF_TILEAREAS; ++i )
+    {
+        TileArea* area = buildTileArea( pool, map, x, y );
+        door      = (DOOR_DIRECTION)(randomNumber() % 2 + 2);
+
+        if( nextRoomEntry != NONE )
+        {
+            setDoor( area, nextRoomEntry );
+        }
+
+        switch( door ) 
+        {
+            case RIGHT:  
+                ++x; 
+                nextRoomEntry = LEFT;   
+                break;
+            case TOP:    
+                ++y; 
+                nextRoomEntry = BOTTOM; 
+                break;
+            
+            default:
+                Assert( door == LEFT || door == BOTTOM );
+                break;
+        }    
+         
+        setDoor( area, door );
+    }
+}
+
 
 TileArea* buildTileArea( MemoryPool* pool, TileMap* map, u32 areaX, u32 areaY )
 {

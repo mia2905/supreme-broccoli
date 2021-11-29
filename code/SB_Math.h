@@ -37,6 +37,8 @@ rect rectWithCenter( v2 center, v2 size );
 rect squareWithCorner( v2 corner, f32 dim );
 rect rectWithCorner( v2 corner, v2 size );
 
+bool isInsideRect( rect rect, v2 value );
+
 /***********************
  * MATH IMPLEMENTATION
  ***********************/

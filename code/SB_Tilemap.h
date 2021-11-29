@@ -80,11 +80,12 @@ GeneralizedPosition updatePosition( GeneralizedPosition p, v2 movement, TileMap*
 GeneralizedPosition buildNewPosition( DecomposedPosition old, v2 movement, TileMap* tilemap );
 GeneralizedPosition buildPosition( u32 tileX, u32 tileY, u32 tileAreaX, u32 tileAreaY, v2 tileRelative );
 
+s32  buildNewTileCoord( s32 tile, s32 tileCount );
+s32  generalizeTileIndex( s32* tileIndex, s32 tileCount );
 
-s32 buildNewTileCoord( s32 tile, s32 tileCount );
-s32 generalizeTileIndex( s32* tileIndex, s32 tileCount );
-
+void      buildWorld( MemoryPool* pool, TileMap* map );
 TileArea* buildTileArea( MemoryPool* pool, TileMap* map, u32 areaX, u32 areaY );
+void      setDoor( TileArea* area, DOOR_DIRECTION door );
 
 
 #endif//SB_TILEMAP_H

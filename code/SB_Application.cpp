@@ -7,44 +7,6 @@
 #include "SB_Sound.cpp"
 #include "SB_Entity.cpp"
 
-void buildWorld( MemoryPool* pool, TileMap* map )
-{
-    u32 x = 0;
-    u32 y = 0;
-
-    DOOR_DIRECTION nextRoomEntry = NONE;
-    DOOR_DIRECTION door          = NONE;
-
-    for( u32 i=0; i<NR_OF_TILEAREAS; ++i )
-    {
-        TileArea* area = buildTileArea( pool, map, x, y );
-        door      = (DOOR_DIRECTION)(randomNumber() % 2 + 2);
-
-        if( nextRoomEntry != NONE )
-        {
-            setDoor( area, nextRoomEntry );
-        }
-
-        switch( door ) 
-        {
-            case RIGHT:  
-                ++x; 
-                nextRoomEntry = LEFT;   
-                break;
-            case TOP:    
-                ++y; 
-                nextRoomEntry = BOTTOM; 
-                break;
-            
-            default:
-                Assert( door == LEFT || door == BOTTOM );
-                break;
-        }    
-         
-        setDoor( area, door );
-    }
-}
-
 void drawBackground( RenderBuffer* buffer )
 {
     Color backgroundColor = { 200.0f/255.0f, 200.0f/255.0f, 200.0f/255.0f, 1.0f };
@@ -320,6 +282,32 @@ void processInput( UserInput* input, ApplicationState* state )
                       acceleration, 
                       direction );
     }
+
+    // check if the camera needs to update
+    Camera* camera   = state->camera;
+    Entity* player   = camera->followingEntity;
+    
+    // 1. construct the screen rect
+    // 2. check if the camera following entity has left the rect
+    // 3. if it has
+    //    a) update the camera
+    //    b) update all entities to be relative to the new camera position
+
+    f32  screenWidth  = tilemap->tileCountX * tilemap->tileInMeters;
+    f32  screenHeight = tilemap->tileCountY * tilemap->tileInMeters;
+    rect screen       = rectWithCorner( vec2( 0, 0 ), vec2( screenWidth, screenHeight ) );
+
+    if( !isInsideRect( screen, player->position ) )
+    {
+        DecomposedPosition p = decomposePosition(player->g_position);
+        DecomposedPosition c = decomposePosition(camera->position);
+        
+        p.tileX = tilemap->tileCountX / 2;
+        p.tileY = tilemap->tileCountY / 2;
+        p.tileRelative = vec2( tilemap->tileInMeters / 2.0f, tilemap->tileInMeters / 2.0f );
+
+        camera->position = composePosition( p );
+    }
 }
 
 void UpdateAndRender( ApplicationMemory* memory, 
@@ -412,12 +400,13 @@ void UpdateAndRender( ApplicationMemory* memory,
         DecomposedPosition startposition = {0};
         startposition.tileareaX = 0;
         startposition.tileareaY = 0;
-        startposition.tileX     = 2;
-        startposition.tileY     = 2;
+        startposition.tileX     = 4;
+        startposition.tileY     = 4;
         startposition.tileRelative = vec2( tilemap->tileInMeters * 0.5f, tilemap->tileInMeters * 0.5f );
         
         buffer->metersToPixels  = (f32)((f32)state->tilemap->tileInPixels/state->tilemap->tileInMeters);
-        player->position        = vec2( 4.0f * tilemap->tileInMeters, 4.0f * tilemap->tileInMeters );
+        player->position        = vec2( startposition.tileX * tilemap->tileInMeters, startposition.tileY * tilemap->tileInMeters );
+        player->position        = player->position + startposition.tileRelative;
         player->size            = vec2( 0.9f * tilemap->tileInMeters, 0.9f * tilemap->tileInMeters );
         player->velocity        = vec2(0.0f, 0.0f);
         player->type            = PLAYER;
