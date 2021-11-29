@@ -78,6 +78,8 @@ DecomposedPosition  decomposePosition( GeneralizedPosition p );
 GeneralizedPosition composePosition( DecomposedPosition pos );
 GeneralizedPosition updatePosition( GeneralizedPosition p, v2 movement, TileMap* tilemap );
 GeneralizedPosition buildNewPosition( DecomposedPosition old, v2 movement, TileMap* tilemap );
+GeneralizedPosition buildPosition( u32 tileX, u32 tileY, u32 tileAreaX, u32 tileAreaY, v2 tileRelative );
+
 
 s32 buildNewTileCoord( s32 tile, s32 tileCount );
 s32 generalizeTileIndex( s32* tileIndex, s32 tileCount );

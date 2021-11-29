@@ -86,8 +86,11 @@ void drawTileArea( RenderBuffer* buffer, TileMap* tilemap, TileArea* area )
     }
 }
 
-void drawWorld( RenderBuffer* buffer, TileMap* world, TileArea* area )
+void drawWorld( RenderBuffer* buffer, TileMap* world, Camera* camera )
 {
+    DecomposedPosition p = decomposePosition( camera->position );
+
+    TileArea* area = getTileArea( world, p.tileareaX, p.tileareaY );
     if( area->tiles != nullptr )
     {
         drawTileArea( buffer, world, area );
@@ -334,6 +337,7 @@ void UpdateAndRender( ApplicationMemory* memory,
     MemoryPool*       appMemory   = state->appMemory;
     TileMap*          tilemap     = state->tilemap;
     entity*           player      = state->liveEntities.entities[0];
+    Camera*           camera      = state->camera;
 
     processInput( input, state );
 
@@ -365,9 +369,6 @@ void UpdateAndRender( ApplicationMemory* memory,
 
         appMemory = state->appMemory;
 
-        // create the camera
-        state->camera                      = PushStruct( appMemory, Camera );
-
         // create the tilemap in permanent memory
         state->tilemap                     = PushStruct( appMemory, TileMap );
         state->liveEntities.entities[0]    = PushStruct( appMemory, entity );
@@ -382,6 +383,17 @@ void UpdateAndRender( ApplicationMemory* memory,
         state->tilemap->tileAreas          = PushArray( appMemory, 
                                                  NR_OF_TILEAREAS * NR_OF_TILEAREAS,
                                                  TileArea );
+
+        // create the camera
+        state->camera                      = PushStruct( appMemory, Camera );
+        state->camera->position            = buildPosition( (u32)tilemap->tileCountX / 2,
+                                                            (u32)tilemap->tileCountY / 2,
+                                                            (u32)0,
+                                                            (u32)0,
+                                                            vec2( tilemap->tileInMeters / 2.0f, tilemap->tileInMeters / 2.0f ) );
+
+        camera = state->camera;
+                                                 
 
         buildWorld( appMemory, tilemap );             
 
@@ -412,6 +424,6 @@ void UpdateAndRender( ApplicationMemory* memory,
     //updatePlayer( input, player, tilemap, state->dt );
 
     drawBackground( buffer );
-    drawWorld( buffer, tilemap, getTileArea( tilemap, 0, 0 ) );
+    drawWorld( buffer, tilemap, camera );
     drawEntities( buffer, &state->liveEntities );
 }

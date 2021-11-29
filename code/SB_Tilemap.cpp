@@ -116,6 +116,18 @@ GeneralizedPosition buildNewPosition( DecomposedPosition oldPosition, v2 movemen
     return result;
 }
 
+GeneralizedPosition buildPosition( u32 tileX, u32 tileY, u32 areaX, u32 areaY, v2 tileRelative )
+{
+    DecomposedPosition p = {0};
+    p.tileareaX    = areaX;
+    p.tileareaY    = areaY;
+    p.tileX        = tileX;
+    p.tileY        = tileY;
+    p.tileRelative = tileRelative;
+
+    return composePosition( p );
+}
+
 u32 getTileValue( TileMap* tilemap, TileArea* area, u32 tileX, u32 tileY )
 {
     Assert( tilemap != nullptr );

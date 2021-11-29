@@ -6,7 +6,7 @@
 
 struct Camera
 {
-    v2 position; // center of the screen
+    GeneralizedPosition position;
 };
 
 struct Pixel
