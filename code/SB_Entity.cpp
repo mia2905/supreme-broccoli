@@ -13,6 +13,7 @@ void drawPlayer( RenderBuffer* buffer, Entity* player, Camera* camera )
     f32 tileMaxx = (absCenter.x + player->size.x / 2.0f) * buffer->metersToPixels;
     f32 tileMiny = (absCenter.y - player->size.y / 2.0f) * buffer->metersToPixels;
     f32 tileMaxy = (absCenter.y + player->size.y / 2.0f) * buffer->metersToPixels;
+    
     drawRectangle( buffer, vec2(tileMinx, tileMiny), vec2(tileMaxx, tileMaxy), color );
 }
 

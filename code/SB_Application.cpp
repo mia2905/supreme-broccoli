@@ -293,18 +293,29 @@ void processInput( UserInput* input, ApplicationState* state )
     //    a) update the camera
     //    b) update all entities to be relative to the new camera position
 
-    f32  screenWidth  = tilemap->tileCountX * tilemap->tileInMeters;
-    f32  screenHeight = tilemap->tileCountY * tilemap->tileInMeters;
-    rect screen       = rectWithCorner( vec2( 0, 0 ), vec2( screenWidth, screenHeight ) );
+    f32  dimX   = (tilemap->tileCountX * tilemap->tileInMeters) / 2.0f;
+    f32  dimY   = (tilemap->tileCountY * tilemap->tileInMeters) / 2.0f;
+    rect screen = rectWithCenter( vec2( 0.0f, 0.0f ), vec2( dimX, dimY ) );
 
     if( !isInsideRect( screen, player->position ) )
     {
+        PrintError( "move screen" );
         DecomposedPosition p = decomposePosition( player->g_position );
+        DecomposedPosition c = decomposePosition( camera->tilePosition );
+
+        PrintNumber( "area x: ", (f32)p.tileareaX );
+        PrintNumber( "area y: ", (f32)p.tileareaY );
         
-        u32 newTileAreaX = p.tileareaX;
-        u32 newTileAreaY = p.tileareaY;
+        // camera change vector -> depends on the new tilearea
+        v2 a   = vec2( (f32)(p.tileareaX - c.tileareaX), (f32)(p.tileareaY - c.tileareaY) ) *
+                 vec2( tilemap->tileCountX * tilemap->tileInMeters,
+                       tilemap->tileCountY * tilemap->tileInMeters);
 
+        // update the tilearea aka screen to be shown
+        camera->tilePosition = player->g_position;
 
+        // map the entity position to the new camera
+        player->position = player->position - a;
     }
 }
 
@@ -384,7 +395,7 @@ void UpdateAndRender( ApplicationMemory* memory,
                                                             (u32)tilemap->tileCountY / 2,
                                                             (u32)0, // tilearea x 
                                                             (u32)0, // tilearea y
-                                                            vec2( tilemap->tileInMeters / 2.0f, tilemap->tileInMeters / 2.0f ) );
+                                                            vec2( 0.0f, 0.0f ) );
         state->camera->absolutePosition    = toAbsolutePosition( state->camera->tilePosition, tilemap->tileInMeters );                                                            
         state->camera->followingEntity     = player;                                                            
 

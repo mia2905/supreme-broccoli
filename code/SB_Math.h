@@ -16,6 +16,7 @@ union v2;
 v2 vec2( f32 x, f32 y );
 v2 operator*( v2 a, f32 x );
 v2 operator*( f32 x, v2 a );
+v2 operator*( v2 a, v2 b );
 v2 operator+( v2 a, v2 b );
 v2 operator+( v2 a, f32 x );
 v2 operator+( f32 x, v2 a );
@@ -70,6 +71,14 @@ v2 operator*( f32 x, v2 a )
     result.x = result.x * x;
     result.y = result.y * x;
     
+    return result;
+}
+
+v2 operator*( v2 a, v2 b )
+{
+    v2 result = a;
+    result.x = a.x * b.x;
+    result.y = a.y * b.y;
     return result;
 }
 
@@ -177,11 +186,9 @@ rect squareWithCenter( v2 center, f32 radius)
 rect rectWithCenter( v2 center, v2 size )
 {
     rect result;
-    result.min.x = center.x - size.x/2.0f;
-    result.min.y = center.y - size.y/2.0f;
 
-    result.max.x = result.min.x + size.x;
-    result.max.y = result.min.y + size.y;
+    result.min = center - size;
+    result.max = center + size;
 
     return result;
 }
