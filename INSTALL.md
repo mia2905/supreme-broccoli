@@ -3,11 +3,10 @@
 In order to use the supreme-brocolli application template you need to install the following tools:
 * XCode
 * XCode command line tools (git, clang)
-* fswatch (brew install fswatch)
 
 ## Build MacOS 
 
-In order to build the MacOS platform layer run: 
+In order to build for the MacOS platform layer run: 
 ```
 >./build_macos.sh
 ```
@@ -15,18 +14,13 @@ This builds the main executable **AND** the dynamic load library.
 
 ## Instant live coding - MacOS
 
-To start the application in instant live coding mode run the script: ```run_macos.hs``` This enables changing application code in the **code** folder while the application is running. Each change triggers a rebuild of the dynamic load library which is reloaded every two seconds by the platform.
+As long as you only ever change code in the application part of the system you can just recompile only the application and the system will reload the new compilation result while the system is still running. For this do not use the build_>>platform<<.sh script but the **build_>>platform<<_application.sh** script.
 
-```
->./run_macos.sh
-```
+>./build_macos_application.sh
 
 ## executing shell scripts
 
 In order to run the mentioned scripts make sure they have the neccessary access rights. The easiest is to execute the following for each of the scripts:
-
 ```
 > chmod 777 >>script name<<
 ```
-
-This should also be done for the script **build _macos_application.sh** which is triggered during instant live coding to rebuild the dynamic load library.
