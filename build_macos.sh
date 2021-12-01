@@ -15,6 +15,7 @@ TIMEFORMAT=%R
 platform () {
 
     clang ${FRAMEWORKS} macos/SB_Main.mm -o ${APP_NAME} ${CFLAGS}
+    chmod 777 ${APP_NAME}
 
     CODE_SIZE=$(cloc ${PLATFORM_CODE} | grep -o -E '([0-9]+)' | tail -1)
 
