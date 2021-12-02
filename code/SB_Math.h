@@ -30,6 +30,7 @@ f32 toRadians( f32 degrees );
 f32 length( v2 a );
 v2  normalize( v2 a );
 f32 angleBetween( v2 a, v2 b );
+f32 distanceBetween( v2 a, v2 b );
 
 struct rect;
 
@@ -167,6 +168,12 @@ f32 angleBetween( v2 a, v2 b )
     f32 angle = arcusCosine(dot( a, b ) );
     
     return angle;
+}
+
+f32 distanceBetween( v2 a, v2 b )
+{
+    f32 result = length( a - b );
+    return result;
 }
 
 struct rect

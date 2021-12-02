@@ -100,149 +100,106 @@ bool wallCollision( f32 wallCoord,
     return hit;
 }
 
-void collisionDetection( Entity*  player, 
-                         TileMap* tilemap, 
-                         v2       direction, 
-                         f32      acceleration, 
-                         f32      dt )
+void moveEntities( UserInput*     input, 
+                   live_entities* entities, 
+                   TileMap*       tilemap, 
+                   f32            dt,
+                   f32            acceleration,
+                   v2             direction )
 {
     static v2 north = vec2(  0.0f,  1.0f );
     static v2 south = vec2(  0.0f, -1.0f );
     static v2 east  = vec2(  1.0f,  0.0f );
     static v2 west  = vec2( -1.0f,  0.0f );
-
-    f32 tileWidth   = tilemap->tileInMeters;
-    f32 tileHeight  = tileWidth;
-
-    DecomposedPosition oldPosition; // = decomposePosition( player->playerPos );
-    TileArea*          tileArea    = getTileArea( tilemap, oldPosition.tileareaX, oldPosition.tileareaY );
     
-    v2 accelerationVector    = direction * acceleration - (4.0f * player->velocity);
-    v2 velocity              = ((2.0f * accelerationVector) * dt) + player->velocity;
-    v2 playerSize            = player->size;
-    player->velocity         = velocity;
-    
-    // equations of motion:
-    // p' = 1/2at^2 + vt + p -> acceleration based position
-    // v' = 2at + v          -> acceleration based velocity ( 1st derivative of the position  )
-    // a' = a                -> acceleration                ( 2nd derivative of the velocity )
-    v2 movement = ((0.5f * accelerationVector) * square( dt )) + (velocity * dt);
-    
-    // 4. calculate time of collision and the collision point
-    f32 timeRemaining = 1.0f;
-    v2  wallNormal      = vec2(0,0);
-
-    // create the new position
-    GeneralizedPosition newPos = buildNewPosition( oldPosition, movement, tilemap );
-    DecomposedPosition  newPosition = decomposePosition( newPos );
-
-    u32 oldAbsTileX = oldPosition.tileX + oldPosition.tileareaX * tilemap->tileCountX;
-    u32 oldAbsTileY = oldPosition.tileY + oldPosition.tileareaY * tilemap->tileCountY;
-
-    u32 newAbsTileX = newPosition.tileX + newPosition.tileareaX * tilemap->tileCountX;
-    u32 newAbsTileY = newPosition.tileY + newPosition.tileareaY * tilemap->tileCountY;
-
-    // 1. constuct the search area
-    s32 searchTileMinX = (oldAbsTileX < newAbsTileX) ? oldAbsTileX : newAbsTileX;
-    s32 searchTileMaxX = (oldAbsTileX > newAbsTileX) ? oldAbsTileX : newAbsTileX;
-    s32 searchTileMinY = (oldAbsTileY < newAbsTileY) ? oldAbsTileY : newAbsTileY;
-    s32 searchTileMaxY = (oldAbsTileY > newAbsTileY) ? oldAbsTileY : newAbsTileY;
- 
-    // adjust the search area for the minkowski sum
-    s32 playerTileWidth  = ceilToS32( player->size.x / tileWidth );
-    s32 playerTileHeigth = ceilToS32( player->size.y / tileHeight );
-
-    searchTileMinX -= playerTileWidth;
-    searchTileMaxX += playerTileWidth;
-    searchTileMinY -= playerTileHeigth;
-    searchTileMaxY += playerTileHeigth;
-    
-    for( u32 iteration=0; (iteration < 4) && (timeRemaining > 0.0f); ++iteration )
+    for( u32 i=0; i<entities->numberOfEntities; ++i )
     {
-        f32 t = 1.0f;
-        TileArea* area = nullptr;
-
-        for( s32 searchY = searchTileMinY; searchY <= searchTileMaxY; ++searchY )
+        Entity* e = entities->entities[i];
+        
+        if( e->moving )
         {
-            for( s32 searchX = searchTileMinX; searchX <= searchTileMaxX; ++searchX )
+            v2 accelerationVector = direction * acceleration - (4.0f * e->velocity);
+            v2 velocity           = ((2.0f * accelerationVector) * dt) + e->velocity;
+            
+            // equations of motion:
+            // p' = 1/2at^2 + vt + p -> acceleration based position
+            // v' = 2at + v          -> acceleration based velocity ( 1st derivative of the position  )
+            // a' = a                -> acceleration                ( 2nd derivative of the velocity )
+            v2 movement = ((0.5f * accelerationVector) * square( dt )) + (velocity * dt);
+
+            // build a search space with all entities inside of defined area (1.5 * tilesize)
+            f32 searchDistance = tilemap->tileInMeters;
+            Entity* searchEntities[8] = {0};
+            u32 searchIndex = 0;
+            for( u32 s=0; s<entities->numberOfEntities && searchIndex < 8; ++s )
             {
-                // create the minkowski sum out of the wall tile and the player rectangle
-                v2 minCorner = vec2( searchX * tileWidth, searchY * tileHeight ) - (playerSize * 0.5f);
-                v2 maxCorner = vec2( (searchX * tileWidth) + tileWidth, (searchY * tileHeight) + tileHeight ) + (playerSize * 0.5f);
-                v2 p0        = vec2( oldAbsTileX * tileWidth, oldAbsTileY * tileHeight ) + oldPosition.tileRelative;
-
-                u32 areaX = (u32)(searchX / tilemap->tileCountX);
-                u32 areaY = (u32)(searchY / tilemap->tileCountY);
-
-                area = getTileArea( tilemap, areaX, areaY );
-                s32 testX = buildNewTileCoord( searchX, tilemap->tileCountX );
-                s32 testY = buildNewTileCoord( searchY, tilemap->tileCountY );
-
-                if( getTileValue( tilemap, area, testX, testY ) == 1 )
+                Entity* t = entities->entities[s];
+                if( t != e )
                 {
-                    //Print( "\n" );
-                    //Print( "search: " ); PrintTile( searchX, searchY, areaX, areaY );
-                    //Print( "test: " ); PrintTile( testX, testY, areaX, areaY );
+                    v2 a = e->position;
+                    v2 b = t->position;
 
-                    if( wallCollision( maxCorner.y, movement.y, movement.x, p0.y, p0.x, &t, minCorner.x, maxCorner.x ) )
+                    if( distanceBetween(a,b) <= searchDistance )
                     {
-                        //Print( "COLLISION NORTH\n" );
-                        wallNormal = north;
-                    }
-                    if( wallCollision( minCorner.y, movement.y, movement.x, p0.y, p0.x, &t, minCorner.x, maxCorner.x ) )
-                    {
-                        //Print( "COLLISION SOUTH\n" );
-                        wallNormal = south;
-                    }
-                    if( wallCollision( minCorner.x, movement.x, movement.y, p0.x, p0.y, &t, minCorner.y, maxCorner.y ) )
-                    {
-                        //Print( "COLLISION WEST\n" );
-                        wallNormal = west;
-                    }
-                    if( wallCollision( maxCorner.x, movement.x, movement.y, p0.x, p0.y, &t, minCorner.y, maxCorner.y ) )
-                    {
-                        //Print( "COLLISION EAST\n" );
-                        wallNormal = east;
+                        searchEntities[searchIndex++] = t;
                     }
                 }
             }
+
+            v2  playerSize    = e->size;
+            f32 timeRemaining = 1.0f;
+            v2 wallNormal     = {0};
+
+            for( u32 iteration=0; (iteration<4) && (timeRemaining > 0.0f); ++iteration)
+            {
+                f32 tMin = 1.0f;
+
+                for( u32 s=0; s<searchIndex; s++ )
+                {
+                    Entity* t = searchEntities[s];
+
+                    rect entityBounds = rectWithCenter( t->position, t->size * 0.5 );
+                    v2 minCorner  = entityBounds.min - (playerSize * 0.5f);
+                    v2 maxCorner  = entityBounds.max + (playerSize * 0.5f);
+                    v2 p0         = e->position;
+                    
+                    if( wallCollision( maxCorner.y, movement.y, movement.x, p0.y, p0.x, &tMin, minCorner.x, maxCorner.x ) )
+                    {
+                        Print( "COLLISION NORTH\n" );
+                        wallNormal = north;
+                    }
+                    if( wallCollision( minCorner.y, movement.y, movement.x, p0.y, p0.x, &tMin, minCorner.x, maxCorner.x ) )
+                    {
+                        Print( "COLLISION SOUTH\n" );
+                        wallNormal = south;
+                    }
+                    if( wallCollision( minCorner.x, movement.x, movement.y, p0.x, p0.y, &tMin, minCorner.y, maxCorner.y ) )
+                    {
+                        Print( "COLLISION WEST\n" );
+                        wallNormal = west;
+                    }
+                    if( wallCollision( maxCorner.x, movement.x, movement.y, p0.x, p0.y, &tMin, minCorner.y, maxCorner.y ) )
+                    {
+                        Print( "COLLISION EAST\n" );
+                        wallNormal = east;
+                    }
+                }
+
+                e->g_position = updatePosition( e->g_position, movement * tMin, tilemap );
+
+                // update the movement
+                movement = movement - dot(movement, wallNormal)*wallNormal;
+            
+                // update the velocity
+                velocity = velocity - dot(velocity, wallNormal)*wallNormal;
+                e->velocity = velocity;            
+                e->position = e->position + movement * tMin;
+                
+                // update time to collision
+                timeRemaining -= timeRemaining * tMin;    
+            }
         }
-
-        // update the player position
-        //player->playerPos = buildNewPosition( oldPosition, movement * t, tilemap );
-        
-        // update the movement
-        movement = movement - dot(movement, wallNormal)*wallNormal;
-        
-        // update the velocity
-        velocity = velocity - dot(velocity, wallNormal)*wallNormal;
-        player->velocity = velocity;
-        
-        // update time to collision
-        timeRemaining -= timeRemaining * t;        
     }
-
-    return;
-}
-
-void updateEntity( UserInput* input, 
-                   Entity*    entity, 
-                   TileMap*   tilemap, 
-                   f32        dt,
-                   f32        acceleration,
-                   v2         direction )
-{
-    v2 accelerationVector    = direction * acceleration - (4.0f * entity->velocity);
-    v2 velocity              = ((2.0f * accelerationVector) * dt) + entity->velocity;
-    entity->velocity         = velocity;
-
-    // equations of motion:
-    // p' = 1/2at^2 + vt + p -> acceleration based position
-    // v' = 2at + v          -> acceleration based velocity ( 1st derivative of the position  )
-    // a' = a                -> acceleration                ( 2nd derivative of the velocity )
-    v2 movement = ((0.5f * accelerationVector) * square( dt )) + (velocity * dt);
-    entity->position   = entity->position + movement;
-    entity->g_position = updatePosition( entity->g_position, movement, tilemap );
 }
 
 void processInput( UserInput* input, ApplicationState* state )
@@ -295,12 +252,7 @@ void processInput( UserInput* input, ApplicationState* state )
 
         if( e->moving )
         {
-            updateEntity( input, 
-                          e, 
-                          tilemap, 
-                          state->dt, 
-                          acceleration, 
-                          direction );
+            moveEntities( input, entities, tilemap, state->dt, acceleration, direction );
         }
     }
 
@@ -400,9 +352,9 @@ void UpdateAndRender( ApplicationMemory* memory,
         appMemory = state->appMemory;
 
         // create the tilemap in permanent memory
-        state->tilemap                     = PushStruct( appMemory, TileMap );
-        state->liveEntities.entities[0]    = PushStruct( appMemory, Entity );
-        state->liveEntities.numberOfEntities++;
+        state->tilemap                       = PushStruct( appMemory, TileMap );
+        state->liveEntities.entities[0]      = PushStruct( appMemory, Entity );
+        state->liveEntities.numberOfEntities = 1;
         tilemap = state->tilemap;
         player  = state->liveEntities.entities[0];
 
