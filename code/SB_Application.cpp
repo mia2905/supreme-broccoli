@@ -30,12 +30,12 @@ void buildWorld( MemoryPool* pool, TileMap* map, Camera* camera, live_entities* 
             {
                 *tile = 0;
 
-                if( row == 0 )                *tile = 1;
-                if( row == (TILES_PER_AREA_Y - 1) )  *tile = 1;
-                if( col == 0 )                *tile = 1;
-                if( col == (TILES_PER_AREA_X - 1 ) ) *tile = 1;
+                if( row == 0 ) *tile = 1;
+                if( col == 0 ) *tile = 1;
+                if( row == (map->tileCountY - 1) ) *tile = 1;
+                if( col == (map->tileCountX - 1) ) *tile = 1;
 
-                if( *tile == 1 )
+                if( *tile == 1 && col != map->tileCountX / 2 && row != map->tileCountY / 2 )
                 {
                     addWall( pool, entities, map, camera->absolutePosition, col, row, x, y );
                 }
@@ -321,9 +321,6 @@ void processInput( UserInput* input, ApplicationState* state )
 
         // update the tilearea aka screen to be shown
         camera->tilePosition = player->g_position;
-
-        PrintNumber( "tilearea x: ", (f32)newTileAreaX );
-        PrintNumber( "tilearea y: ", (f32)newTileAreaY );
     }
 }
 
