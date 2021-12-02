@@ -4,6 +4,7 @@
 #include "SB_Application.h"
 #include "SB_Tilemap.h"
 #include "SB_Math.h"
+#include "SB_Render.h"
 
 #define MAX_ENTITIES 1000
 
@@ -25,6 +26,8 @@ struct Entity
 
     entity_type type;
     bool        moving;
+
+    Color       color;
 };
 
 struct live_entities

@@ -14,6 +14,7 @@ void addWall( MemoryPool*    appMemory,
     wall->size       = vec2( tilemap->tileInMeters, tilemap->tileInMeters );
     wall->type       = WALL;
     wall->velocity   = vec2(0, 0);
+    wall->color      = { 75.0f/255.0f, 75.0f/255.0f, 75.0f/255.0f, 0.5f };
     
     DecomposedPosition d = {0};
     d.tileX        = tileX;
@@ -35,8 +36,6 @@ void addWall( MemoryPool*    appMemory,
 
 void drawPlayer( RenderBuffer* buffer, Entity* player, Camera* camera )
 {
-    Color color = { 75.0f/255.0f, 75.0f/255.0f, 75.0f/255.0f, 0.9f };
-
     // the position of the player is relative to the camera
     v2 cameraP   = camera->absolutePosition;
     v2 absCenter = cameraP + player->position;
@@ -46,7 +45,7 @@ void drawPlayer( RenderBuffer* buffer, Entity* player, Camera* camera )
     f32 tileMiny = (absCenter.y - player->size.y / 2.0f) * buffer->metersToPixels;
     f32 tileMaxy = (absCenter.y + player->size.y / 2.0f) * buffer->metersToPixels;
     
-    drawRectangle( buffer, vec2(tileMinx, tileMiny), vec2(tileMaxx, tileMaxy), color );
+    drawRectangle( buffer, vec2(tileMinx, tileMiny), vec2(tileMaxx, tileMaxy), player->color );
 }
 
 void drawMonster( RenderBuffer* buffer, Entity* monster, Camera* camera )
@@ -67,7 +66,7 @@ void drawWall( RenderBuffer* buffer, Entity* wall, Camera* camera )
     f32 tileMiny = (absCenter.y - wall->size.y / 2.0f) * buffer->metersToPixels;
     f32 tileMaxy = (absCenter.y + wall->size.y / 2.0f) * buffer->metersToPixels;
     
-    drawRectangle( buffer, vec2(tileMinx, tileMiny), vec2(tileMaxx, tileMaxy), color );
+    drawRectangle( buffer, vec2(tileMinx, tileMiny), vec2(tileMaxx, tileMaxy), wall->color );
 }
 
 void drawDoor( RenderBuffer* buffer, Entity* door, Camera* camera )

@@ -12,9 +12,6 @@ void buildWorld( MemoryPool* pool, TileMap* map, Camera* camera, live_entities* 
     u32 x = 0;
     u32 y = 0;
 
-    DOOR_DIRECTION nextRoomEntry = NONE;
-    DOOR_DIRECTION door          = NONE;
-
     for( u32 i=0; i<NR_OF_TILEAREAS; ++i )
     {
         TileArea* area = nullptr;
@@ -128,9 +125,11 @@ void moveEntities( UserInput*     input,
             v2 movement = ((0.5f * accelerationVector) * square( dt )) + (velocity * dt);
 
             // build a search space with all entities inside of defined area (1.5 * tilesize)
-            f32 searchDistance = tilemap->tileInMeters;
+            f32     searchDistance    = tilemap->tileInMeters;
             Entity* searchEntities[8] = {0};
-            u32 searchIndex = 0;
+            u32     searchIndex       = 0;
+            Color   c                 = { 75.0f/255.0f, 75.0f/255.0f, 75.0f/255.0f, 0.5f };
+
             for( u32 s=0; s<entities->numberOfEntities && searchIndex < 8; ++s )
             {
                 Entity* t = entities->entities[s];
@@ -142,6 +141,11 @@ void moveEntities( UserInput*     input,
                     if( distanceBetween(a,b) <= searchDistance )
                     {
                         searchEntities[searchIndex++] = t;
+                        t->color = { 1.0f, 0.0f, 0.0f, 0.5f };
+                    }
+                    else
+                    {
+                        t->color = c;
                     }
                 }
             }
@@ -405,6 +409,7 @@ void UpdateAndRender( ApplicationMemory* memory,
         player->velocity        = vec2(0.0f, 0.0f);
         player->type            = PLAYER;
         player->moving          = true;
+        player->color           = { 75.0f/255.0f, 75.0f/255.0f, 75.0f/255.0f, 0.9f };
         
         memory->isInitialized = true;
         state->loading        = false;

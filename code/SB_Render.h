@@ -4,6 +4,7 @@
 #include "SB_Application.h"
 #include "SB_Math.h"
 
+struct Entity;
 struct Camera
 {
     GeneralizedPosition tilePosition;
