@@ -23,6 +23,8 @@ void buildWorld( MemoryPool* pool, TileMap* map, Camera* camera, live_entities* 
         area->tiles = PushArray( pool, map->tileCountX * map->tileCountY, u32 );
     
         u32* tile = area->tiles;
+        f32 absoluteTileAreaWidth  = map->tileCountX * map->tileInMeters;
+        f32 absoluteTileAreaHeight = map->tileCountY * map->tileInMeters;
 
         for( u32 row=0; row<map->tileCountY; ++row )
         {
@@ -35,13 +37,33 @@ void buildWorld( MemoryPool* pool, TileMap* map, Camera* camera, live_entities* 
                 if( row == (map->tileCountY - 1) ) *tile = 1;
                 if( col == (map->tileCountX - 1) ) *tile = 1;
 
+                v2 tileAreaCamera = camera->absolutePosition;
+
                 if( *tile == 1 && col != map->tileCountX / 2 && row != map->tileCountY / 2 )
                 {
-                    addWall( pool, entities, map, camera->absolutePosition, col, row, x, y );
+                    addWall( pool, entities, map, tileAreaCamera, col, row, x, y );
                 }
 
                 tile++;
             }
+        }
+
+        // update tilearea coords
+        if( x < NR_OF_TILEAREAS / 2 )
+        {
+            x++;
+        }
+        else
+        {
+            if( x == NR_OF_TILEAREAS / 2 )
+            {
+                x = 0;
+            }
+            else
+            {
+                x++;
+            }
+            y = 1;
         }
     }
 }
@@ -408,7 +430,7 @@ void UpdateAndRender( ApplicationMemory* memory,
                                                      (u32)0, // tilearea y
                                                      vec2( camera->absolutePosition.x - (cameraTileX * tilemap->tileInMeters),
                                                            camera->absolutePosition.y - (cameraTileY * tilemap->tileInMeters)) );
-        camera->absolutePosition    = toAbsolutePosition( camera->tilePosition, tilemap->tileInMeters );                                                            
+        camera->absolutePosition    = toAbsolutePosition( camera->tilePosition, tilemap->tileInMeters, tilemap->tileCountX, tilemap->tileCountY );                                                            
         camera->followingEntity     = player;  
 
         f32  dimX   = (tilemap->tileCountX * tilemap->tileInMeters) / 2.0f;

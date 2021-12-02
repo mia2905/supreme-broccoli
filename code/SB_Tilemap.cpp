@@ -136,12 +136,16 @@ GeneralizedPosition buildPosition( u32 tileX, u32 tileY, u32 areaX, u32 areaY, v
     return composePosition( p );
 }
 
-v2 toAbsolutePosition( GeneralizedPosition p, f32 tileInMeters )
+v2 toAbsolutePosition( GeneralizedPosition p, f32 tileInMeters, u32 tileCountX, u32 tileCountY )
 {
+    f32 areaWidth  = tileCountX * tileInMeters;
+    f32 areaHeight = tileCountY * tileInMeters;
+
     DecomposedPosition d = decomposePosition( p );
     v2 result = vec2( (d.tileX * tileInMeters) + (d.tileRelative.x), 
                       (d.tileY * tileInMeters) + (d.tileRelative.y));
 
+    result = result + vec2( d.tileareaX * areaWidth, d.tileareaY * areaHeight );
     return result;
 }
 

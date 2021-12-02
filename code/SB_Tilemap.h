@@ -4,7 +4,7 @@
 #include "SB_Application.h"
 #include "SB_Math.h"
 
-#define NR_OF_TILEAREAS     1
+#define NR_OF_TILEAREAS     10
 #define TILEAREA_SHIFT      8
 #define TILE_MASK           0x000000ff
 #define TILE_SIZE           40
@@ -79,7 +79,7 @@ GeneralizedPosition composePosition( DecomposedPosition pos );
 GeneralizedPosition updatePosition( GeneralizedPosition p, v2 movement, TileMap* tilemap );
 GeneralizedPosition buildNewPosition( DecomposedPosition old, v2 movement, TileMap* tilemap );
 GeneralizedPosition buildPosition( u32 tileX, u32 tileY, u32 tileAreaX, u32 tileAreaY, v2 tileRelative );
-v2                  toAbsolutePosition( GeneralizedPosition p, f32 tileInMeters );
+v2                  toAbsolutePosition( GeneralizedPosition p, f32 tileInMeters, u32 tileCountX, u32 tileCountY );
 
 s32  buildNewTileCoord( s32 tile, s32 tileCount );
 s32  generalizeTileIndex( s32* tileIndex, s32 tileCount );

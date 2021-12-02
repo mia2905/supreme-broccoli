@@ -23,7 +23,7 @@ void addWall( MemoryPool*    appMemory,
     d.tileRelative = wall->size * 0.5f;
 
     GeneralizedPosition g = composePosition( d );
-    v2 wallAbsPos    = toAbsolutePosition( g, tilemap->tileInMeters );
+    v2 wallAbsPos    = toAbsolutePosition( g, tilemap->tileInMeters, tilemap->tileCountX, tilemap->tileCountY );
     v2 wallPosition  = wallAbsPos - cameraPosition;
 
     wall->g_position = g;
