@@ -15,12 +15,13 @@ TIMEFORMAT=%R
 platform () {
 
     clang ${FRAMEWORKS} macos/SB_Main.mm -o ${APP_NAME} ${CFLAGS}
-    chmod 777 ${APP_NAME}
-
+    
     CODE_SIZE=$(cloc ${PLATFORM_CODE} | grep -o -E '([0-9]+)' | tail -1)
 
-    if [ -e supreme-broccoli ]
+    if [ -e ${APP_NAME} ]
     then
+        chmod 777 ${APP_NAME}
+        chmod 777 ${APP_NAME}.dSYM
         echo "-> BUILD PLATFORM: ${GREEN}SUCCESS${NORMAL}"
         sizeInKB=$(du -k ${APP_NAME} | cut -f -1)
         echo "-> FILE SIZE: " $sizeInKB kB
@@ -38,6 +39,7 @@ application () {
 
     if [ -e ${APP_NAME}.dylib ]
     then
+        chmod 777 ${APP_NAME}.dylib.dSYM
         echo "-> BUILD APP: ${GREEN}SUCCESS${NORMAL}"
         sizeInKB=$(du -k ${APP_NAME}.dylib | cut -f -1)
         echo "-> FILE SIZE: " $sizeInKB kB

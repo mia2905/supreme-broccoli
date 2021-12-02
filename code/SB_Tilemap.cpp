@@ -112,7 +112,15 @@ GeneralizedPosition buildNewPosition( DecomposedPosition oldPosition, v2 movemen
     p.tileareaX = p.tileareaX + generalizeTileIndex( (s32*)&p.tileX, tilemap->tileCountX );
     p.tileareaY = p.tileareaY + generalizeTileIndex( (s32*)&p.tileY, tilemap->tileCountY );
 
-    result = composePosition( p );
+    if( p.tileareaX >= 0 && p.tileareaY >= 0 )
+    {
+        result = composePosition( p );    
+    }
+    else
+    {
+        result = composePosition( oldPosition );
+    }
+    
     return result;
 }
 
@@ -131,8 +139,8 @@ GeneralizedPosition buildPosition( u32 tileX, u32 tileY, u32 areaX, u32 areaY, v
 v2 toAbsolutePosition( GeneralizedPosition p, f32 tileInMeters )
 {
     DecomposedPosition d = decomposePosition( p );
-    v2 result = vec2( (d.tileX * tileInMeters) + (d.tileRelative.x * tileInMeters), 
-                      (d.tileY * tileInMeters) + (d.tileRelative.y * tileInMeters));
+    v2 result = vec2( (d.tileX * tileInMeters) + (d.tileRelative.x), 
+                      (d.tileY * tileInMeters) + (d.tileRelative.y));
 
     return result;
 }
@@ -153,97 +161,6 @@ GeneralizedPosition updatePosition( GeneralizedPosition p, v2 movement, TileMap*
 /***********************************
  * only called once during startup
  ***********************************/
-void buildWorld( MemoryPool* pool, TileMap* map )
-{
-    u32 x = 0;
-    u32 y = 0;
-
-    DOOR_DIRECTION nextRoomEntry = NONE;
-    DOOR_DIRECTION door          = NONE;
-
-    for( u32 i=0; i<NR_OF_TILEAREAS; ++i )
-    {
-        TileArea* area = buildTileArea( pool, map, x, y );
-        door      = (DOOR_DIRECTION)(randomNumber() % 2 + 2);
-
-        if( nextRoomEntry != NONE )
-        {
-            setDoor( area, nextRoomEntry );
-        }
-
-        switch( door ) 
-        {
-            case RIGHT:  
-                ++x; 
-                nextRoomEntry = LEFT;   
-                break;
-            case TOP:    
-                ++y; 
-                nextRoomEntry = BOTTOM; 
-                break;
-            
-            default:
-                Assert( door == LEFT || door == BOTTOM );
-                break;
-        }    
-         
-        setDoor( area, door );
-    }
-}
-
-
-TileArea* buildTileArea( MemoryPool* pool, TileMap* map, u32 areaX, u32 areaY )
-{
-    TileArea* area = getTileArea( map, areaX, areaY );
-    area->tiles = PushArray( pool, map->tileCountX * map->tileCountY, u32 );
-    
-    u32* tile = area->tiles;
-
-    for( u32 row=0; row<TILES_PER_AREA_Y; ++row )
-    {
-        for( u32 col=0; col<TILES_PER_AREA_X; ++col )
-        {
-            *tile = 0;
-
-            if( row == 0 )                *tile = 1;
-            if( row == (TILES_PER_AREA_Y - 1) )  *tile = 1;
-            if( col == 0 )                *tile = 1;
-            if( col == (TILES_PER_AREA_X - 1 ) ) *tile = 1;
-            
-            tile++;
-        }
-    }
-
-    return area;
-}
-
-void setDoor( TileArea* area, DOOR_DIRECTION door )
-{
-    u32* tiles = area->tiles;
-
-    switch( door )
-    {
-        case LEFT:   
-            tiles[(TILES_PER_AREA_Y / 2 * TILES_PER_AREA_X) + 1] = 0;
-            tiles[TILES_PER_AREA_Y / 2 * TILES_PER_AREA_X]       = 0;                 
-            break;
-        case RIGHT:  
-            tiles[TILES_PER_AREA_Y / 2 * TILES_PER_AREA_X + TILES_PER_AREA_X - 2] = 0; 
-            tiles[TILES_PER_AREA_Y / 2 * TILES_PER_AREA_X + TILES_PER_AREA_X - 1] = 0; 
-            break;
-        case TOP:    
-            tiles[(TILES_PER_AREA_Y - 1) * TILES_PER_AREA_X - (TILES_PER_AREA_X / 2)] = 0;   
-            tiles[TILES_PER_AREA_Y * TILES_PER_AREA_X - (TILES_PER_AREA_X / 2)]       = 0;   
-            break;
-        case BOTTOM: 
-            tiles[TILES_PER_AREA_X + TILES_PER_AREA_X / 2] = 0;
-            tiles[TILES_PER_AREA_X / 2]             = 0;                             
-            break;
-    
-        default: break;
-    }
-}
-
 void printTileArea( TileArea* area, TileMap* tilemap )
 {
     u32 tilesX = tilemap->tileCountX;

@@ -4,7 +4,7 @@
 #include "SB_Application.h"
 #include "SB_Math.h"
 
-#define NR_OF_TILEAREAS     100
+#define NR_OF_TILEAREAS     1
 #define TILEAREA_SHIFT      8
 #define TILE_MASK           0x000000ff
 #define TILE_SIZE           40
@@ -84,9 +84,7 @@ v2                  toAbsolutePosition( GeneralizedPosition p, f32 tileInMeters 
 s32  buildNewTileCoord( s32 tile, s32 tileCount );
 s32  generalizeTileIndex( s32* tileIndex, s32 tileCount );
 
-void      buildWorld( MemoryPool* pool, TileMap* map );
-TileArea* buildTileArea( MemoryPool* pool, TileMap* map, u32 areaX, u32 areaY );
-void      setDoor( TileArea* area, DOOR_DIRECTION door );
+void setDoor( TileArea* area, DOOR_DIRECTION door );
 
 
 #endif//SB_TILEMAP_H

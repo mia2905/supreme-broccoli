@@ -9,6 +9,7 @@ struct Camera
     GeneralizedPosition tilePosition;
     v2                  absolutePosition; // in meters
     Entity*             followingEntity;
+    rect                screen;
 };
 
 struct Pixel
