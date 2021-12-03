@@ -7,7 +7,9 @@
 #define ARROW_RIGHT 124
 #define ESC          53
 #define SPACE        49
-#define COMMAND     0x3
+#define KEY_F         3
+#define KEY_P        35
+#define KEY_S         1
 
 bool updateInput( UserInput* input, NSEvent* event )
 {
@@ -40,10 +42,19 @@ bool updateInput( UserInput* input, NSEvent* event )
                 input->space.isDown = true;
                 eventHandeled = true;
                 break;
-            case COMMAND:
-                input->command.isDown = true;
+            case KEY_F:
+                input->key_f.isDown = true;
                 eventHandeled = true;
                 break;
+            case KEY_P:
+                input->key_p.isDown = true;
+                eventHandeled = true;
+                break;
+            case KEY_S:
+                input->key_s.isDown = true;
+                eventHandeled = true;
+                break;
+            
                 
             default: break;
         }
@@ -77,8 +88,16 @@ bool updateInput( UserInput* input, NSEvent* event )
                 input->space.isDown = false;
                 eventHandeled = true;
                 break;
-            case COMMAND:
-                input->command.isDown = false;
+            case KEY_F:
+                input->key_f.isDown = false;
+                eventHandeled = true;
+                break;
+            case KEY_P:
+                input->key_p.isDown = false;
+                eventHandeled = true;
+                break;
+            case KEY_S:
+                input->key_s.isDown = false;
                 eventHandeled = true;
                 break;
                 

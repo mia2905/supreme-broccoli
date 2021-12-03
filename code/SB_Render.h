@@ -4,6 +4,15 @@
 #include "SB_Application.h"
 #include "SB_Math.h"
 
+struct Entity;
+struct Camera
+{
+    GeneralizedPosition tilePosition;
+    v2                  absolutePosition; // in meters
+    Entity*             followingEntity;
+    rect                screen;
+};
+
 struct Pixel
 {
     u8 red;

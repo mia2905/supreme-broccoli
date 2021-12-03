@@ -46,7 +46,9 @@ struct UserInput
     KeyPress arrowRight;
     KeyPress esc;
     KeyPress space;
-    KeyPress command;
+    KeyPress key_f;
+    KeyPress key_p;
+    KeyPress key_s;
 };
 
 struct ApplicationMemory
@@ -68,6 +70,7 @@ struct RenderBuffer
     u32 width;
     u32 height;
     u32 pitch;
+    f32 metersToPixels;
     u8* buffer;
 };
 
@@ -83,6 +86,7 @@ struct SoundBuffer;
 struct MemoryPool;
 struct Mp3Buffer;
 struct TileMap;
+struct Camera;
 struct Player;
 struct Mp3;
 
@@ -95,6 +99,8 @@ struct PlatformServices
     File*  (*loadFile)         (MemoryPool*, const char*); // file loading service
     Mp3*   (*loadMp3)          (MemoryPool*, const char*); // mp3 loading service
     void   (*toggleFullScreen) (bool);                     // toggle between window and fullscreen mode  
+    void   (*playAudio)        ();
+    void   (*stopAudio)        ();
 };
 
 extern "C" {
@@ -102,6 +108,8 @@ extern "C" {
     File*  LoadFile(  MemoryPool* pool, const char* filename );
     Mp3*   LoadMp3(   MemoryPool* pool, const char* filename );
     void   ToggleFullScreen( bool fullscreen );
+    void   PlayAudio();
+    void   StopAudio();
 }
 
 /******************************************************
@@ -116,12 +124,15 @@ extern "C" {
                           SoundBuffer*       buffer );                    
 }
 
+#include "SB_Entity.h"
+
 struct ApplicationState
 {
     MemoryPool*       appMemory;
     PlatformServices  services;
     TileMap*          tilemap;
-    Player*           player;
+    Camera*           camera;
+    live_entities     liveEntities;
     File*             backgroundMp3;
     Mp3*              mp3Samples;
     bool              loading;

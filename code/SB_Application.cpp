@@ -5,128 +5,70 @@
 #include "SB_Memory.cpp"
 #include "SB_Tilemap.cpp"
 #include "SB_Sound.cpp"
+#include "SB_Entity.cpp"
 
-struct Player
-{
-    GeneralizedPosition playerPos;
-    v2     size;
-    v2     velocityVector;
-    f32    acceleration; // meters per second squared -> m/s^2
-    Color  color;
-    Image* playerImg;
-};
-
-void buildWorld( MemoryPool* pool, TileMap* map )
+void buildWorld( MemoryPool* pool, TileMap* map, Camera* camera, live_entities* entities )
 {
     u32 x = 0;
     u32 y = 0;
 
-    DOOR_DIRECTION nextRoomEntry = NONE;
-    DOOR_DIRECTION door          = NONE;
-
     for( u32 i=0; i<NR_OF_TILEAREAS; ++i )
     {
-        TileArea* area = buildTileArea( pool, map, x, y );
-        door      = (DOOR_DIRECTION)(randomNumber() % 2 + 2);
+        TileArea* area = nullptr;
 
-        if( nextRoomEntry != NONE )
+        area = getTileArea( map, x, y );
+        area->tiles = PushArray( pool, map->tileCountX * map->tileCountY, u32 );
+    
+        u32* tile = area->tiles;
+        f32 absoluteTileAreaWidth  = map->tileCountX * map->tileInMeters;
+        f32 absoluteTileAreaHeight = map->tileCountY * map->tileInMeters;
+
+        for( u32 row=0; row<map->tileCountY; ++row )
         {
-            setDoor( area, nextRoomEntry );
+            for( u32 col=0; col<map->tileCountX; ++col )
+            {
+                *tile = 0;
+
+                if( row == 0 ) *tile = 1;
+                if( col == 0 ) *tile = 1;
+                if( row == (map->tileCountY - 1) ) *tile = 1;
+                if( col == (map->tileCountX - 1) ) *tile = 1;
+
+                v2 tileAreaCamera = camera->absolutePosition;
+
+                if( *tile == 1 && col != map->tileCountX / 2 && row != map->tileCountY / 2 )
+                {
+                    addWall( pool, entities, map, tileAreaCamera, col, row, x, y );
+                }
+
+                tile++;
+            }
         }
 
-        switch( door ) 
+        // update tilearea coords
+        if( x < NR_OF_TILEAREAS / 2 )
         {
-            case RIGHT:  
-                ++x; 
-                nextRoomEntry = LEFT;   
-                break;
-            case TOP:    
-                ++y; 
-                nextRoomEntry = BOTTOM; 
-                break;
-            
-            default:
-                Assert( door == LEFT || door == BOTTOM );
-                break;
-        }    
-         
-        setDoor( area, door );
+            x++;
+        }
+        else
+        {
+            if( x == NR_OF_TILEAREAS / 2 )
+            {
+                x = 0;
+            }
+            else
+            {
+                x++;
+            }
+            y = 1;
+        }
     }
 }
 
-void drawBackground( RenderBuffer* buffer )
+void drawWorld( RenderBuffer* buffer, TileMap* world, Camera* camera )
 {
     Color backgroundColor = { 200.0f/255.0f, 200.0f/255.0f, 200.0f/255.0f, 1.0f };
     drawRectangle( buffer, vec2(0, 0), vec2(buffer->width, buffer->height), backgroundColor );
-}
-
-void drawPlayer( RenderBuffer* buffer, Player* player, TileMap* tilemap )
-{
-    DecomposedPosition pos = decomposePosition( player->playerPos );
-    
-    u32 tileOffsetX = pos.tileareaX * tilemap->tileCountX;
-    u32 tileOffsetY = pos.tileareaY * tilemap->tileCountY;
-
-    f32 tileY = pos.tileY * tilemap->tileInMeters;
-    f32 tileX = pos.tileX * tilemap->tileInMeters;
-
-    Color tilecolor = { 75.0f/255.0f, 75.0f/255.0f, 75.0f/255.0f, 0.9f };
-
-    f32 tileMinx = tilemap->metersToPixels * tileX;
-    f32 tileMaxx = tilemap->metersToPixels * (tileX + tilemap->tileInMeters);
-    f32 tileMiny = buffer->height - tilemap->metersToPixels * tileY;
-    f32 tileMaxy = tileMiny - (tilemap->metersToPixels * tilemap->tileInMeters);
-    drawRectangle( buffer, vec2(tileMinx, tileMaxy), vec2(tileMaxx, tileMiny), tilecolor );
-
-    f32 minx  = tilemap->metersToPixels * ( tileX + player->playerPos.tileRelative.x - player->size.x/2 );
-    f32 maxx  = tilemap->metersToPixels * ( tileX + player->playerPos.tileRelative.x + player->size.x/2 );
-    f32 miny  = buffer->height - tilemap->metersToPixels * ( tileY + player->playerPos.tileRelative.y - player->size.y/2 );
-    f32 maxy  = miny - (tilemap->metersToPixels * player->size.y);
-    drawRectangle( buffer, vec2(minx, maxy), vec2(maxx, miny), player->color );
-
-    drawImage( buffer, vec2(minx, maxy), player->playerImg );
-}
-
-void drawTileArea( RenderBuffer* buffer, TileMap* tilemap, TileArea* area )
-{
-    Color tilecolor = { 53.0f/255.0f, 51.0f/255.0f, 47.0f/255.0f, 0.8f };
-
-    u32 tileWidth   = tilemap->tileInMeters * tilemap->metersToPixels;
-    u32 tileHeight  = tilemap->tileInMeters * tilemap->metersToPixels;
-    u32 tilesPerRow = tilemap->tileCountX;
-    u32 rows        = tilemap->tileCountY;
-
-    for( u32 row=0; row<rows; ++row )
-    {
-        for( u32 col=0; col<tilesPerRow; ++col )
-        {
-            u32 tile = area->tiles[row * tilemap->tileCountX + col];
-            if( tile == 1 )
-            {
-                u32 minX = col * tileWidth;
-                u32 maxX = minX + tileWidth;
-
-                u32 minY = buffer->height - (row * tileHeight);
-                u32 maxY = minY - tileHeight;
-
-                //drawImage( buffer, V2(minX, maxY), tilemap->brickImage );
-                drawRectangle( buffer, vec2(minX, maxY), vec2(maxX, minY), tilecolor );
-            }
-        }
-    }
-}
-
-void drawWorld( RenderBuffer* buffer, TileMap* world, Player* player )
-{
-    DecomposedPosition currentScreen = decomposePosition( player->playerPos );
-    u32 areaX = currentScreen.tileareaX;
-    u32 areaY = currentScreen.tileareaY;
-    
-    TileArea* area = getTileArea( world, areaX, areaY );
-    if( area->tiles != nullptr )
-    {
-        drawTileArea( buffer, world, area );
-    }
 }
 
 bool wallCollision( f32 wallCoord, 
@@ -155,136 +97,139 @@ bool wallCollision( f32 wallCoord,
     return hit;
 }
 
-void collisionDetection( Player*  player, 
-                         TileMap* tilemap, 
-                         v2       direction, 
-                         f32      acceleration, 
-                         f32      dt )
+void moveEntities( UserInput*     input, 
+                   live_entities* entities, 
+                   TileMap*       tilemap, 
+                   f32            dt,
+                   f32            acceleration,
+                   v2             direction )
 {
     static v2 north = vec2(  0.0f,  1.0f );
     static v2 south = vec2(  0.0f, -1.0f );
     static v2 east  = vec2(  1.0f,  0.0f );
     static v2 west  = vec2( -1.0f,  0.0f );
-
-    f32 tileWidth   = tilemap->tileInMeters;
-    f32 tileHeight  = tileWidth;
-
-    DecomposedPosition oldPosition = decomposePosition( player->playerPos );
-    TileArea*          tileArea    = getTileArea( tilemap, oldPosition.tileareaX, oldPosition.tileareaY );
     
-    v2 accelerationVector          = direction * acceleration - (4.0f * player->velocityVector);
-    v2 velocity                    = ((2.0f * accelerationVector) * dt) + player->velocityVector;
-    v2 playerSize                  = player->size;
-    player->velocityVector         = velocity;
-    
-    // equations of motion:
-    // p' = 1/2at^2 + vt + p -> acceleration based position
-    // v' = 2at + v          -> acceleration based velocity ( 1st derivative of the position  )
-    // a' = a                -> acceleration                ( 2nd derivative of the velocity )
-    v2 movement = ((0.5f * accelerationVector) * square( dt )) + (velocity * dt);
-    
-    // 4. calculate time of collision and the collision point
-    f32 timeRemaining = 1.0f;
-    v2  wallNormal      = vec2(0,0);
-
-    // create the new position
-    GeneralizedPosition newPos = buildNewPosition( oldPosition, movement, tilemap );
-    DecomposedPosition  newPosition = decomposePosition( newPos );
-
-    u32 oldAbsTileX = oldPosition.tileX + oldPosition.tileareaX * tilemap->tileCountX;
-    u32 oldAbsTileY = oldPosition.tileY + oldPosition.tileareaY * tilemap->tileCountY;
-
-    u32 newAbsTileX = newPosition.tileX + newPosition.tileareaX * tilemap->tileCountX;
-    u32 newAbsTileY = newPosition.tileY + newPosition.tileareaY * tilemap->tileCountY;
-
-    // 1. constuct the search area
-    s32 searchTileMinX = (oldAbsTileX < newAbsTileX) ? oldAbsTileX : newAbsTileX;
-    s32 searchTileMaxX = (oldAbsTileX > newAbsTileX) ? oldAbsTileX : newAbsTileX;
-    s32 searchTileMinY = (oldAbsTileY < newAbsTileY) ? oldAbsTileY : newAbsTileY;
-    s32 searchTileMaxY = (oldAbsTileY > newAbsTileY) ? oldAbsTileY : newAbsTileY;
- 
-    // adjust the search area for the minkowski sum
-    s32 playerTileWidth  = ceilToS32( player->size.x / tileWidth );
-    s32 playerTileHeigth = ceilToS32( player->size.y / tileHeight );
-
-    searchTileMinX -= playerTileWidth;
-    searchTileMaxX += playerTileWidth;
-    searchTileMinY -= playerTileHeigth;
-    searchTileMaxY += playerTileHeigth;
-    
-    for( u32 iteration=0; (iteration < 4) && (timeRemaining > 0.0f); ++iteration )
+    for( u32 i=0; i<entities->numberOfEntities; ++i )
     {
-        f32 t = 1.0f;
-        TileArea* area = nullptr;
-
-        for( s32 searchY = searchTileMinY; searchY <= searchTileMaxY; ++searchY )
+        Entity* e = entities->entities[i];
+        
+        if( e->moving )
         {
-            for( s32 searchX = searchTileMinX; searchX <= searchTileMaxX; ++searchX )
+            v2 accelerationVector = direction * acceleration - (4.0f * e->velocity);
+            v2 velocity           = ((2.0f * accelerationVector) * dt) + e->velocity;
+            
+            // equations of motion:
+            // p' = 1/2at^2 + vt + p -> acceleration based position
+            // v' = 2at + v          -> acceleration based velocity ( 1st derivative of the position  )
+            // a' = a                -> acceleration                ( 2nd derivative of the velocity )
+            v2 movement = ((0.5f * accelerationVector) * square( dt )) + (velocity * dt);
+
+            // build a search space with all entities inside of defined area (1.5 * tilesize)
+            f32     searchDistance    = tilemap->tileInMeters * 1.5f;
+            Entity* searchEntities[8] = {0};
+            u32     searchIndex       = 0;
+            Color   c                 = { 75.0f/255.0f, 75.0f/255.0f, 75.0f/255.0f, 0.5f };
+
+            for( u32 s=0; s<entities->numberOfEntities && searchIndex < 8; ++s )
             {
-                // create the minkowski sum out of the wall tile and the player rectangle
-                v2 minCorner = vec2( searchX * tileWidth, searchY * tileHeight ) - (playerSize * 0.5f);
-                v2 maxCorner = vec2( (searchX * tileWidth) + tileWidth, (searchY * tileHeight) + tileHeight ) + (playerSize * 0.5f);
-                v2 p0        = vec2( oldAbsTileX * tileWidth, oldAbsTileY * tileHeight ) + oldPosition.tileRelative;
-
-                u32 areaX = (u32)(searchX / tilemap->tileCountX);
-                u32 areaY = (u32)(searchY / tilemap->tileCountY);
-
-                area = getTileArea( tilemap, areaX, areaY );
-                s32 testX = buildNewTileCoord( searchX, tilemap->tileCountX );
-                s32 testY = buildNewTileCoord( searchY, tilemap->tileCountY );
-
-                if( getTileValue( tilemap, area, testX, testY ) == 1 )
+                Entity* t = entities->entities[s];
+                if( t != e )
                 {
-                    //Print( "\n" );
-                    //Print( "search: " ); PrintTile( searchX, searchY, areaX, areaY );
-                    //Print( "test: " ); PrintTile( testX, testY, areaX, areaY );
+                    v2 a = e->position;
+                    v2 b = t->position;
 
-                    if( wallCollision( maxCorner.y, movement.y, movement.x, p0.y, p0.x, &t, minCorner.x, maxCorner.x ) )
+                    if( distanceBetween(a,b) <= searchDistance )
                     {
-                        //Print( "COLLISION NORTH\n" );
-                        wallNormal = north;
+                        searchEntities[searchIndex++] = t;
+                        t->color = { 1.0f, 0.0f, 0.0f, 0.5f };
                     }
-                    if( wallCollision( minCorner.y, movement.y, movement.x, p0.y, p0.x, &t, minCorner.x, maxCorner.x ) )
+                    else
                     {
-                        //Print( "COLLISION SOUTH\n" );
-                        wallNormal = south;
-                    }
-                    if( wallCollision( minCorner.x, movement.x, movement.y, p0.x, p0.y, &t, minCorner.y, maxCorner.y ) )
-                    {
-                        //Print( "COLLISION WEST\n" );
-                        wallNormal = west;
-                    }
-                    if( wallCollision( maxCorner.x, movement.x, movement.y, p0.x, p0.y, &t, minCorner.y, maxCorner.y ) )
-                    {
-                        //Print( "COLLISION EAST\n" );
-                        wallNormal = east;
+                        t->color = c;
                     }
                 }
             }
+
+            v2  playerSize    = e->size;
+            f32 timeRemaining = 1.0f;
+            v2 wallNormal     = {0};
+
+            for( u32 iteration=0; (iteration<4) && (timeRemaining > 0.0f); ++iteration)
+            {
+                f32 tMin = 1.0f;
+
+                for( u32 s=0; s<searchIndex; s++ )
+                {
+                    Entity* t = searchEntities[s];
+
+                    rect entityBounds = rectWithCenter( t->position, t->size * 0.5 );
+                    v2 minCorner  = entityBounds.min - (playerSize * 0.5f);
+                    v2 maxCorner  = entityBounds.max + (playerSize * 0.5f);
+                    v2 p0         = e->position;
+                    
+                    if( wallCollision( maxCorner.y, movement.y, movement.x, p0.y, p0.x, &tMin, minCorner.x, maxCorner.x ) )
+                    {
+                        Print( "COLLISION NORTH\n" );
+                        wallNormal = north;
+                    }
+                    if( wallCollision( minCorner.y, movement.y, movement.x, p0.y, p0.x, &tMin, minCorner.x, maxCorner.x ) )
+                    {
+                        Print( "COLLISION SOUTH\n" );
+                        wallNormal = south;
+                    }
+                    if( wallCollision( minCorner.x, movement.x, movement.y, p0.x, p0.y, &tMin, minCorner.y, maxCorner.y ) )
+                    {
+                        Print( "COLLISION WEST\n" );
+                        wallNormal = west;
+                    }
+                    if( wallCollision( maxCorner.x, movement.x, movement.y, p0.x, p0.y, &tMin, minCorner.y, maxCorner.y ) )
+                    {
+                        Print( "COLLISION EAST\n" );
+                        wallNormal = east;
+                    }
+                }
+
+                e->g_position = updatePosition( e->g_position, movement * tMin, tilemap );
+
+                // update the movement
+                movement = movement - dot(movement, wallNormal)*wallNormal;
+            
+                // update the velocity
+                velocity = velocity - dot(velocity, wallNormal)*wallNormal;
+                e->velocity = velocity;            
+                e->position = e->position + movement * tMin;
+                
+                // update time to collision
+                timeRemaining -= timeRemaining * tMin;    
+            }
         }
-
-        // update the player position
-        player->playerPos = buildNewPosition( oldPosition, movement * t, tilemap );
-        
-        // update the movement
-        movement = movement - 1*movement.dot(wallNormal)*wallNormal;
-        
-        // update the velocity
-        velocity = velocity - 1*velocity.dot(wallNormal)*wallNormal;
-        player->velocityVector = velocity;
-        
-        // update time to collision
-        timeRemaining -= timeRemaining * t;        
     }
-
-    return;
 }
 
-void updatePlayer( UserInput* input, Player* player, TileMap* tilemap, f32 dt )
+void processInput( UserInput* input, ApplicationState* state )
 {
-    v2 playerRelativePosition = player->playerPos.tileRelative;
-    f32 acceleration          = input->space.isDown ? 3.0f * player->acceleration : player->acceleration;
-    v2 direction              = vec2(0.0f, 0.0f);
+    if( input->key_f.isDown )
+    {
+        state->fullscreen = !state->fullscreen;
+        state->services.toggleFullScreen(state->fullscreen);
+    }
+
+    if( input->key_p.isDown )
+    {
+        state->services.playAudio();
+    }
+
+    if( input->key_s.isDown )
+    {
+        state->services.stopAudio();
+    }
+
+    live_entities* entities = &state->liveEntities;
+    TileMap*       tilemap  = state->tilemap;
+    Camera*        camera   = state->camera;
+
+    f32 acceleration = input->space.isDown ? 3.0f * 50.0f : 50.0f;
+    v2 direction     = vec2(0.0f, 0.0f);
     
     if( input->arrowUp.isDown )    
     {
@@ -303,17 +248,57 @@ void updatePlayer( UserInput* input, Player* player, TileMap* tilemap, f32 dt )
         direction.x = -1.0f;
     }
 
-    direction.normalize();
+    direction = normalize( direction );
 
-    collisionDetection( player, tilemap, direction, acceleration, dt );
-}
-
-void processInput( UserInput* input, ApplicationState* state )
-{
-    if( input->command.isDown )
+    for( u32 i=0; i<entities->numberOfEntities; ++i )
     {
-        state->fullscreen = !state->fullscreen;
-        state->services.toggleFullScreen(state->fullscreen);
+        Entity* e = entities->entities[i];
+
+        if( e->moving )
+        {
+            moveEntities( input, entities, tilemap, state->dt, acceleration, direction );
+        }
+    }
+
+    // check if the camera needs to update    
+    Entity* player = camera->followingEntity;
+    
+    // 1. construct the screen rect
+    // 2. check if the camera following entity has left the rect
+    // 3. if it has
+    //    a) update all entities to be relative to the new camera position
+    //    b) update the camera tile position
+
+    u32 newTileAreaX = 0;
+    u32 newTileAreaY = 0;
+
+    if( !isInsideRect( camera->screen, player->position ) )
+    {
+        for( u32 i=0; i<entities->numberOfEntities; ++i )
+        {
+            Entity* e = entities->entities[i];
+            
+            DecomposedPosition p = decomposePosition( player->g_position );
+            DecomposedPosition c = decomposePosition( camera->tilePosition );
+
+            // camera change vector -> depends on the new tilearea
+            v2 a   = vec2( (f32)(p.tileareaX - c.tileareaX), 
+                           (f32)(p.tileareaY - c.tileareaY) ) *
+                     vec2( (f32)(tilemap->tileCountX * tilemap->tileInMeters) ,
+                           (f32)(tilemap->tileCountY * tilemap->tileInMeters) );
+
+            // map the entity position to the new camera
+            e->position = e->position - a;
+
+            if( e == player )
+            {
+                newTileAreaX = p.tileareaX;
+                newTileAreaY = p.tileareaY;
+            }
+        }
+
+        // update the tilearea aka screen to be shown
+        camera->tilePosition = player->g_position;
     }
 }
 
@@ -324,21 +309,23 @@ void UpdateAndRender( ApplicationMemory* memory,
     /**
         ++ ApplicationState ++
 
-        -  MemoryPool*       appMemory; // equal to the start of ApplicationState
-        -  PlatformServices  services;
-        -  TileMap*          tilemap;
-        -  Player*           player;
-        -  File*             backgroundMp3;
-        -  Mp3Buffer*        mp3Samples;
-        -  bool              loading;
+        -  MemoryPool*       appMemory      // equal to the start of ApplicationState
+        -  PlatformServices  services       // pointer to platform specific implementations
+        -  TileMap*          tilemap        // the world
+        -  Camera*           camera         // the camera (middle of the screen)
+        -  live_entities     liveEntities   // player, walls, monsters - everything which somehow interacts
+        -  File*             backgroundMp3
+        -  Mp3Buffer*        mp3Samples
+        -  bool              loading        // if true platform is not ready yet
+        -  bool              fullscreen
+        -  f32               dt             // time step this frame
      */
     ApplicationState* state = (ApplicationState*)memory->permanentMemory;
     
     MemoryPool*       appMemory   = state->appMemory;
     TileMap*          tilemap     = state->tilemap;
-    Player*           player      = state->player;
-
-    processInput( input, state );
+    Entity*           player      = state->liveEntities.entities[0];
+    Camera*           camera      = state->camera;
 
     // reentrant guard
     if( state->loading )
@@ -355,9 +342,9 @@ void UpdateAndRender( ApplicationMemory* memory,
          *  
          *  MEMORY LAYOUT
          *  
-         *  ApplicationState
-         *  MemoryPool
-         *  Memory of MemoryPool
+         *  struct ApplicationState
+         *  struct MemoryPool
+         *  backing store of the MemoryPool
          * 
          *********************/ 
 
@@ -369,52 +356,68 @@ void UpdateAndRender( ApplicationMemory* memory,
         appMemory = state->appMemory;
 
         // create the tilemap in permanent memory
-        state->tilemap                     = PushStruct( appMemory, TileMap );
-        state->player                      = PushStruct( appMemory, Player );
+        state->tilemap                       = PushStruct( appMemory, TileMap );
+        state->liveEntities.entities[0]      = PushStruct( appMemory, Entity );
+        state->liveEntities.numberOfEntities = 1;
         tilemap = state->tilemap;
-        player  = state->player;
+        player  = state->liveEntities.entities[0];
 
         state->tilemap->tileCountX         = TILES_PER_AREA_X;
         state->tilemap->tileCountY         = TILES_PER_AREA_Y;
         state->tilemap->tileInMeters       = 2.0f;
         state->tilemap->tileInPixels       = TILE_SIZE;
-        state->tilemap->metersToPixels     = (f32)((f32)state->tilemap->tileInPixels/state->tilemap->tileInMeters);
         state->tilemap->tileAreas          = PushArray( appMemory, 
                                                  NR_OF_TILEAREAS * NR_OF_TILEAREAS,
                                                  TileArea );
 
-        buildWorld( appMemory, tilemap );             
+        buffer->metersToPixels  = (f32)((f32)state->tilemap->tileInPixels/state->tilemap->tileInMeters);
+
+        // create the camera
+        state->camera                      = PushStruct( appMemory, Camera );
+        camera = state->camera;
+        camera->absolutePosition    = vec2( tilemap->tileCountX * tilemap->tileInMeters,
+                                            tilemap->tileCountY * tilemap->tileInMeters ) * 0.5f;
+
+        u32 cameraTileX = (u32)(camera->absolutePosition.x / tilemap->tileInMeters);
+        u32 cameraTileY = (u32)(camera->absolutePosition.y / tilemap->tileInMeters);
+        camera->tilePosition        = buildPosition( cameraTileX,
+                                                     cameraTileY,
+                                                     (u32)0, // tilearea x 
+                                                     (u32)0, // tilearea y
+                                                     vec2( camera->absolutePosition.x - (cameraTileX * tilemap->tileInMeters),
+                                                           camera->absolutePosition.y - (cameraTileY * tilemap->tileInMeters)) );
+        camera->absolutePosition    = toAbsolutePosition( camera->tilePosition, tilemap->tileInMeters, tilemap->tileCountX, tilemap->tileCountY );                                                            
+        camera->followingEntity     = player;  
+
+        f32  dimX   = (tilemap->tileCountX * tilemap->tileInMeters) / 2.0f;
+        f32  dimY   = (tilemap->tileCountY * tilemap->tileInMeters) / 2.0f;
+        camera->screen = rectWithCenter( vec2( 0.0f, 0.0f ), vec2( dimX, dimY ) );
+
+                                                         
+
+        buildWorld( appMemory, tilemap, camera, &state->liveEntities );             
 
         const char* playerfile   = "./art/player.png";
         const char* mp3File      = "./assets/music/datahop.mp3";
 
-        player->playerImg        = state->services.loadImage( appMemory, playerfile );
         state->mp3Samples        = state->services.loadMp3( appMemory, mp3File );
         
-        Color playerColor = { 1.0f, 162.0f/255.0f, 0.0f, 0.7f };
-
-        DecomposedPosition startposition = {0};
-        startposition.tileareaX = 0;
-        startposition.tileareaY = 0;
-        startposition.tileX     = 2;
-        startposition.tileY     = 2;
-        startposition.tileRelative = vec2( tilemap->tileInMeters * 0.5f, tilemap->tileInMeters * 0.5f );
+        // the player starts at the camera location
+        player->position        = vec2( 0.0f, 0.0f );
+        player->g_position      = camera->tilePosition;
+        player->size            = vec2( 0.9f * tilemap->tileInMeters, 0.9f * tilemap->tileInMeters );
+        player->velocity        = vec2(0.0f, 0.0f);
+        player->type            = PLAYER;
+        player->moving          = true;
+        player->color           = { 75.0f/255.0f, 75.0f/255.0f, 75.0f/255.0f, 0.9f };
         
-        player->playerPos       = composePosition( startposition );
-        player->size.x          = 0.9f * tilemap->tileInMeters;
-        player->size.y          = 0.9f * tilemap->tileInMeters;
-        player->acceleration    = 50.0f; // in meters per second squared -> m/s^2
-        player->velocityVector  = vec2(0.0f, 0.0f);
-        player->color           = playerColor;
-
         memory->isInitialized = true;
         state->loading        = false;
         state->fullscreen     = false;
     }
 
-    updatePlayer( input, player, tilemap, state->dt );
-
-    drawBackground( buffer );
-    drawWorld( buffer, tilemap, player );
-    drawPlayer( buffer, player, tilemap );
+    processInput( input, state );
+    
+    drawWorld( buffer, tilemap, camera );
+    drawEntities( buffer, &state->liveEntities, camera );
 }
