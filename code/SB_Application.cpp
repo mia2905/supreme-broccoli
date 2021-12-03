@@ -125,7 +125,7 @@ void moveEntities( UserInput*     input,
             v2 movement = ((0.5f * accelerationVector) * square( dt )) + (velocity * dt);
 
             // build a search space with all entities inside of defined area (1.5 * tilesize)
-            f32     searchDistance    = tilemap->tileInMeters;
+            f32     searchDistance    = tilemap->tileInMeters * 1.5f;
             Entity* searchEntities[8] = {0};
             u32     searchIndex       = 0;
             Color   c                 = { 75.0f/255.0f, 75.0f/255.0f, 75.0f/255.0f, 0.5f };
